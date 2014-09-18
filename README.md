@@ -9,7 +9,7 @@ Without containing any empirical parameters, `MB-pol` has been found to accurate
 
 References:
 
-1. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 9, 1103–1114 (2013).](http://pubs.acs.org/doi/abs/10.1021/ct300913g).
+1. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 9, 1103–1114 (2013)](http://pubs.acs.org/doi/abs/10.1021/ct300913g).
 2. [V. Babin, C. Leforestier, and F. Paesani, J. Chem. Theory Comput. 9, 5395–5403 (2013)](http://pubs.acs.org/doi/abs/10.1021/ct400863t).
 3. [V. Babin, G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 10, 1599–1607 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct500079y).
 4. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 10, 2906–2910 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct5004115).
