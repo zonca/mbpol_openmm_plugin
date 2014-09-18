@@ -4,8 +4,7 @@
 
 ## How to install
 
-* Clone the `mbpol` plugin source from Github:
-  <https://github.com/paesanilab/mbpol_openmm_plugin>
+* Download the last release from Github <https://github.com/paesanilab/mbpol_openmm_plugin/releases>
 * Create the `build_mbpol` folder outside of the source folder
 * Configure the build by entering the `build_mbpol` folder and running `ccmake -i ../mbpol_openmm_plugin` (`ccmake` with 2 time `c` is a console-based GUI for `cmake`, in debian/ubuntu it is in the `cmake-curses-gui` package)
 * Press `c` to start the configuration process
