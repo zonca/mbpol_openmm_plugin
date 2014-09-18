@@ -1,17 +1,18 @@
 MB-pol plugin for OpenMM
 =======================
 
-`mbpol` is a plugin for the `OpenMM` toolkit for molecular simulations.
+`mbpol` is a plugin for the `OpenMM` toolkit for molecular simulations using the `MB-pol` potential energy surface for water.
 
-This plugin implements the `MB-pol` potential energy surface for water. `MB-pol` is built upon a many-body expansion of the interaction energy of water molecules and is fit exclusively to ``first principles'' calculations [1,2]. In particular, `MB-pol` explicitly treats the one-body (intramolecular distortion energy) term and the short-ranged two- and three-body terms through permutationally invariant polynomials. Long-range two-body interactions are described through electrostatic interactions and by dispersion energies. Finally, higher-order terms in the expansion are modeled through many-body polarizable electrostatic interactions.
+Previously, we carried out a detailed analysis of the two- and three-body water interactions evaluated at the CCSD(T) level to quantitatively assess the accuracy of several force fields, DFT models, and ab initio based interaction potentials that are commonly used in molecular simulations [1]. On the basis of this analysis, we have developed `MB-pol`, a "first principles" potential energy surface built upon a many-body expansion of the interaction energy of water molecules [2,3]. In particular, `MB-pol` explicitly treats the one-body (intramolecular distortion energy) term and the short-ranged two- and three-body terms through permutationally invariant polynomials. Long-range two-body interactions are described through electrostatic interactions and by dispersion energies. Higher-order terms in the expansion are modeled through many-body polarizable electrostatic interactions.
 
-Without containing any empirical parameters, `MB-pol` has been found to accurately describe the dimer vibration-rotation tunneling spectrum to within a few wavenumbers of experiment [1], capture the second and third virial coefficients [1,2], and obtain good agreement with benchmark calculations of cluster structures and energies [2]. Comparisons with the available experimental data for several structural, thermodynamic, and dynamical properties indicate that `MB-pol` provides a highly accurate description of the liquid phase of water at ambient conditions [3].
+Without containing any empirical parameters, `MB-pol` has been found to accurately describe the dimer vibration-rotation tunneling spectrum to within a few wavenumbers of experiment [2], capture the second and third virial coefficients [2,3], and obtain good agreement with benchmark calculations of cluster structures and energies [3]. Finally, after including nuclear quantum effects into molecular simulations, we have demonstrated that `MB-pol` provides a highly accurate description of the liquid phase of water at ambient conditions in comparison with experiment for several structural, thermodynamic, and dynamical properties [4].
 
 References:
 
-1. [V. Babin, C. Leforestier, and F. Paesani, J. Chem. Theory Comput. 9, 5395–5403 (2013)](http://pubs.acs.org/doi/abs/10.1021/ct400863t).
-2. [V. Babin, G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 10, 1599–1607 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct500079y).
-3. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 10, 2906–2910 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct5004115).
+1. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 9, 1103–1114 (2013).](http://pubs.acs.org/doi/abs/10.1021/ct300913g).
+2. [V. Babin, C. Leforestier, and F. Paesani, J. Chem. Theory Comput. 9, 5395–5403 (2013)](http://pubs.acs.org/doi/abs/10.1021/ct400863t).
+3. [V. Babin, G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 10, 1599–1607 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct500079y).
+4. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 10, 2906–2910 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct5004115).
 
 
 available components are:
