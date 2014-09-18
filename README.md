@@ -8,9 +8,10 @@ This plugin implements the `MB-pol` potential energy surface for water. MB-pol i
 Without containing any empirical parameters, MB-pol has been found to accurately describe the dimer vibration-rotation tunneling spectrum to within a few wavenumbers of experiment [1], capture the second and third virial coefficients [1,2], and obtain good agreement with benchmark calculations of cluster structures and energies [2]. Comparisons with the available experimental data for several structural, thermodynamic, and dynamical properties indicate that MB-pol provides a highly accurate description of the liquid phase of water at ambient conditions [3].
 
 References:
-[1] V. Babin, C. Leforestier, and F. Paesani, J. Chem. Theory Comput. 9, 5395–5403 (2013).
-[2] V. Babin, G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 10, 1599–1607 (2014).
-[3] G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 10, 2906–2910 (2014).
+
+1. V. Babin, C. Leforestier, and F. Paesani, J. Chem. Theory Comput. 9, 5395–5403 (2013).
+2. V. Babin, G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 10, 1599–1607 (2014).
+3. G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 10, 2906–2910 (2014).
 
 
 available components are:
