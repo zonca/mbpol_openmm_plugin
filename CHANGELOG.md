@@ -1,3 +1,15 @@
+# v0.4.0 (18-09-2014)
+
+Complete code refactor based on the [OpenMM Example Plugin](https://github.com/peastman/openmmexampleplugin)  ([#21](https://github.com/paesanilab/mbpol_openmm_plugin/pull/21)), allows to:
+
+* install the plugin on a pre-existing OpenMM install
+* create Python wrappers
+
+Other notes:
+
+* Created IPython notebook example
+* Prepared README.md and license for release
+
 # v0.3.0 (10-06-2014)
 
 Complete MBPol force field implementation for clusters of water molecules
