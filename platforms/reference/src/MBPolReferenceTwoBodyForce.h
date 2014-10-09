@@ -32,14 +32,15 @@
 #include <vector>
 
 using namespace  OpenMM;
+enum TrimerAtomIndex { Oa, Ha1, Ha2, Ob, Hb1, Hb2, Oc, Hc1, Hc2 };
+enum ExtraPointIndex { Xa1, Xa2, Xb1, Xb2, Xc1, Xc2 };
 
 class MBPolReferenceTwoBodyForce;
 typedef  RealOpenMM (MBPolReferenceTwoBodyForce::*CombiningFunction)( RealOpenMM x, RealOpenMM y) const;
 
-void imageParticles(const RealVec& box, double* referenceParticle, const RealVec& particleToImage, double* outputArray);
+void imageParticles(const RealVec& box, const RealVec & referenceParticle, RealVec& particleToImage);
 
-void imageMolecules(const RealVec& box, int siteI, int siteJ, const std::vector<RealVec>& particlePositions,
-        const std::vector<std::vector<int> >& allParticleIndices, double* imagedPositions);
+void imageMolecules(const RealVec& box, std::vector<RealVec> allPositions);
 
 // ---------------------------------------------------------------------------------------
 
