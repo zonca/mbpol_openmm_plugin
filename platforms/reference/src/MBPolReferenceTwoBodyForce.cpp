@@ -165,7 +165,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
 
         variable ctxt[31];
 
-
+        v[0] = ctxt[1].v_exp(d0_intra, k_HH_intra,   allPositions[Ha1], allPositions[Ha2]);
         v[1] = ctxt[1].v_exp(d0_intra, k_HH_intra,   allPositions[Hb1], allPositions[Hb2]);
 
         v[2] = ctxt[2].v_exp(d0_intra, k_OH_intra,   allPositions[Oa], allPositions[Ha1]);
