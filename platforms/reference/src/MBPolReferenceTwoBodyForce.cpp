@@ -117,45 +117,21 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
 
         // offsets
 
-        const int Oa  = 0;
-        const int Ha1 = 3;
-        const int Ha2 = 6;
+        std::vector<RealVec> allPositions;
 
-        const int Ob  = 9;
-        const int Hb1 = 12;
-        const int Hb2 = 15;
+        for (unsigned int i=0; i < 3; i++)
+            allPositions.push_back(particlePositions[allParticleIndices[siteI][i]] * nm_to_A);
 
-        const int Xa1 = 18;
-        const int Xa2 = 21;
+        for (unsigned int i=0; i < 3; i++)
+            allPositions.push_back(particlePositions[allParticleIndices[siteJ][i]] * nm_to_A);
 
-        const int Xb1 = 24;
-        const int Xb2 = 27;
+        std::vector<RealVec> extraPoints;
+        extraPoints.resize(4);
 
-        double xcrd[30]; // coordinates including extra-points
+        if( _nonbondedMethod == CutoffPeriodic )
+            imageMolecules(_periodicBoxDimensions, allPositions);
 
-        if( _nonbondedMethod == CutoffPeriodic ){
-            imageMolecules(_periodicBoxDimensions, siteI, siteJ, particlePositions, allParticleIndices, xcrd);
-        } else {
-            for (unsigned int i=0; i < 3; i++) {
-                // first water molecule
-                xcrd[Oa + i] =  particlePositions[allParticleIndices[siteI][0]][i];
-                xcrd[Ha1 + i] = particlePositions[allParticleIndices[siteI][1]][i];
-                xcrd[Ha2 + i] = particlePositions[allParticleIndices[siteI][2]][i];
-                // second water molecule
-                xcrd[Ob + i] =  particlePositions[allParticleIndices[siteJ][0]][i];
-                xcrd[Hb1 + i] = particlePositions[allParticleIndices[siteJ][1]][i];
-                xcrd[Hb2 + i] = particlePositions[allParticleIndices[siteJ][2]][i];
-            }
-        }
-
-
-        for (unsigned int i=0; i < 6*3; i++) {
-            xcrd[i] *= nm_to_A;
-        }
-
-        const double dOO[3] = {xcrd[Oa] - xcrd[Ob],
-                               xcrd[Oa + 1] - xcrd[Ob + 1],
-                               xcrd[Oa + 2] - xcrd[Ob + 2],};
+        RealVec dOO = allPositions[Oa] - allPositions[Ob];
 
         const double rOOsq = dOO[0]*dOO[0] + dOO[1]*dOO[1] + dOO[2]*dOO[2];
         const double rOO = std::sqrt(rOOsq);
@@ -171,13 +147,13 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
 
         monomer ma, mb;
 
-        ma.setup(xcrd + Oa,
+        ma.setup(allPositions[Oa], allPositions[Ha1], allPositions[Ha2],
                  in_plane_gamma, out_of_plane_gamma,
-                 xcrd + Xa1, xcrd + Xa2);
+                 extraPoints[Xa1], extraPoints[Xa2]);
 
-        mb.setup(xcrd + Ob,
+        mb.setup(allPositions[Ob], allPositions[Ha1], allPositions[Hb2],
                  in_plane_gamma, out_of_plane_gamma,
-                 xcrd + Xb1, xcrd + Xb2);
+                 extraPoints[Xb1], extraPoints[Xb2]);
 
         // variables
 
@@ -186,46 +162,47 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
 
         double v[31]; // stored separately (gets passed to poly::eval)
 
+
         variable ctxt[31];
 
-        v[0] = ctxt[0].v_exp(d0_intra, k_HH_intra, xcrd, Ha1, Ha2);
-        v[1] = ctxt[1].v_exp(d0_intra, k_HH_intra, xcrd, Hb1, Hb2);
 
-        v[2] = ctxt[2].v_exp(d0_intra, k_OH_intra, xcrd, Oa, Ha1);
-        v[3] = ctxt[3].v_exp(d0_intra, k_OH_intra, xcrd, Oa, Ha2);
-        v[4] = ctxt[4].v_exp(d0_intra, k_OH_intra, xcrd, Ob, Hb1);
-        v[5] = ctxt[5].v_exp(d0_intra, k_OH_intra, xcrd, Ob, Hb2);
+        v[1] = ctxt[1].v_exp(d0_intra, k_HH_intra,   allPositions[Hb1], allPositions[Hb2]);
 
-        v[6] = ctxt[6].v_coul(d0_inter, k_HH_coul, xcrd, Ha1, Hb1);
-        v[7] = ctxt[7].v_coul(d0_inter, k_HH_coul, xcrd, Ha1, Hb2);
-        v[8] = ctxt[8].v_coul(d0_inter, k_HH_coul, xcrd, Ha2, Hb1);
-        v[9] = ctxt[9].v_coul(d0_inter, k_HH_coul, xcrd, Ha2, Hb2);
+        v[2] = ctxt[2].v_exp(d0_intra, k_OH_intra,   allPositions[Oa], allPositions[Ha1]);
+        v[3] = ctxt[3].v_exp(d0_intra, k_OH_intra,   allPositions[Oa], allPositions[Ha2]);
+        v[4] = ctxt[4].v_exp(d0_intra, k_OH_intra,   allPositions[Ob], allPositions[Hb1]);
+        v[5] = ctxt[5].v_exp(d0_intra, k_OH_intra,   allPositions[Ob], allPositions[Hb2]);
 
-        v[10] = ctxt[10].v_coul(d0_inter, k_OH_coul, xcrd, Oa, Hb1);
-        v[11] = ctxt[11].v_coul(d0_inter, k_OH_coul, xcrd, Oa, Hb2);
-        v[12] = ctxt[12].v_coul(d0_inter, k_OH_coul, xcrd, Ob, Ha1);
-        v[13] = ctxt[13].v_coul(d0_inter, k_OH_coul, xcrd, Ob, Ha2);
+        v[6] = ctxt[6].v_coul(d0_inter, k_HH_coul,   allPositions[Ha1], allPositions[Hb1]);
+        v[7] = ctxt[7].v_coul(d0_inter, k_HH_coul,   allPositions[Ha1], allPositions[Hb2]);
+        v[8] = ctxt[8].v_coul(d0_inter, k_HH_coul,   allPositions[Ha2], allPositions[Hb1]);
+        v[9] = ctxt[9].v_coul(d0_inter, k_HH_coul,   allPositions[Ha2], allPositions[Hb2]);
 
-        v[14] = ctxt[14].v_coul(d0_inter, k_OO_coul, xcrd, Oa, Ob);
+        v[10] = ctxt[10].v_coul(d0_inter, k_OH_coul, allPositions[Oa], allPositions[Hb1]);
+        v[11] = ctxt[11].v_coul(d0_inter, k_OH_coul, allPositions[Oa], allPositions[Hb2]);
+        v[12] = ctxt[12].v_coul(d0_inter, k_OH_coul, allPositions[Ob], allPositions[Ha1]);
+        v[13] = ctxt[13].v_coul(d0_inter, k_OH_coul, allPositions[Ob], allPositions[Ha2]);
 
-        v[15] = ctxt[15].v_exp(d0_inter, k_XH_main, xcrd, Xa1, Hb1);
-        v[16] = ctxt[16].v_exp(d0_inter, k_XH_main, xcrd, Xa1, Hb2);
-        v[17] = ctxt[17].v_exp(d0_inter, k_XH_main, xcrd, Xa2, Hb1);
-        v[18] = ctxt[18].v_exp(d0_inter, k_XH_main, xcrd, Xa2, Hb2);
-        v[19] = ctxt[19].v_exp(d0_inter, k_XH_main, xcrd, Xb1, Ha1);
-        v[20] = ctxt[20].v_exp(d0_inter, k_XH_main, xcrd, Xb1, Ha2);
-        v[21] = ctxt[21].v_exp(d0_inter, k_XH_main, xcrd, Xb2, Ha1);
-        v[22] = ctxt[22].v_exp(d0_inter, k_XH_main, xcrd, Xb2, Ha2);
+        v[14] = ctxt[14].v_coul(d0_inter, k_OO_coul, allPositions[Oa], allPositions[Ob]);
 
-        v[23] = ctxt[23].v_exp(d0_inter, k_XO_main, xcrd, Oa, Xb1);
-        v[24] = ctxt[24].v_exp(d0_inter, k_XO_main, xcrd, Oa, Xb2);
-        v[25] = ctxt[25].v_exp(d0_inter, k_XO_main, xcrd, Ob, Xa1);
-        v[26] = ctxt[26].v_exp(d0_inter, k_XO_main, xcrd, Ob, Xa2);
+        v[15] = ctxt[15].v_exp(d0_inter, k_XH_main,  allPositions[Xa1], allPositions[Hb1]);
+        v[16] = ctxt[16].v_exp(d0_inter, k_XH_main,  allPositions[Xa1], allPositions[Hb2]);
+        v[17] = ctxt[17].v_exp(d0_inter, k_XH_main,  allPositions[Xa2], allPositions[Hb1]);
+        v[18] = ctxt[18].v_exp(d0_inter, k_XH_main,  allPositions[Xa2], allPositions[Hb2]);
+        v[19] = ctxt[19].v_exp(d0_inter, k_XH_main,  allPositions[Xb1], allPositions[Ha1]);
+        v[20] = ctxt[20].v_exp(d0_inter, k_XH_main,  allPositions[Xb1], allPositions[Ha2]);
+        v[21] = ctxt[21].v_exp(d0_inter, k_XH_main,  allPositions[Xb2], allPositions[Ha1]);
+        v[22] = ctxt[22].v_exp(d0_inter, k_XH_main,  allPositions[Xb2], allPositions[Ha2]);
 
-        v[27] = ctxt[27].v_exp(d0_inter, k_XX_main, xcrd, Xa1, Xb1);
-        v[28] = ctxt[28].v_exp(d0_inter, k_XX_main, xcrd, Xa1, Xb2);
-        v[29] = ctxt[29].v_exp(d0_inter, k_XX_main, xcrd, Xa2, Xb1);
-        v[30] = ctxt[30].v_exp(d0_inter, k_XX_main, xcrd, Xa2, Xb2);
+        v[23] = ctxt[23].v_exp(d0_inter, k_XO_main,  allPositions[Oa ], allPositions[Xb1]);
+        v[24] = ctxt[24].v_exp(d0_inter, k_XO_main,  allPositions[Oa ], allPositions[Xb2]);
+        v[25] = ctxt[25].v_exp(d0_inter, k_XO_main,  allPositions[Ob ], allPositions[Xa1]);
+        v[26] = ctxt[26].v_exp(d0_inter, k_XO_main,  allPositions[Ob ], allPositions[Xa2]);
+
+        v[27] = ctxt[27].v_exp(d0_inter, k_XX_main,  allPositions[Xa1], allPositions[Xb1]);
+        v[28] = ctxt[28].v_exp(d0_inter, k_XX_main,  allPositions[Xa1], allPositions[Xb2]);
+        v[29] = ctxt[29].v_exp(d0_inter, k_XX_main,  allPositions[Xa2], allPositions[Xb1]);
+        v[30] = ctxt[30].v_exp(d0_inter, k_XX_main,  allPositions[Xa2], allPositions[Xb2]);
 
         double g[31];
         const double E_poly = poly_2b_v6x_eval(thefit, v, g);

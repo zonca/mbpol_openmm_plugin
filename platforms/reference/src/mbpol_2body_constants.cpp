@@ -1,24 +1,24 @@
 #include "mbpol_2body_constants.h"
 #include <algorithm>
 #include <cmath>
+#include "openmm/reference/RealVec.h"
+
+using OpenMM::RealVec;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 double variable::v_exp(const double& r0, const double& k,
-                       const double* xcrd, int o1, int o2)
+                       RealVec& O1, RealVec& O2)
 {
-    g[0] = xcrd[o1++] - xcrd[o2++];
-    g[1] = xcrd[o1++] - xcrd[o2++];
-    g[2] = xcrd[o1]   - xcrd[o2];
 
-    const double r = std::sqrt(g[0]*g[0] + g[1]*g[1] + g[2]*g[2]);
+    g = O1 - O2;
+
+    const double r = std::sqrt(g.dot(g));
 
     const double exp1 = std::exp(k*(r0 - r));
     const double gg = - k*exp1/r;
 
-    g[0] *= gg;
-    g[1] *= gg;
-    g[2] *= gg;
+    g *= gg;
 
     return exp1;
 }
@@ -26,13 +26,11 @@ double variable::v_exp(const double& r0, const double& k,
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - //
 
 double variable::v_coul(const double& r0, const double& k,
-                        const double* xcrd, int o1, int o2)
+        RealVec& O1, RealVec& O2)
 {
-    g[0] = xcrd[o1++] - xcrd[o2++];
-    g[1] = xcrd[o1++] - xcrd[o2++];
-    g[2] = xcrd[o1]   - xcrd[o2];
+    g = O1 - O2;
 
-    const double rsq = g[0]*g[0] + g[1]*g[1] + g[2]*g[2];
+    const double rsq = g.dot(g);
     const double r = std::sqrt(rsq);
 
     const double exp1 = std::exp(k*(r0 - r));
