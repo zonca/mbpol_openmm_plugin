@@ -62,6 +62,42 @@ RealVec MBPolReferenceTwoBodyForce::getPeriodicBox( void ) const {
     return _periodicBoxDimensions;
 }
 
+void imageParticles(const RealVec& box, double* referenceParticle, const RealVec& particleToImage, double* outputArray)
+{
+    // Periodic boundary conditions imaging of particleToImage with respect to referenceParticle
+
+    double distance, factor;
+    for (unsigned int i=0; i < 3; i++) {
+        distance = referenceParticle[i] - particleToImage[i];
+        factor = std::floor(distance/box[i] + 0.5);
+        outputArray[i] = particleToImage[i] + box[i]*factor;
+    }
+}
+
+void imageMolecules(const RealVec& box, int siteI, int siteJ, const std::vector<RealVec>& particlePositions,
+        const std::vector<std::vector<int> >& allParticleIndices, double* imagedPositions)
+{
+
+    // Take first oxygen as central atom
+
+    for(unsigned int i = 0; i < 3; ++i)
+        imagedPositions[i] = particlePositions[allParticleIndices[siteI][0]][i];
+
+    // image its two hydrogens with respect of the first oxygen
+
+    for(unsigned int a = 1; a < 3; ++a)
+        imageParticles(box, imagedPositions, particlePositions[allParticleIndices[siteI][a]], imagedPositions + 3*a);
+
+    // Now image the oxygen of the second molecule
+
+    imageParticles(box, imagedPositions, particlePositions[allParticleIndices[siteJ][0]], imagedPositions + 3*3);
+
+    // Image the hydrogen of the second molecule with respect to the oxygen of the second molecule
+    for(unsigned int a = 1; a < 3; ++a)
+        imageParticles(box, imagedPositions + 3*3, particlePositions[allParticleIndices[siteJ][a]], imagedPositions + 9 + 3*a);
+
+
+}
 RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
                                                       const std::vector<RealVec>& particlePositions,
                                                       const std::vector<std::vector<int> >& allParticleIndices,
@@ -73,18 +109,6 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
         // second hydrogen: allParticleIndices[siteI][2]
         // same for the second water molecule
         const double nm_to_A = 10.;
-        const double dOO[3] = {particlePositions[allParticleIndices[siteI][0]][0]*nm_to_A - particlePositions[allParticleIndices[siteJ][0]][0]*nm_to_A,
-                               particlePositions[allParticleIndices[siteI][0]][1]*nm_to_A - particlePositions[allParticleIndices[siteJ][0]][1]*nm_to_A,
-                               particlePositions[allParticleIndices[siteI][0]][2]*nm_to_A - particlePositions[allParticleIndices[siteJ][0]][2]*nm_to_A};
-
-        const double rOOsq = dOO[0]*dOO[0] + dOO[1]*dOO[1] + dOO[2]*dOO[2];
-        const double rOO = std::sqrt(rOOsq);
-
-        if (rOO > r2f)
-            return 0.0;
-
-        if (rOO < 2.)
-            return 0.0;
 
         // offsets
 
@@ -104,16 +128,39 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
 
         double xcrd[30]; // coordinates including extra-points
 
-        for (unsigned int i=0; i < 3; i++) {
-            // first water molecule
-            xcrd[Oa + i] =  particlePositions[allParticleIndices[siteI][0]][i]*nm_to_A;
-            xcrd[Ha1 + i] = particlePositions[allParticleIndices[siteI][1]][i]*nm_to_A;
-            xcrd[Ha2 + i] = particlePositions[allParticleIndices[siteI][2]][i]*nm_to_A;
-            // second water molecule
-            xcrd[Ob + i] =  particlePositions[allParticleIndices[siteJ][0]][i]*nm_to_A;
-            xcrd[Hb1 + i] = particlePositions[allParticleIndices[siteJ][1]][i]*nm_to_A;
-            xcrd[Hb2 + i] = particlePositions[allParticleIndices[siteJ][2]][i]*nm_to_A;
+        if( _nonbondedMethod == CutoffPeriodic ){
+            imageMolecules(_periodicBoxDimensions, siteI, siteJ, particlePositions, allParticleIndices, xcrd);
+        } else {
+            for (unsigned int i=0; i < 3; i++) {
+                // first water molecule
+                xcrd[Oa + i] =  particlePositions[allParticleIndices[siteI][0]][i];
+                xcrd[Ha1 + i] = particlePositions[allParticleIndices[siteI][1]][i];
+                xcrd[Ha2 + i] = particlePositions[allParticleIndices[siteI][2]][i];
+                // second water molecule
+                xcrd[Ob + i] =  particlePositions[allParticleIndices[siteJ][0]][i];
+                xcrd[Hb1 + i] = particlePositions[allParticleIndices[siteJ][1]][i];
+                xcrd[Hb2 + i] = particlePositions[allParticleIndices[siteJ][2]][i];
+            }
         }
+
+
+        for (unsigned int i=0; i < 6*3; i++) {
+            xcrd[i] *= nm_to_A;
+        }
+
+        const double dOO[3] = {xcrd[Oa] - xcrd[Ob],
+                               xcrd[Oa + 1] - xcrd[Ob + 1],
+                               xcrd[Oa + 2] - xcrd[Ob + 2],};
+
+        const double rOOsq = dOO[0]*dOO[0] + dOO[1]*dOO[1] + dOO[2]*dOO[2];
+        const double rOO = std::sqrt(rOOsq);
+
+        if (rOO > r2f)
+            return 0.0;
+
+        if (rOO < 2.)
+            return 0.0;
+
 
         // the extra-points
 

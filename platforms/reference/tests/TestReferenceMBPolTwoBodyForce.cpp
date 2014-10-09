@@ -38,11 +38,14 @@
 #include "OpenMMMBPol.h"
 #include "openmm/System.h"
 #include "openmm/MBPolTwoBodyForce.h"
+#include "MBPolReferenceTwoBodyForce.h"
 #include "openmm/LangevinIntegrator.h"
 #include <iostream>
 #include <vector>
 #include <stdlib.h>
 #include <stdio.h>
+
+#include "openmm/reference/RealVec.h"
 
 #define ASSERT_EQUAL_TOL_MOD(expected, found, tol, testname) {double _scale_ = std::abs(expected) > 1.0 ? std::abs(expected) : 1.0; if (!(std::abs((expected)-(found))/_scale_ <= (tol))) {std::stringstream details; details << testname << " Expected "<<(expected)<<", found "<<(found); throwException(__FILE__, __LINE__, details.str());}};
 
@@ -53,18 +56,27 @@ using namespace MBPolPlugin;
 
 const double TOL = 1e-4;
 
-void testTwoBody( FILE* log ) {
+void testTwoBody( double boxDimension ) {
 
     std::string testName      = "testMBPol2BodyInteraction";
 
     System system;
     int numberOfParticles          = 6;
     MBPolTwoBodyForce* mbpolTwoBodyForce = new MBPolTwoBodyForce();
-    double cutoff = 1e10;
+    double cutoff = 10;
     mbpolTwoBodyForce->setCutoff( cutoff );
-    mbpolTwoBodyForce->setNonbondedMethod(MBPolTwoBodyForce::CutoffNonPeriodic);
 
     unsigned int particlesPerMolecule = 3;
+
+    if( boxDimension > 0.0 ){
+        Vec3 a( boxDimension, 0.0, 0.0 );
+        Vec3 b( 0.0, boxDimension, 0.0 );
+        Vec3 c( 0.0, 0.0, boxDimension );
+        system.setDefaultPeriodicBoxVectors( a, b, c );
+        mbpolTwoBodyForce->setNonbondedMethod(MBPolTwoBodyForce::CutoffPeriodic);
+    } else {
+        mbpolTwoBodyForce->setNonbondedMethod(MBPolTwoBodyForce::CutoffNonPeriodic);
+    }
 
     std::vector<int> particleIndices(particlesPerMolecule);
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
@@ -143,13 +155,63 @@ void testTwoBody( FILE* log ) {
 
 
 
-//    ASSERT_EQUAL_TOL( expectedEnergy, energy, tolerance );
-//
-//    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-//        ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
-//    }
+    ASSERT_EQUAL_TOL( expectedEnergy, energy, tolerance );
+
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
+    }
        std::cout << "Test Successful: " << testName << std::endl << std::endl;
 
+}
+
+void testImageMolecules( bool runTestWithAtomImaging) {
+
+    double boxDimension = 10.;
+    RealVec box( boxDimension, boxDimension, boxDimension );
+
+    unsigned int numberOfParticles = 6;
+    std::vector<RealVec> particlePositions(numberOfParticles);
+
+    particlePositions[0]             = RealVec( 0., 0., 0. );
+    particlePositions[1]             = RealVec( 0., 1., 0. );
+    particlePositions[2]             = RealVec( 0., 0., 0. );
+
+    particlePositions[3]             = RealVec( 4.5, 0., 0. );
+    particlePositions[4]             = RealVec( 5.5, 0., 0. );
+    particlePositions[5]             = RealVec( 4.5, 0., 0. );
+
+    std::vector<std::vector<int> > allParticleIndices(6);
+
+    allParticleIndices[0].push_back(0);
+    allParticleIndices[0].push_back(1);
+    allParticleIndices[0].push_back(2);
+
+    allParticleIndices[3].push_back(3);
+    allParticleIndices[3].push_back(4);
+    allParticleIndices[3].push_back(5);
+
+    double imagedPositions[numberOfParticles*2];
+    imageMolecules(box, 0, 3, particlePositions, allParticleIndices, imagedPositions);
+
+    if (runTestWithAtomImaging)
+    {
+        // Check that making periodic images of everything with respect to the first oxygen fails
+        int siteI = 0;
+        int siteJ = 3;
+
+        // Image the hydrogens of the second molecule with respect to the oxygen of the FIRST MOLECULE instead of SECOND
+        for(unsigned int a = 1; a < 3; ++a)
+            imageParticles(box, imagedPositions, particlePositions[allParticleIndices[siteJ][a]], imagedPositions + 9 + 3*a);
+    }
+
+    RealVec tempPosition;
+    for (int i=0; i<numberOfParticles; i++) {
+           std::cout << "Position atom " << i << ": " << particlePositions[i] << " A" << std::endl;
+           for (int xyz=0; xyz<3; xyz++) {
+               tempPosition[xyz] = imagedPositions[3*i + xyz];
+           }
+           std::cout << "Imaged   atom " << i << ": " << tempPosition << " A" << std::endl;
+    }
 }
 
 int main( int numberOfArguments, char* argv[] ) {
@@ -157,15 +219,23 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolTwoBodyForce running test..." << std::endl;
 
-        FILE* log = NULL;
+        double boxDimension = 0;
+        std::cout << "TestReferenceMBPolTwoBodyForce Cluster" << std::endl;
+        testTwoBody( boxDimension );
 
-        testTwoBody( log );
+        std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions Huge Box" << std::endl;
+        boxDimension = 50;
+        testTwoBody( boxDimension);
+
+        bool runTestWithAtomImaging = false;
+        testImageMolecules(runTestWithAtomImaging);
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
         std::cout << "FAIL - ERROR.  Test failed." << std::endl;
         return 1;
     }
+
     std::cout << "Done" << std::endl;
     return 0;
 }

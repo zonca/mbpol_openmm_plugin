@@ -36,6 +36,11 @@ using namespace  OpenMM;
 class MBPolReferenceTwoBodyForce;
 typedef  RealOpenMM (MBPolReferenceTwoBodyForce::*CombiningFunction)( RealOpenMM x, RealOpenMM y) const;
 
+void imageParticles(const RealVec& box, double* referenceParticle, const RealVec& particleToImage, double* outputArray);
+
+void imageMolecules(const RealVec& box, int siteI, int siteJ, const std::vector<RealVec>& particlePositions,
+        const std::vector<std::vector<int> >& allParticleIndices, double* imagedPositions);
+
 // ---------------------------------------------------------------------------------------
 
 class MBPolReferenceTwoBodyForce {
