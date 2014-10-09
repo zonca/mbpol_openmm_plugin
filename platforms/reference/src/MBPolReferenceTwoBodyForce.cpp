@@ -151,7 +151,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
                  in_plane_gamma, out_of_plane_gamma,
                  extraPoints[Xa1], extraPoints[Xa2]);
 
-        mb.setup(allPositions[Ob], allPositions[Ha1], allPositions[Hb2],
+        mb.setup(allPositions[Ob], allPositions[Hb1], allPositions[Hb2],
                  in_plane_gamma, out_of_plane_gamma,
                  extraPoints[Xb1], extraPoints[Xb2]);
 
@@ -165,7 +165,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
 
         variable ctxt[31];
 
-        v[0] = ctxt[1].v_exp(d0_intra, k_HH_intra,   allPositions[Ha1], allPositions[Ha2]);
+        v[0] = ctxt[0].v_exp(d0_intra, k_HH_intra,   allPositions[Ha1], allPositions[Ha2]);
         v[1] = ctxt[1].v_exp(d0_intra, k_HH_intra,   allPositions[Hb1], allPositions[Hb2]);
 
         v[2] = ctxt[2].v_exp(d0_intra, k_OH_intra,   allPositions[Oa], allPositions[Ha1]);
@@ -185,30 +185,27 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
 
         v[14] = ctxt[14].v_coul(d0_inter, k_OO_coul, allPositions[Oa], allPositions[Ob]);
 
-        v[15] = ctxt[15].v_exp(d0_inter, k_XH_main,  allPositions[Xa1], allPositions[Hb1]);
-        v[16] = ctxt[16].v_exp(d0_inter, k_XH_main,  allPositions[Xa1], allPositions[Hb2]);
-        v[17] = ctxt[17].v_exp(d0_inter, k_XH_main,  allPositions[Xa2], allPositions[Hb1]);
-        v[18] = ctxt[18].v_exp(d0_inter, k_XH_main,  allPositions[Xa2], allPositions[Hb2]);
-        v[19] = ctxt[19].v_exp(d0_inter, k_XH_main,  allPositions[Xb1], allPositions[Ha1]);
-        v[20] = ctxt[20].v_exp(d0_inter, k_XH_main,  allPositions[Xb1], allPositions[Ha2]);
-        v[21] = ctxt[21].v_exp(d0_inter, k_XH_main,  allPositions[Xb2], allPositions[Ha1]);
-        v[22] = ctxt[22].v_exp(d0_inter, k_XH_main,  allPositions[Xb2], allPositions[Ha2]);
+        v[15] = ctxt[15].v_exp(d0_inter, k_XH_main,  extraPoints[Xa1], allPositions[Hb1]);
+        v[16] = ctxt[16].v_exp(d0_inter, k_XH_main,  extraPoints[Xa1], allPositions[Hb2]);
+        v[17] = ctxt[17].v_exp(d0_inter, k_XH_main,  extraPoints[Xa2], allPositions[Hb1]);
+        v[18] = ctxt[18].v_exp(d0_inter, k_XH_main,  extraPoints[Xa2], allPositions[Hb2]);
+        v[19] = ctxt[19].v_exp(d0_inter, k_XH_main,  extraPoints[Xb1], allPositions[Ha1]);
+        v[20] = ctxt[20].v_exp(d0_inter, k_XH_main,  extraPoints[Xb1], allPositions[Ha2]);
+        v[21] = ctxt[21].v_exp(d0_inter, k_XH_main,  extraPoints[Xb2], allPositions[Ha1]);
+        v[22] = ctxt[22].v_exp(d0_inter, k_XH_main,  extraPoints[Xb2], allPositions[Ha2]);
 
-        v[23] = ctxt[23].v_exp(d0_inter, k_XO_main,  allPositions[Oa ], allPositions[Xb1]);
-        v[24] = ctxt[24].v_exp(d0_inter, k_XO_main,  allPositions[Oa ], allPositions[Xb2]);
-        v[25] = ctxt[25].v_exp(d0_inter, k_XO_main,  allPositions[Ob ], allPositions[Xa1]);
-        v[26] = ctxt[26].v_exp(d0_inter, k_XO_main,  allPositions[Ob ], allPositions[Xa2]);
+        v[23] = ctxt[23].v_exp(d0_inter, k_XO_main,  allPositions[Oa ], extraPoints[Xb1]);
+        v[24] = ctxt[24].v_exp(d0_inter, k_XO_main,  allPositions[Oa ], extraPoints[Xb2]);
+        v[25] = ctxt[25].v_exp(d0_inter, k_XO_main,  allPositions[Ob ], extraPoints[Xa1]);
+        v[26] = ctxt[26].v_exp(d0_inter, k_XO_main,  allPositions[Ob ], extraPoints[Xa2]);
 
-        v[27] = ctxt[27].v_exp(d0_inter, k_XX_main,  allPositions[Xa1], allPositions[Xb1]);
-        v[28] = ctxt[28].v_exp(d0_inter, k_XX_main,  allPositions[Xa1], allPositions[Xb2]);
-        v[29] = ctxt[29].v_exp(d0_inter, k_XX_main,  allPositions[Xa2], allPositions[Xb1]);
-        v[30] = ctxt[30].v_exp(d0_inter, k_XX_main,  allPositions[Xa2], allPositions[Xb2]);
+        v[27] = ctxt[27].v_exp(d0_inter, k_XX_main,  extraPoints[Xa1], extraPoints[Xb1]);
+        v[28] = ctxt[28].v_exp(d0_inter, k_XX_main,  extraPoints[Xa1], extraPoints[Xb2]);
+        v[29] = ctxt[29].v_exp(d0_inter, k_XX_main,  extraPoints[Xa2], extraPoints[Xb1]);
+        v[30] = ctxt[30].v_exp(d0_inter, k_XX_main,  extraPoints[Xa2], extraPoints[Xb2]);
 
         double g[31];
         const double E_poly = poly_2b_v6x_eval(thefit, v, g);
-
-        double xgrd[30];
-        std::fill(xgrd, xgrd + 30, 0.0);
 
 
         std::vector<RealVec> allForces;
