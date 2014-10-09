@@ -180,6 +180,9 @@ void testImageMolecules( bool runTestWithAtomImaging) {
     particlePositions[4]             = RealVec( 5.5, 0., 0. );
     particlePositions[5]             = RealVec( 4.5, 0., 0. );
 
+    std::vector<RealVec> originalParticlePositions(numberOfParticles);
+    originalParticlePositions = particlePositions;
+
     std::vector<std::vector<int> > allParticleIndices(6);
 
     allParticleIndices[0].push_back(0);
@@ -191,26 +194,19 @@ void testImageMolecules( bool runTestWithAtomImaging) {
     allParticleIndices[3].push_back(5);
 
     double imagedPositions[numberOfParticles*2];
-    imageMolecules(box, 0, 3, particlePositions, allParticleIndices, imagedPositions);
+    imageMolecules(box, particlePositions);
 
     if (runTestWithAtomImaging)
     {
         // Check that making periodic images of everything with respect to the first oxygen fails
-        int siteI = 0;
-        int siteJ = 3;
-
-        // Image the hydrogens of the second molecule with respect to the oxygen of the FIRST MOLECULE instead of SECOND
-        for(unsigned int a = 1; a < 3; ++a)
-            imageParticles(box, imagedPositions, particlePositions[allParticleIndices[siteJ][a]], imagedPositions + 9 + 3*a);
+        imageParticles(box, particlePositions[0], particlePositions[4]);
+        imageParticles(box, particlePositions[0], particlePositions[5]);
     }
 
     RealVec tempPosition;
     for (int i=0; i<numberOfParticles; i++) {
-           std::cout << "Position atom " << i << ": " << particlePositions[i] << " A" << std::endl;
-           for (int xyz=0; xyz<3; xyz++) {
-               tempPosition[xyz] = imagedPositions[3*i + xyz];
-           }
-           std::cout << "Imaged   atom " << i << ": " << tempPosition << " A" << std::endl;
+        std::cout << "Position atom " << i << ": " << originalParticlePositions[i] << " A" << std::endl;
+        std::cout << "Position atom " << i << ": " << particlePositions[i] << " A" << std::endl;
     }
 }
 
