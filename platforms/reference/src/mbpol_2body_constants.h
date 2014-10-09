@@ -12,7 +12,7 @@ struct variable {
     double v_coul(const double& r0, const double& k,
             RealVec& O1, RealVec& O2);
 
-    void grads(const double& gg, double* xgrd, int o1, int o2) const;
+    void grads(const double& gg, RealVec& O1, RealVec& O2) const;
 
     RealVec g;
 };
@@ -25,9 +25,9 @@ struct monomer {
                         const double& in_plane_g, const double& out_of_plane_g,
                         RealVec& x1, RealVec& x2);
 
-    void grads(const double* g1, const double* g2,
-               const double& in_plane_g, const double& out_of_plane_g,
-               double* grd) const;
+    void grads(RealVec& g1, RealVec& g2,
+                        const double& in_plane_g, const double& out_of_plane_g,
+                        RealVec& O, RealVec& H1, RealVec& H2 ) const;
 };
 
 // Parameters, TODO make those configurable in the xml together with polynomial coefficients

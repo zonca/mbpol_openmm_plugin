@@ -210,72 +210,77 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
         double xgrd[30];
         std::fill(xgrd, xgrd + 30, 0.0);
 
-        ctxt[0].grads(g[0], xgrd, Ha1, Ha2);
-        ctxt[1].grads(g[1], xgrd, Hb1, Hb2);
 
-        ctxt[2].grads(g[2], xgrd, Oa, Ha1);
-        ctxt[3].grads(g[3], xgrd, Oa, Ha2);
-        ctxt[4].grads(g[4], xgrd, Ob, Hb1);
-        ctxt[5].grads(g[5], xgrd, Ob, Hb2);
+        std::vector<RealVec> allForces;
+        allForces.resize(allPositions.size());
 
-        ctxt[6].grads(g[6], xgrd, Ha1, Hb1);
-        ctxt[7].grads(g[7], xgrd, Ha1, Hb2);
-        ctxt[8].grads(g[8], xgrd, Ha2, Hb1);
-        ctxt[9].grads(g[9], xgrd, Ha2, Hb2);
+        std::vector<RealVec> extraForces;
+        extraForces.resize(extraPoints.size());
 
-        ctxt[10].grads(g[10], xgrd, Oa, Hb1);
-        ctxt[11].grads(g[11], xgrd, Oa, Hb2);
-        ctxt[12].grads(g[12], xgrd, Ob, Ha1);
-        ctxt[13].grads(g[13], xgrd, Ob, Ha2);
+        ctxt[0].grads(g[0],   allForces[Ha1], allForces[Ha2]);
+        ctxt[1].grads(g[1],   allForces[Hb1], allForces[Hb2]);
 
-        ctxt[14].grads(g[14], xgrd, Oa, Ob);
+        ctxt[2].grads(g[2],   allForces[Oa ], allForces[Ha1]);
+        ctxt[3].grads(g[3],   allForces[Oa ], allForces[Ha2]);
+        ctxt[4].grads(g[4],   allForces[Ob ], allForces[Hb1]);
+        ctxt[5].grads(g[5],   allForces[Ob ], allForces[Hb2]);
 
-        ctxt[15].grads(g[15], xgrd, Xa1, Hb1);
-        ctxt[16].grads(g[16], xgrd, Xa1, Hb2);
-        ctxt[17].grads(g[17], xgrd, Xa2, Hb1);
-        ctxt[18].grads(g[18], xgrd, Xa2, Hb2);
-        ctxt[19].grads(g[19], xgrd, Xb1, Ha1);
-        ctxt[20].grads(g[20], xgrd, Xb1, Ha2);
-        ctxt[21].grads(g[21], xgrd, Xb2, Ha1);
-        ctxt[22].grads(g[22], xgrd, Xb2, Ha2);
+        ctxt[6].grads(g[6],   allForces[Ha1], allForces[Hb1]);
+        ctxt[7].grads(g[7],   allForces[Ha1], allForces[Hb2]);
+        ctxt[8].grads(g[8],   allForces[Ha2], allForces[Hb1]);
+        ctxt[9].grads(g[9],   allForces[Ha2], allForces[Hb2]);
 
-        ctxt[23].grads(g[23], xgrd, Oa, Xb1);
-        ctxt[24].grads(g[24], xgrd, Oa, Xb2);
-        ctxt[25].grads(g[25], xgrd, Ob, Xa1);
-        ctxt[26].grads(g[26], xgrd, Ob, Xa2);
+        ctxt[10].grads(g[10], allForces[Oa ], allForces[Hb1]);
+        ctxt[11].grads(g[11], allForces[Oa ], allForces[Hb2]);
+        ctxt[12].grads(g[12], allForces[Ob ], allForces[Ha1]);
+        ctxt[13].grads(g[13], allForces[Ob ], allForces[Ha2]);
 
-        ctxt[27].grads(g[27], xgrd, Xa1, Xb1);
-        ctxt[28].grads(g[28], xgrd, Xa1, Xb2);
-        ctxt[29].grads(g[29], xgrd, Xa2, Xb1);
-        ctxt[30].grads(g[30], xgrd, Xa2, Xb2);
+        ctxt[14].grads(g[14], allForces[Oa ], allForces[Ob]);
+
+        ctxt[15].grads(g[15], extraForces[Xa1], allForces[Hb1]);
+        ctxt[16].grads(g[16], extraForces[Xa1], allForces[Hb2]);
+        ctxt[17].grads(g[17], extraForces[Xa2], allForces[Hb1]);
+        ctxt[18].grads(g[18], extraForces[Xa2], allForces[Hb2]);
+        ctxt[19].grads(g[19], extraForces[Xb1], allForces[Ha1]);
+        ctxt[20].grads(g[20], extraForces[Xb1], allForces[Ha2]);
+        ctxt[21].grads(g[21], extraForces[Xb2], allForces[Ha1]);
+        ctxt[22].grads(g[22], extraForces[Xb2], allForces[Ha2]);
+
+        ctxt[23].grads(g[23], allForces[Oa ], extraForces[Xb1]);
+        ctxt[24].grads(g[24], allForces[Oa ], extraForces[Xb2]);
+        ctxt[25].grads(g[25], allForces[Ob ], extraForces[Xa1]);
+        ctxt[26].grads(g[26], allForces[Ob ], extraForces[Xa2]);
+
+        ctxt[27].grads(g[27], extraForces[Xa1], extraForces[Xb1]);
+        ctxt[28].grads(g[28], extraForces[Xa1], extraForces[Xb2]);
+        ctxt[29].grads(g[29], extraForces[Xa2], extraForces[Xb1]);
+        ctxt[30].grads(g[30], extraForces[Xa2], extraForces[Xb2]);
 
         // distribute gradients w.r.t. the X-points
 
-        ma.grads(xgrd + Xa1, xgrd + Xa2,
+        ma.grads(extraForces[Xa1], extraForces[Xa2],
                  in_plane_gamma, out_of_plane_gamma,
-                 xgrd + Oa);
+                 allForces[Oa], allForces[Ha1], allForces[Ha2]);
 
-        mb.grads(xgrd + Xb1, xgrd + Xb2,
+        mb.grads(extraForces[Xb1], extraForces[Xb2],
                  in_plane_gamma, out_of_plane_gamma,
-                 xgrd + Ob);
+                 allForces[Ob], allForces[Hb1], allForces[Hb2]);
 
         // the switch
 
         double gsw;
-        const double sw = f_switch(rOO, gsw);
+        double sw = f_switch(rOO, gsw);
 
         double cal2joule = 4.184;
 
-        for (int i = 0; i < 3; ++i) {
-            // first water molecule
-            forces[allParticleIndices[siteI][0]][i] += sw*xgrd[Oa + i]  * cal2joule * -10.;
-            forces[allParticleIndices[siteI][1]][i] += sw*xgrd[Ha1 + i] * cal2joule * -10.;
-            forces[allParticleIndices[siteI][2]][i] += sw*xgrd[Ha2 + i] * cal2joule * -10.;
-            // second water molecule
-            forces[allParticleIndices[siteJ][0]][i] += sw*xgrd[Ob + i]  * cal2joule * -10.;
-            forces[allParticleIndices[siteJ][1]][i] += sw*xgrd[Hb1 + i] * cal2joule * -10.;
-            forces[allParticleIndices[siteJ][2]][i] += sw*xgrd[Hb2 + i] * cal2joule * -10.;
-        }
+        // first water molecule
+        forces[allParticleIndices[siteI][0]] += allForces[Oa]  * sw * cal2joule * -10.;
+        forces[allParticleIndices[siteI][1]] += allForces[Ha1] * sw * cal2joule * -10.;
+        forces[allParticleIndices[siteI][2]] += allForces[Ha2] * sw * cal2joule * -10.;
+        // second water molecule
+        forces[allParticleIndices[siteJ][0]] += allForces[Ob]  * sw * cal2joule * -10.;
+        forces[allParticleIndices[siteJ][1]] += allForces[Hb1] * sw * cal2joule * -10.;
+        forces[allParticleIndices[siteJ][2]] += allForces[Hb2] * sw * cal2joule * -10.;
 
         // gradient of the switch
         gsw *= E_poly/rOO;
