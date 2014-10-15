@@ -208,6 +208,10 @@ void testImageMolecules( bool runTestWithAtomImaging) {
         std::cout << "Position atom " << i << ": " << originalParticlePositions[i] << " A" << std::endl;
         std::cout << "Position atom " << i << ": " << particlePositions[i] << " A" << std::endl;
     }
+
+    for (int i=0; i<numberOfParticles; i++) {
+        ASSERT_EQUAL_VEC( originalParticlePositions[i], particlePositions[i], 1e-6 );
+    }
 }
 
 int main( int numberOfArguments, char* argv[] ) {
