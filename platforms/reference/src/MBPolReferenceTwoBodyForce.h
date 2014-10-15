@@ -40,7 +40,7 @@ typedef  RealOpenMM (MBPolReferenceTwoBodyForce::*CombiningFunction)( RealOpenMM
 
 void imageParticles(const RealVec& box, const RealVec & referenceParticle, RealVec& particleToImage);
 
-void imageMolecules(const RealVec& box, std::vector<RealVec> allPositions);
+void imageMolecules(const RealVec& box, std::vector<RealVec>& allPositions);
 
 // ---------------------------------------------------------------------------------------
 

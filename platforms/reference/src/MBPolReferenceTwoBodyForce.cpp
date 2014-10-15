@@ -74,7 +74,7 @@ void imageParticles(const RealVec& box, const RealVec & referenceParticle, RealV
     }
 }
 
-void imageMolecules(const RealVec& box, std::vector<RealVec> allPositions)
+void imageMolecules(const RealVec& box, std::vector<RealVec>& allPositions)
 {
 
     // Take first oxygen as central atom
