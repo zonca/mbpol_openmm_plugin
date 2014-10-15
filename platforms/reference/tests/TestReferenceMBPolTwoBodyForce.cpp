@@ -56,7 +56,7 @@ using namespace MBPolPlugin;
 
 const double TOL = 1e-4;
 
-void testTwoBody( double boxDimension ) {
+void testTwoBody( double boxDimension, bool addPositionOffset ) {
 
     std::string testName      = "testMBPol2BodyInteraction";
 
@@ -108,6 +108,13 @@ void testTwoBody( double boxDimension ) {
         for (int j=0; j<3; j++) {
             positions[i][j] *= 1e-1;
         }
+    }
+
+    if (addPositionOffset) {
+        // move second molecule 1 box dimension in Y direction
+        positions[3][1] += boxDimension;
+        positions[4][1] += boxDimension;
+        positions[5][1] += boxDimension;
     }
 
     expectedForces[0]     = Vec3( -4.85337479, -4.47836379 ,-20.08989563);
@@ -164,7 +171,7 @@ void testTwoBody( double boxDimension ) {
 
 }
 
-void testImageMolecules( bool runTestWithAtomImaging) {
+void testImageMolecules( bool runTestWithAtomImaging, bool addPositionOffset) {
 
     double boxDimension = 10.;
     RealVec box( boxDimension, boxDimension, boxDimension );
@@ -182,6 +189,13 @@ void testImageMolecules( bool runTestWithAtomImaging) {
 
     std::vector<RealVec> originalParticlePositions(numberOfParticles);
     originalParticlePositions = particlePositions;
+
+    if (addPositionOffset) {
+        // move second molecule 1 box dimension in Y direction
+        particlePositions[3][0] += boxDimension;
+        particlePositions[4][0] += boxDimension;
+        particlePositions[5][0] += boxDimension;
+    }
 
     std::vector<std::vector<int> > allParticleIndices(6);
 
@@ -221,14 +235,22 @@ int main( int numberOfArguments, char* argv[] ) {
 
         double boxDimension = 0;
         std::cout << "TestReferenceMBPolTwoBodyForce Cluster" << std::endl;
-        testTwoBody( boxDimension );
-
-        std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions Huge Box" << std::endl;
-        boxDimension = 50;
-        testTwoBody( boxDimension);
+        testTwoBody( boxDimension, false );
 
         bool runTestWithAtomImaging = false;
-        testImageMolecules(runTestWithAtomImaging);
+        testImageMolecules(runTestWithAtomImaging, false);
+        // shift molecule of 1 boxDimension
+        testImageMolecules(runTestWithAtomImaging, true);
+
+        std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions" << std::endl;
+        boxDimension = 50;
+        testTwoBody( boxDimension, false);
+
+        std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
+        boxDimension = 50;
+        testTwoBody( boxDimension, true);
+
+
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
