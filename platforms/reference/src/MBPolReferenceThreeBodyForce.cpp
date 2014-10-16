@@ -143,6 +143,9 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
                 allPositions.push_back(particlePositions[allParticleIndices[*it][i]]);
         }
 
+        if( _nonbondedMethod == CutoffPeriodic )
+            imageMolecules(_periodicBoxDimensions, allPositions);
+
           double x[36];
 
           x[0] = var(kHH_intra, dHH_intra, allPositions[Ha1], allPositions[Ha2]);
