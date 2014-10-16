@@ -140,7 +140,7 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
         for (std::list<int>::iterator it = sites.begin(); it != sites.end(); it++)
         {
             for (unsigned int i=0; i < 3; i++)
-                allPositions.push_back(particlePositions[allParticleIndices[*it][i]] * nm_to_A);
+                allPositions.push_back(particlePositions[allParticleIndices[*it][i]]);
         }
 
           double x[36];
