@@ -25,10 +25,12 @@
 
 #include "MBPolReferenceForce.h"
 #include "MBPolReferenceThreeBodyForce.h"
+#include "MBPolReferenceTwoBodyForce.h"
 #include <algorithm>
 #include <cctype>
 #include "mbpol_3body_constants.h"
 #include "poly-3b-v2x.h"
+#include <list>
 
 using std::vector;
 using OpenMM::RealVec;
@@ -129,58 +131,60 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
         // same for the second water molecule
 
 
+        std::vector<RealVec> allPositions;
 
-        const OpenMM::RealVec& Oa  = particlePositions[allParticleIndices[siteI][0]];
-        const OpenMM::RealVec& Ha1 = particlePositions[allParticleIndices[siteI][1]];
-        const OpenMM::RealVec& Ha2 = particlePositions[allParticleIndices[siteI][2]];
+        // the iterator constructor can also be used to construct from arrays:
+        int sites_array[] = {siteI, siteJ, siteQ};
+        std::list<int> sites (sites_array, sites_array + sizeof(sites_array) / sizeof(int) );
 
-        const OpenMM::RealVec& Ob  = particlePositions[allParticleIndices[siteJ][0]];
-        const OpenMM::RealVec& Hb1 = particlePositions[allParticleIndices[siteJ][1]];
-        const OpenMM::RealVec& Hb2 = particlePositions[allParticleIndices[siteJ][2]];
+        for (std::list<int>::iterator it = sites.begin(); it != sites.end(); it++)
+        {
+            for (unsigned int i=0; i < 3; i++)
+                allPositions.push_back(particlePositions[allParticleIndices[*it][i]]);
+        }
 
-        const OpenMM::RealVec& Oc  = particlePositions[allParticleIndices[siteQ][0]];
-        const OpenMM::RealVec& Hc1 = particlePositions[allParticleIndices[siteQ][1]];
-        const OpenMM::RealVec& Hc2 = particlePositions[allParticleIndices[siteQ][2]];
+        if( _nonbondedMethod == CutoffPeriodic )
+            imageMolecules(_periodicBoxDimensions, allPositions);
 
           double x[36];
 
-          x[0] = var(kHH_intra, dHH_intra, Ha1, Ha2);
-          x[1] = var(kHH_intra, dHH_intra, Hb1, Hb2);
-          x[2] = var(kHH_intra, dHH_intra, Hc1, Hc2);
-          x[3] = var(kOH_intra, dOH_intra,  Oa, Ha1);
-          x[4] = var(kOH_intra, dOH_intra,  Oa, Ha2);
-          x[5] = var(kOH_intra, dOH_intra,  Ob, Hb1);
-          x[6] = var(kOH_intra, dOH_intra,  Ob, Hb2);
-          x[7] = var(kOH_intra, dOH_intra,  Oc, Hc1);
-          x[8] = var(kOH_intra, dOH_intra,  Oc, Hc2);
+          x[0] = var(kHH_intra, dHH_intra, allPositions[Ha1], allPositions[Ha2]);
+          x[1] = var(kHH_intra, dHH_intra, allPositions[Hb1], allPositions[Hb2]);
+          x[2] = var(kHH_intra, dHH_intra, allPositions[Hc1], allPositions[Hc2]);
+          x[3] = var(kOH_intra, dOH_intra, allPositions[ Oa], allPositions[Ha1]);
+          x[4] = var(kOH_intra, dOH_intra, allPositions[ Oa], allPositions[Ha2]);
+          x[5] = var(kOH_intra, dOH_intra, allPositions[ Ob], allPositions[Hb1]);
+          x[6] = var(kOH_intra, dOH_intra, allPositions[ Ob], allPositions[Hb2]);
+          x[7] = var(kOH_intra, dOH_intra, allPositions[ Oc], allPositions[Hc1]);
+          x[8] = var(kOH_intra, dOH_intra, allPositions[ Oc], allPositions[Hc2]);
 
-          x[9] =  var(kHH, dHH, Ha1, Hb1);
-          x[10] = var(kHH, dHH, Ha1, Hb2);
-          x[11] = var(kHH, dHH, Ha1, Hc1);
-          x[12] = var(kHH, dHH, Ha1, Hc2);
-          x[13] = var(kHH, dHH, Ha2, Hb1);
-          x[14] = var(kHH, dHH, Ha2, Hb2);
-          x[15] = var(kHH, dHH, Ha2, Hc1);
-          x[16] = var(kHH, dHH, Ha2, Hc2);
-          x[17] = var(kHH, dHH, Hb1, Hc1);
-          x[18] = var(kHH, dHH, Hb1, Hc2);
-          x[19] = var(kHH, dHH, Hb2, Hc1);
-          x[20] = var(kHH, dHH, Hb2, Hc2);
-          x[21] = var(kOH, dOH,  Oa, Hb1);
-          x[22] = var(kOH, dOH,  Oa, Hb2);
-          x[23] = var(kOH, dOH,  Oa, Hc1);
-          x[24] = var(kOH, dOH,  Oa, Hc2);
-          x[25] = var(kOH, dOH,  Ob, Ha1);
-          x[26] = var(kOH, dOH,  Ob, Ha2);
-          x[27] = var(kOH, dOH,  Ob, Hc1);
-          x[28] = var(kOH, dOH,  Ob, Hc2);
-          x[29] = var(kOH, dOH,  Oc, Ha1);
-          x[30] = var(kOH, dOH,  Oc, Ha2);
-          x[31] = var(kOH, dOH,  Oc, Hb1);
-          x[32] = var(kOH, dOH,  Oc, Hb2);
-          x[33] = var(kOO, dOO,  Oa,  Ob);
-          x[34] = var(kOO, dOO,  Oa,  Oc);
-          x[35] = var(kOO, dOO,  Ob,  Oc);
+          x[9] =  var(kHH, dHH, allPositions[Ha1], allPositions[Hb1]);
+          x[10] = var(kHH, dHH, allPositions[Ha1], allPositions[Hb2]);
+          x[11] = var(kHH, dHH, allPositions[Ha1], allPositions[Hc1]);
+          x[12] = var(kHH, dHH, allPositions[Ha1], allPositions[Hc2]);
+          x[13] = var(kHH, dHH, allPositions[Ha2], allPositions[Hb1]);
+          x[14] = var(kHH, dHH, allPositions[Ha2], allPositions[Hb2]);
+          x[15] = var(kHH, dHH, allPositions[Ha2], allPositions[Hc1]);
+          x[16] = var(kHH, dHH, allPositions[Ha2], allPositions[Hc2]);
+          x[17] = var(kHH, dHH, allPositions[Hb1], allPositions[Hc1]);
+          x[18] = var(kHH, dHH, allPositions[Hb1], allPositions[Hc2]);
+          x[19] = var(kHH, dHH, allPositions[Hb2], allPositions[Hc1]);
+          x[20] = var(kHH, dHH, allPositions[Hb2], allPositions[Hc2]);
+          x[21] = var(kOH, dOH, allPositions[ Oa], allPositions[Hb1]);
+          x[22] = var(kOH, dOH, allPositions[ Oa], allPositions[Hb2]);
+          x[23] = var(kOH, dOH, allPositions[ Oa], allPositions[Hc1]);
+          x[24] = var(kOH, dOH, allPositions[ Oa], allPositions[Hc2]);
+          x[25] = var(kOH, dOH, allPositions[ Ob], allPositions[Ha1]);
+          x[26] = var(kOH, dOH, allPositions[ Ob], allPositions[Ha2]);
+          x[27] = var(kOH, dOH, allPositions[ Ob], allPositions[Hc1]);
+          x[28] = var(kOH, dOH, allPositions[ Ob], allPositions[Hc2]);
+          x[29] = var(kOH, dOH, allPositions[ Oc], allPositions[Ha1]);
+          x[30] = var(kOH, dOH, allPositions[ Oc], allPositions[Ha2]);
+          x[31] = var(kOH, dOH, allPositions[ Oc], allPositions[Hb1]);
+          x[32] = var(kOH, dOH, allPositions[ Oc], allPositions[Hb2]);
+          x[33] = var(kOO, dOO, allPositions[ Oa], allPositions[ Ob]);
+          x[34] = var(kOO, dOO, allPositions[ Oa], allPositions[ Oc]);
+          x[35] = var(kOO, dOO, allPositions[ Ob], allPositions[ Oc]);
 
           double g[36];
           double retval = poly_3b_v2x::eval(thefit, x, g);
@@ -189,13 +193,13 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
           double drab(0), drac(0), drbc(0);
 
           for (int n = 0; n < 3; ++n) {
-              rab[n] = (Oa[n] - Ob[n])*nm_to_A;
+              rab[n] = (allPositions[Oa][n] - allPositions[Ob][n])*nm_to_A;
               drab += rab[n]*rab[n];
 
-              rac[n] = (Oa[n] - Oc[n])*nm_to_A;
+              rac[n] = (allPositions[Oa][n] - allPositions[Oc][n])*nm_to_A;
               drac += rac[n]*rac[n];
 
-              rbc[n] = (Ob[n] - Oc[n])*nm_to_A;
+              rbc[n] = (allPositions[Ob][n] - allPositions[Oc][n])*nm_to_A;
               drbc += rbc[n]*rbc[n];
           }
 
@@ -217,55 +221,46 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
           for (int n = 0; n < 36; ++n)
               g[n] *= s;
 
-          OpenMM::RealVec& gOa  = forces[allParticleIndices[siteI][0]];
-          OpenMM::RealVec& gHa1 = forces[allParticleIndices[siteI][1]];
-          OpenMM::RealVec& gHa2 = forces[allParticleIndices[siteI][2]];
+          std::vector<RealVec> allForces;
+          allForces.resize(allPositions.size());
 
-          OpenMM::RealVec& gOb  = forces[allParticleIndices[siteJ][0]];
-          OpenMM::RealVec& gHb1 = forces[allParticleIndices[siteJ][1]];
-          OpenMM::RealVec& gHb2 = forces[allParticleIndices[siteJ][2]];
+          g_var(g[0], kHH_intra, dHH_intra, allPositions[Ha1], allPositions[Ha2], allForces[ Ha1], allForces[ Ha2]);
+          g_var(g[1], kHH_intra, dHH_intra, allPositions[Hb1], allPositions[Hb2], allForces[ Hb1], allForces[ Hb2]);
+          g_var(g[2], kHH_intra, dHH_intra, allPositions[Hc1], allPositions[Hc2], allForces[ Hc1], allForces[ Hc2]);
+          g_var(g[3], kOH_intra, dOH_intra, allPositions[ Oa], allPositions[Ha1], allForces[  Oa], allForces[ Ha1]);
+          g_var(g[4], kOH_intra, dOH_intra, allPositions[ Oa], allPositions[Ha2], allForces[  Oa], allForces[ Ha2]);
+          g_var(g[5], kOH_intra, dOH_intra, allPositions[ Ob], allPositions[Hb1], allForces[  Ob], allForces[ Hb1]);
+          g_var(g[6], kOH_intra, dOH_intra, allPositions[ Ob], allPositions[Hb2], allForces[  Ob], allForces[ Hb2]);
+          g_var(g[7], kOH_intra, dOH_intra, allPositions[ Oc], allPositions[Hc1], allForces[  Oc], allForces[ Hc1]);
+          g_var(g[8], kOH_intra, dOH_intra, allPositions[ Oc], allPositions[Hc2], allForces[  Oc], allForces[ Hc2]);
+          g_var(g[9],  kHH, dHH,            allPositions[Ha1], allPositions[Hb1], allForces[ Ha1], allForces[ Hb1]);
+          g_var(g[10], kHH, dHH,            allPositions[Ha1], allPositions[Hb2], allForces[ Ha1], allForces[ Hb2]);
+          g_var(g[11], kHH, dHH,            allPositions[Ha1], allPositions[Hc1], allForces[ Ha1], allForces[ Hc1]);
+          g_var(g[12], kHH, dHH,            allPositions[Ha1], allPositions[Hc2], allForces[ Ha1], allForces[ Hc2]);
+          g_var(g[13], kHH, dHH,            allPositions[Ha2], allPositions[Hb1], allForces[ Ha2], allForces[ Hb1]);
+          g_var(g[14], kHH, dHH,            allPositions[Ha2], allPositions[Hb2], allForces[ Ha2], allForces[ Hb2]);
+          g_var(g[15], kHH, dHH,            allPositions[Ha2], allPositions[Hc1], allForces[ Ha2], allForces[ Hc1]);
+          g_var(g[16], kHH, dHH,            allPositions[Ha2], allPositions[Hc2], allForces[ Ha2], allForces[ Hc2]);
+          g_var(g[17], kHH, dHH,            allPositions[Hb1], allPositions[Hc1], allForces[ Hb1], allForces[ Hc1]);
+          g_var(g[18], kHH, dHH,            allPositions[Hb1], allPositions[Hc2], allForces[ Hb1], allForces[ Hc2]);
+          g_var(g[19], kHH, dHH,            allPositions[Hb2], allPositions[Hc1], allForces[ Hb2], allForces[ Hc1]);
+          g_var(g[20], kHH, dHH,            allPositions[Hb2], allPositions[Hc2], allForces[ Hb2], allForces[ Hc2]);
+          g_var(g[21], kOH, dOH,            allPositions[ Oa], allPositions[Hb1], allForces[  Oa], allForces[ Hb1]);
+          g_var(g[22], kOH, dOH,            allPositions[ Oa], allPositions[Hb2], allForces[  Oa], allForces[ Hb2]);
+          g_var(g[23], kOH, dOH,            allPositions[ Oa], allPositions[Hc1], allForces[  Oa], allForces[ Hc1]);
+          g_var(g[24], kOH, dOH,            allPositions[ Oa], allPositions[Hc2], allForces[  Oa], allForces[ Hc2]);
+          g_var(g[25], kOH, dOH,            allPositions[ Ob], allPositions[Ha1], allForces[  Ob], allForces[ Ha1]);
+          g_var(g[26], kOH, dOH,            allPositions[ Ob], allPositions[Ha2], allForces[  Ob], allForces[ Ha2]);
+          g_var(g[27], kOH, dOH,            allPositions[ Ob], allPositions[Hc1], allForces[  Ob], allForces[ Hc1]);
+          g_var(g[28], kOH, dOH,            allPositions[ Ob], allPositions[Hc2], allForces[  Ob], allForces[ Hc2]);
+          g_var(g[29], kOH, dOH,            allPositions[ Oc], allPositions[Ha1], allForces[  Oc], allForces[ Ha1]);
+          g_var(g[30], kOH, dOH,            allPositions[ Oc], allPositions[Ha2], allForces[  Oc], allForces[ Ha2]);
+          g_var(g[31], kOH, dOH,            allPositions[ Oc], allPositions[Hb1], allForces[  Oc], allForces[ Hb1]);
+          g_var(g[32], kOH, dOH,            allPositions[ Oc], allPositions[Hb2], allForces[  Oc], allForces[ Hb2]);
+          g_var(g[33], kOO, dOO,            allPositions[ Oa], allPositions[ Ob], allForces[  Oa], allForces[  Ob]);
+          g_var(g[34], kOO, dOO,            allPositions[ Oa], allPositions[ Oc], allForces[  Oa], allForces[  Oc]);
+          g_var(g[35], kOO, dOO,            allPositions[ Ob], allPositions[ Oc], allForces[  Ob], allForces[  Oc]);
 
-          OpenMM::RealVec& gOc  = forces[allParticleIndices[siteQ][0]];
-          OpenMM::RealVec& gHc1 = forces[allParticleIndices[siteQ][1]];
-          OpenMM::RealVec& gHc2 = forces[allParticleIndices[siteQ][2]];
-
-          g_var(g[0], kHH_intra, dHH_intra, Ha1, Ha2, gHa1, gHa2);
-          g_var(g[1], kHH_intra, dHH_intra, Hb1, Hb2, gHb1, gHb2);
-          g_var(g[2], kHH_intra, dHH_intra, Hc1, Hc2, gHc1, gHc2);
-          g_var(g[3], kOH_intra, dOH_intra,  Oa, Ha1,  gOa, gHa1);
-          g_var(g[4], kOH_intra, dOH_intra,  Oa, Ha2,  gOa, gHa2);
-          g_var(g[5], kOH_intra, dOH_intra,  Ob, Hb1,  gOb, gHb1);
-          g_var(g[6], kOH_intra, dOH_intra,  Ob, Hb2,  gOb, gHb2);
-          g_var(g[7], kOH_intra, dOH_intra,  Oc, Hc1,  gOc, gHc1);
-          g_var(g[8], kOH_intra, dOH_intra,  Oc, Hc2,  gOc, gHc2);
-
-          g_var(g[9],  kHH, dHH, Ha1, Hb1, gHa1, gHb1);
-          g_var(g[10], kHH, dHH, Ha1, Hb2, gHa1, gHb2);
-          g_var(g[11], kHH, dHH, Ha1, Hc1, gHa1, gHc1);
-          g_var(g[12], kHH, dHH, Ha1, Hc2, gHa1, gHc2);
-          g_var(g[13], kHH, dHH, Ha2, Hb1, gHa2, gHb1);
-          g_var(g[14], kHH, dHH, Ha2, Hb2, gHa2, gHb2);
-          g_var(g[15], kHH, dHH, Ha2, Hc1, gHa2, gHc1);
-          g_var(g[16], kHH, dHH, Ha2, Hc2, gHa2, gHc2);
-          g_var(g[17], kHH, dHH, Hb1, Hc1, gHb1, gHc1);
-          g_var(g[18], kHH, dHH, Hb1, Hc2, gHb1, gHc2);
-          g_var(g[19], kHH, dHH, Hb2, Hc1, gHb2, gHc1);
-          g_var(g[20], kHH, dHH, Hb2, Hc2, gHb2, gHc2);
-          g_var(g[21], kOH, dOH,  Oa, Hb1,  gOa, gHb1);
-          g_var(g[22], kOH, dOH,  Oa, Hb2,  gOa, gHb2);
-          g_var(g[23], kOH, dOH,  Oa, Hc1,  gOa, gHc1);
-          g_var(g[24], kOH, dOH,  Oa, Hc2,  gOa, gHc2);
-          g_var(g[25], kOH, dOH,  Ob, Ha1,  gOb, gHa1);
-          g_var(g[26], kOH, dOH,  Ob, Ha2,  gOb, gHa2);
-          g_var(g[27], kOH, dOH,  Ob, Hc1,  gOb, gHc1);
-          g_var(g[28], kOH, dOH,  Ob, Hc2,  gOb, gHc2);
-          g_var(g[29], kOH, dOH,  Oc, Ha1,  gOc, gHa1);
-          g_var(g[30], kOH, dOH,  Oc, Ha2,  gOc, gHa2);
-          g_var(g[31], kOH, dOH,  Oc, Hb1,  gOc, gHb1);
-          g_var(g[32], kOH, dOH,  Oc, Hb2,  gOc, gHb2);
-          g_var(g[33], kOO, dOO,  Oa,  Ob,  gOa,  gOb);
-          g_var(g[34], kOO, dOO,  Oa,  Oc,  gOa,  gOc);
-          g_var(g[35], kOO, dOO,  Ob,  Oc,  gOb,  gOc);
 
           // gradients of the switching function
 
@@ -278,9 +273,19 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
           const double cal2joule = 4.184;
 
           for (int n = 0; n < 3; ++n) {
-              gOa[n] += (gab*rab[n] + gac*rac[n]) * cal2joule * -nm_to_A;
-              gOb[n] += (gbc*rbc[n] - gab*rab[n]) * cal2joule * -nm_to_A;
-              gOc[n] -= (gac*rac[n] + gbc*rbc[n]) * cal2joule * -nm_to_A;
+              allForces[Oa][n] += (gab*rab[n] + gac*rac[n]) * cal2joule * -nm_to_A;
+              allForces[Ob][n] += (gbc*rbc[n] - gab*rab[n]) * cal2joule * -nm_to_A;
+              allForces[Oc][n] -= (gac*rac[n] + gbc*rbc[n]) * cal2joule * -nm_to_A;
+          }
+
+          unsigned int j = 0;
+          for (std::list<int>::iterator it = sites.begin(); it != sites.end(); it++)
+          {
+              for (unsigned int i=0; i < 3; i++)
+              {
+                  forces[allParticleIndices[*it][i]] += allForces[j];
+                  j++;
+              }
           }
 
     RealOpenMM energy=retval * cal2joule;
