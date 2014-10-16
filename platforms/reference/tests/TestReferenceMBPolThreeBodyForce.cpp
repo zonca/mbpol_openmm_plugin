@@ -54,16 +54,25 @@ using namespace MBPolPlugin;
 
 const double TOL = 1e-4;
 
-void testThreeBody( FILE* log ) {
+void testThreeBody( double boxDimension, bool addPositionOffset ) {
 
     std::string testName      = "testMBPolThreeBodyInteraction";
 
     System system;
     int numberOfParticles          = 9;
     MBPolThreeBodyForce* mbpolThreeBodyForce = new MBPolThreeBodyForce();
-    double cutoff = 1e10;
+    double cutoff = 10;
     mbpolThreeBodyForce->setCutoff( cutoff );
-    mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffNonPeriodic);
+
+    if( boxDimension > 0.0 ){
+            Vec3 a( boxDimension, 0.0, 0.0 );
+            Vec3 b( 0.0, boxDimension, 0.0 );
+            Vec3 c( 0.0, 0.0, boxDimension );
+            system.setDefaultPeriodicBoxVectors( a, b, c );
+            mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffPeriodic);
+        } else {
+            mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffNonPeriodic);
+        }
 
     unsigned int particlesPerMolecule = 3;
 
@@ -101,6 +110,13 @@ void testThreeBody( FILE* log ) {
         for (int j=0; j<3; j++) {
             positions[i][j] *= 1e-1;
         }
+    }
+
+    if (addPositionOffset) {
+        // move second molecule 1 box dimension in Y direction
+        positions[3][1] += boxDimension;
+        positions[4][1] += boxDimension;
+        positions[5][1] += boxDimension;
     }
 
     expectedForces[0]     = Vec3(  0.29919011, -0.34960381, -0.16238472 );
@@ -172,9 +188,18 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolThreeBodyForce running test..." << std::endl;
 
-        FILE* log = NULL;
 
-        testThreeBody( log );
+        double boxDimension = 0;
+        std::cout << "TestReferenceMBPolThreeBodyForce Cluster" << std::endl;
+        testThreeBody( boxDimension, false );
+
+        std::cout << "TestReferenceMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
+        boxDimension = 50;
+        testThreeBody( boxDimension, false);
+
+        std::cout << "TestReferenceMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
+        boxDimension = 50;
+        testThreeBody( boxDimension, true);
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
