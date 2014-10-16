@@ -275,6 +275,16 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
               allForces[Oc][n] -= (gac*rac[n] + gbc*rbc[n]) * cal2joule * -nm_to_A;
           }
 
+          unsigned int j = 0;
+          for (std::list<int>::iterator it = sites.begin(); it != sites.end(); it++)
+          {
+              for (unsigned int i=0; i < 3; i++)
+              {
+                  forces[allParticleIndices[*it][i]] += allForces[j];
+                  j++;
+              }
+          }
+
     RealOpenMM energy=retval * cal2joule;
 
     return energy;
