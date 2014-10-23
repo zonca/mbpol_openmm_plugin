@@ -29,10 +29,6 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-/**
- * This tests the Reference implementation of ReferenceMBPolThreeBodyForce.
- */
-
 #include "openmm/internal/AssertionUtilities.h"
 #include "openmm/Context.h"
 #include "OpenMMMBPol.h"
@@ -55,15 +51,24 @@ using namespace MBPolPlugin;
 
 const double TOL = 1e-4;
 
-void testThreeBody( FILE* log ) {
+void testDispersion( double boxDimension, bool addPositionOffset ) {
 
     std::string testName      = "testMBPolDispersionForceTest";
 
     System system;
     // Dispersion Force
     MBPolDispersionForce* dispersionForce = new MBPolDispersionForce();
-    dispersionForce->setCutoff( 1e10 );
-    dispersionForce->setNonbondedMethod(MBPolDispersionForce::CutoffNonPeriodic);
+    dispersionForce->setCutoff( 10 );
+
+    if( boxDimension > 0.0 ){
+        Vec3 a( boxDimension, 0.0, 0.0 );
+        Vec3 b( 0.0, boxDimension, 0.0 );
+        Vec3 c( 0.0, 0.0, boxDimension );
+        system.setDefaultPeriodicBoxVectors( a, b, c );
+        dispersionForce->setNonbondedMethod(MBPolDispersionForce::CutoffPeriodic);
+    } else {
+        dispersionForce->setNonbondedMethod(MBPolDispersionForce::CutoffNonPeriodic);
+    }
 
     int numberOfWaterMolecules = 3;
     unsigned int particlesPerMolecule = 3;
@@ -108,6 +113,13 @@ void testThreeBody( FILE* log ) {
         for (int j=0; j<3; j++) {
             positions[i][j] *= 1e-1;
         }
+    }
+
+    if (addPositionOffset) {
+        // move second molecule 1 box dimension in Y direction
+        positions[3][1] += boxDimension;
+        positions[4][1] += boxDimension;
+        positions[5][1] += boxDimension;
     }
 
     expectedForces[0]     = Vec3( 0.08571609, -2.87858990,  9.55466024 );
@@ -176,7 +188,17 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         FILE* log = NULL;
 
-        testThreeBody( log );
+        std::cout << "TestReferenceMBPolDispersionForce" << std::endl;
+        double boxDimension = 0;
+        testDispersion( boxDimension, false );
+
+        std::cout << "TestReferenceMBPolDispersionForce Periodic boundary conditions" << std::endl;
+        boxDimension = 50;
+        testDispersion( boxDimension, false );
+
+        std::cout << "TestReferenceMBPolDispersionForce Periodic boundary conditions with offset" << std::endl;
+        boxDimension = 50;
+        testDispersion( boxDimension, true );
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
