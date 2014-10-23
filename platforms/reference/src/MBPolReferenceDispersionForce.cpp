@@ -25,6 +25,7 @@
 
 #include "MBPolReferenceForce.h"
 #include "MBPolReferenceDispersionForce.h"
+#include "MBPolReferenceTwoBodyForce.h"
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -118,9 +119,9 @@ inline double x6(const double& C6, const double& d6,
                  const OpenMM::RealVec& p1, const OpenMM::RealVec& p2,
                  OpenMM::RealVec& g1,       OpenMM::RealVec& g2)
 {
-    const double dx = (p1[0] - p2[0])*nm_to_A;
-    const double dy = (p1[1] - p2[1])*nm_to_A;
-    const double dz = (p1[2] - p2[2])*nm_to_A;
+    const double dx = (p1[0] - p2[0]);
+    const double dy = (p1[1] - p2[1]);
+    const double dz = (p1[2] - p2[2]);
 
     const double rsq = dx*dx + dy*dy + dz*dz;
     const double r = std::sqrt(rsq);
@@ -161,15 +162,6 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
         // same for the second water molecule
 
 
-
-        const OpenMM::RealVec& Oa  = particlePositions[allParticleIndices[siteI][0]];
-        const OpenMM::RealVec& Ha1 = particlePositions[allParticleIndices[siteI][1]];
-        const OpenMM::RealVec& Ha2 = particlePositions[allParticleIndices[siteI][2]];
-
-        const OpenMM::RealVec& Ob  = particlePositions[allParticleIndices[siteJ][0]];
-        const OpenMM::RealVec& Hb1 = particlePositions[allParticleIndices[siteJ][1]];
-        const OpenMM::RealVec& Hb2 = particlePositions[allParticleIndices[siteJ][2]];
-
         OpenMM::RealVec& gOa  = forces[allParticleIndices[siteI][0]];
         OpenMM::RealVec& gHa1 = forces[allParticleIndices[siteI][1]];
         OpenMM::RealVec& gHa2 = forces[allParticleIndices[siteI][2]];
@@ -178,24 +170,34 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
         OpenMM::RealVec& gHb1 = forces[allParticleIndices[siteJ][1]];
         OpenMM::RealVec& gHb2 = forces[allParticleIndices[siteJ][2]];
 
+        std::vector<RealVec> allPositions;
+
+        for (unsigned int i=0; i < 3; i++)
+            allPositions.push_back(particlePositions[allParticleIndices[siteI][i]] * nm_to_A);
+        for (unsigned int i=0; i < 3; i++)
+            allPositions.push_back(particlePositions[allParticleIndices[siteJ][i]] * nm_to_A);
+
+        if( _nonbondedMethod == CutoffPeriodic )
+            imageMolecules(_periodicBoxDimensions, allPositions);
+
         const double HH6 =
-               x6(C6_HH, d6_HH, Ha1, Hb1, gHa1, gHb1)
-             + x6(C6_HH, d6_HH, Ha1, Hb2, gHa1, gHb2)
-             + x6(C6_HH, d6_HH, Ha2, Hb1, gHa2, gHb1)
-             + x6(C6_HH, d6_HH, Ha2, Hb2, gHa2, gHb2);
+               x6(C6_HH, d6_HH, allPositions[Ha1], allPositions[Hb1], gHa1, gHb1)
+             + x6(C6_HH, d6_HH, allPositions[Ha1], allPositions[Hb2], gHa1, gHb2)
+             + x6(C6_HH, d6_HH, allPositions[Ha2], allPositions[Hb1], gHa2, gHb1)
+             + x6(C6_HH, d6_HH, allPositions[Ha2], allPositions[Hb2], gHa2, gHb2);
 
-           const double OH6 =
-               x6(C6_OH, d6_OH, Oa, Hb1, gOa, gHb1)
-             + x6(C6_OH, d6_OH, Oa, Hb2, gOa, gHb2)
-             + x6(C6_OH, d6_OH, Ob, Ha1, gOb, gHa1)
-             + x6(C6_OH, d6_OH, Ob, Ha2, gOb, gHa2);
+        const double OH6 =
+           x6(C6_OH, d6_OH, allPositions[Oa ], allPositions[Hb1], gOa, gHb1)
+         + x6(C6_OH, d6_OH, allPositions[Oa ], allPositions[Hb2], gOa, gHb2)
+         + x6(C6_OH, d6_OH, allPositions[Ob ], allPositions[Ha1], gOb, gHa1)
+         + x6(C6_OH, d6_OH, allPositions[Ob ], allPositions[Ha2], gOb, gHa2);
 
-           const double OO6 =
-               x6(C6_OO, d6_OO, Oa, Ob, gOa, gOb);
+        const double OO6 =
+           x6(C6_OO, d6_OO, allPositions[Oa ], allPositions[Ob ], gOa, gOb);
 
-    RealOpenMM energy= (HH6 + OH6 + OO6);
+        RealOpenMM energy= (HH6 + OH6 + OO6);
 
-    return energy;
+        return energy;
 
 }
 
