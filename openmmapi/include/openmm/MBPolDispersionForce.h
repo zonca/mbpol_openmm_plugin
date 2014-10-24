@@ -153,6 +153,28 @@ public:
      */
     void updateParametersInContext(Context& context);
 
+    /**
+     * Get whether to add a contribution to the energy that approximately represents the effect of VdW
+     * interactions beyond the cutoff distance.  The energy depends on the volume of the periodic box, and is only
+     * applicable when periodic boundary conditions are used.  When running simulations at constant pressure, adding
+     * this contribution can improve the quality of results.
+     */
+    bool getUseDispersionCorrection() const {
+        return useDispersionCorrection;
+    }
+
+
+    /**
+     * Set whether to add a contribution to the energy that approximately represents the effect of VdW
+     * interactions beyond the cutoff distance.  The energy depends on the volume of the periodic box, and is only
+     * applicable when periodic boundary conditions are used.  When running simulations at constant pressure, adding
+     * this contribution can improve the quality of results.
+     */
+    void setUseDispersionCorrection(bool useCorrection) {
+        useDispersionCorrection = useCorrection;
+    }
+
+
 protected:
     ForceImpl* createImpl() const;
 private:
@@ -163,6 +185,8 @@ private:
 
     std::vector<DispersionInfo> parameters;
     std::vector< std::vector< std::vector<double> > > sigEpsTable;
+    bool useDispersionCorrection;
+
 };
 
 class MBPolDispersionForce::DispersionInfo {
