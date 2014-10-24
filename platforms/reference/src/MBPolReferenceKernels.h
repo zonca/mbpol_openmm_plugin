@@ -281,6 +281,7 @@ private:
     int useCutoff;
     int usePBC;
     double cutoff;
+    double dispersionCoefficient;
     std::vector< std::vector<int> > allParticleIndices;
     const System& system;
     NeighborList* neighborList;

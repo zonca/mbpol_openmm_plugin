@@ -62,7 +62,8 @@ public:
         return std::map<std::string, double>(); // This force field doesn't define any parameters.
     }
     std::vector<std::string> getKernelNames();
-
+    double evalIntegral(double r, double rs, double rc, double sigma);
+    static double calcDispersionCorrection(const System& system, const MBPolDispersionForce& force);
 
     void updateParametersInContext(ContextImpl& context);
 private:

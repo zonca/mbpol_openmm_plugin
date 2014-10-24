@@ -580,6 +580,7 @@ void ReferenceCalcMBPolDispersionForceKernel::initialize(const OpenMM::System& s
     usePBC                 = (force.getNonbondedMethod() == MBPolDispersionForce::CutoffPeriodic);
     cutoff                 = force.getCutoff();
     neighborList           = useCutoff ? new NeighborList() : NULL;
+    dispersionCoefficient  = force.getUseDispersionCorrection() ?  MBPolDispersionForceImpl::calcDispersionCorrection(system, force) : 0.0;
 
 }
 
@@ -600,6 +601,8 @@ double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bo
     dispersionForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
     computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+
+    RealOpenMM dispersionCorrection = 0;
     if( usePBC ){
         dispersionForce.setNonbondedMethod( MBPolReferenceDispersionForce::CutoffPeriodic);
         RealVec& box = extractBoxSize(context);
@@ -608,11 +611,13 @@ double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bo
             throw OpenMMException("The periodic box size has decreased to less than twice the cutoff.");
         }
         dispersionForce.setPeriodicBox(box);
+        dispersionCorrection = dispersionCoefficient/(box[0]*box[1]*box[2]);
     } else {
         dispersionForce.setNonbondedMethod( MBPolReferenceDispersionForce::CutoffNonPeriodic);
     }
     // here we need allPosData, every atom!
     energy  = dispersionForce.calculateForceAndEnergy( numParticles, allPosData, allParticleIndices, *neighborList, forceData);
+    energy += dispersionCorrection;
 
     return static_cast<double>(energy);
 }

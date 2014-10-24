@@ -66,6 +66,7 @@ void testDispersion( double boxDimension, bool addPositionOffset ) {
         Vec3 c( 0.0, 0.0, boxDimension );
         system.setDefaultPeriodicBoxVectors( a, b, c );
         dispersionForce->setNonbondedMethod(MBPolDispersionForce::CutoffPeriodic);
+        dispersionForce->setUseDispersionCorrection(true);
     } else {
         dispersionForce->setNonbondedMethod(MBPolDispersionForce::CutoffNonPeriodic);
     }
