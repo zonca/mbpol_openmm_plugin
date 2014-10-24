@@ -37,6 +37,7 @@
 #include "openmm/internal/MBPolThreeBodyForceImpl.h"
 #include "openmm/internal/MBPolDispersionForceImpl.h"
 #include "openmm/NonbondedForce.h"
+#include "openmm/System.h"
 #include "openmm/internal/NonbondedForceImpl.h"
 
 #include <cmath>

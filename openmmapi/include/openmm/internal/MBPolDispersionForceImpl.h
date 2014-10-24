@@ -35,13 +35,12 @@
 #include "openmm/internal/ForceImpl.h"
 #include "openmm/MBPolDispersionForce.h"
 #include "openmm/Kernel.h"
+#include "openmm/System.h"
 #include <utility>
 #include <set>
 #include <string>
 
 namespace MBPolPlugin {
-
-class System;
 
 /**
  * This is the internal implementation of MBPolDispersionForce.
