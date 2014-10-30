@@ -76,45 +76,6 @@ double MBPolDispersionForceImpl::calcForcesAndEnergy(ContextImpl& context, bool 
 }
 
 
-
-double MBPolDispersionForceImpl::evalIntegral(double r, double rs, double rc, double sigma) {
-    // Compute the indefinite integral of the LJ interaction multiplied by the switching function.
-    // This is a large and somewhat horrifying expression, though it does grow on you if you look
-    // at it long enough.  Perhaps it could be simplified further, but I got tired of working on it.
-
-    double A = 1/(rc-rs);
-    double A2 = A*A;
-    double A3 = A2*A;
-    double sig2 = sigma*sigma;
-    double sig6 = sig2*sig2*sig2;
-    double rs2 = rs*rs;
-    double rs3 = rs*rs2;
-    double r2 = r*r;
-    double r3 = r*r2;
-    double r4 = r*r3;
-    double r5 = r*r4;
-    double r6 = r*r5;
-    double r9 = r3*r6;
-    return sig6*A3*((
-        sig6*(
-            + rs3*28*(6*rs2*A2 + 15*rs*A + 10)
-            - r*rs2*945*(rs2*A2 + 2*rs*A + 1)
-            + r2*rs*1080*(2*rs2*A2 + 3*rs*A + 1)
-            - r3*420*(6*rs2*A2 + 6*rs*A + 1)
-            + r4*756*(2*rs*A2 + A)
-            - r5*378*A2)
-        -r6*(
-            + rs3*84*(6*rs2*A2 + 15*rs*A + 10)
-            - r*rs2*3780*(rs2*A2 + 2*rs*A + 1)
-            + r2*rs*7560*(2*rs2*A2 + 3*rs*A + 1))
-        )/(252*r9)
-     - log(r)*10*(6*rs2*A2 + 6*rs*A + 1)
-     + r*15*(2*rs*A2 + A)
-     - r2*3*A2
-    );
-}
-
-
 double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, const MBPolDispersionForce& force) {
     if (force.getNonbondedMethod() == MBPolDispersionForce::NoCutoff || force.getNonbondedMethod() == MBPolDispersionForce::CutoffNonPeriodic)
         return 0.0;
@@ -138,9 +99,7 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
     // Loop over all pairs of classes to compute the coefficient.
 
     double sum1 = 0, sum2 = 0, sum3 = 0;
-//    bool useSwitch = force.getUseSwitchingFunction();
     double cutoff = force.getCutoff();
-//    double switchDist = force.getSwitchingDistance();
     for (map<pair<double, double>, int>::const_iterator entry = classCounts.begin(); entry != classCounts.end(); ++entry) {
         double sigma = entry->first.first;
         double epsilon = entry->first.second;
@@ -150,8 +109,6 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
         double sigma6 = sigma2*sigma2*sigma2;
         sum1 += count*epsilon*sigma6*sigma6;
         sum2 += count*epsilon*sigma6;
-//        if (useSwitch)
-//            sum3 += count*epsilon*(evalIntegral(cutoff, switchDist, cutoff, sigma)-evalIntegral(switchDist, switchDist, cutoff, sigma));
     }
     for (map<pair<double, double>, int>::const_iterator class1 = classCounts.begin(); class1 != classCounts.end(); ++class1)
         for (map<pair<double, double>, int>::const_iterator class2 = classCounts.begin(); class2 != class1; ++class2) {
@@ -163,8 +120,6 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
             double sigma6 = sigma2*sigma2*sigma2;
             sum1 += count*epsilon*sigma6*sigma6;
             sum2 += count*epsilon*sigma6;
-//            if (useSwitch)
-//                sum3 += count*epsilon*(evalIntegral(cutoff, switchDist, cutoff, sigma)-evalIntegral(switchDist, switchDist, cutoff, sigma));
         }
     double numParticles = (double) system.getNumParticles();
     double numInteractions = (numParticles*(numParticles+1))/2;
