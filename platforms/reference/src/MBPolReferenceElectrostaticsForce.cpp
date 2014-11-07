@@ -3138,27 +3138,27 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     RealOpenMM ci    = particleI.charge;
 
-    RealOpenMM di1   = particleI.dipole[0];
-    RealOpenMM di2   = particleI.dipole[1];
-    RealOpenMM di3   = particleI.dipole[2];
-
-    RealOpenMM qi1   = particleI.quadrupole[QXX];
-    RealOpenMM qi2   = particleI.quadrupole[QXY];
-    RealOpenMM qi3   = particleI.quadrupole[QXZ];
-    RealOpenMM qi5   = particleI.quadrupole[QYY];
-    RealOpenMM qi6   = particleI.quadrupole[QYZ];
-    RealOpenMM qi9   = -(particleI.quadrupole[QXX] + particleI.quadrupole[QYY]);
-
-    RealOpenMM dk1  = particleJ.dipole[0];
-    RealOpenMM dk2  = particleJ.dipole[1];
-    RealOpenMM dk3  = particleJ.dipole[2];
-
-    RealOpenMM qk1   = particleJ.quadrupole[QXX];
-    RealOpenMM qk2   = particleJ.quadrupole[QXY];
-    RealOpenMM qk3   = particleJ.quadrupole[QXZ];
-    RealOpenMM qk5   = particleJ.quadrupole[QYY];
-    RealOpenMM qk6   = particleJ.quadrupole[QYZ];
-    RealOpenMM qk9   = -(particleJ.quadrupole[QXX] + particleJ.quadrupole[QYY]);
+//    RealOpenMM di1   = particleI.dipole[0];
+//    RealOpenMM di2   = particleI.dipole[1];
+//    RealOpenMM di3   = particleI.dipole[2];
+//
+//    RealOpenMM qi1   = particleI.quadrupole[QXX];
+//    RealOpenMM qi2   = particleI.quadrupole[QXY];
+//    RealOpenMM qi3   = particleI.quadrupole[QXZ];
+//    RealOpenMM qi5   = particleI.quadrupole[QYY];
+//    RealOpenMM qi6   = particleI.quadrupole[QYZ];
+//    RealOpenMM qi9   = -(particleI.quadrupole[QXX] + particleI.quadrupole[QYY]);
+//
+//    RealOpenMM dk1  = particleJ.dipole[0];
+//    RealOpenMM dk2  = particleJ.dipole[1];
+//    RealOpenMM dk3  = particleJ.dipole[2];
+//
+//    RealOpenMM qk1   = particleJ.quadrupole[QXX];
+//    RealOpenMM qk2   = particleJ.quadrupole[QXY];
+//    RealOpenMM qk3   = particleJ.quadrupole[QXZ];
+//    RealOpenMM qk5   = particleJ.quadrupole[QYY];
+//    RealOpenMM qk6   = particleJ.quadrupole[QYZ];
+//    RealOpenMM qk9   = -(particleJ.quadrupole[QXX] + particleJ.quadrupole[QYY]);
 
     // calculate the real space error function terms
 
@@ -3193,8 +3193,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     RealOpenMM rr3    = rr1/r2;
     RealOpenMM rr5    = 3.0*rr3/r2;
     RealOpenMM rr7    = 5.0*rr5/r2;
-    RealOpenMM rr9    = 7.0*rr7/r2;
-    RealOpenMM rr11   = 9.0*rr9/r2;
+//    RealOpenMM rr9    = 7.0*rr7/r2;
+//    RealOpenMM rr11   = 9.0*rr9/r2;
 
 //    RealOpenMM scale1 = 1.0;
 //    RealOpenMM scale3 = 1.0;
@@ -3229,6 +3229,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 //    RealOpenMM usc5 = 1.0 - scale5;
 //    RealOpenMM usc7 = 1.0 - scale7;
 
+#if 0
     // construct necessary auxiliary vectors
 
     RealOpenMM dixdk1       = di2*dk3 - di3*dk2;
@@ -3382,18 +3383,20 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     RealOpenMM sc10         = qi1*qk1 + qi2*qk2 + qi3*qk3
                          + qi2*qk2 + qi5*qk5 + qi6*qk6
                          + qi3*qk3 + qi6*qk6 + qi9*qk9;
+#endif
 
     // calculate the scalar products for induced components
 
-    RealOpenMM sci1         = _inducedDipole[iIndex][0]*dk1 + _inducedDipole[iIndex][1]*dk2
-                         + _inducedDipole[iIndex][2]*dk3 + di1*_inducedDipole[jIndex][0]
-                         + di2*_inducedDipole[jIndex][1] + di3*_inducedDipole[jIndex][2];
+//    RealOpenMM sci1         = _inducedDipole[iIndex][0]*dk1 + _inducedDipole[iIndex][1]*dk2
+//                         + _inducedDipole[iIndex][2]*dk3 + di1*_inducedDipole[jIndex][0]
+//                         + di2*_inducedDipole[jIndex][1] + di3*_inducedDipole[jIndex][2];
 
     RealOpenMM sci3         = _inducedDipole[iIndex][0]*xr + _inducedDipole[iIndex][1]*yr + _inducedDipole[iIndex][2]*zr;
     RealOpenMM sci4         = _inducedDipole[jIndex][0]*xr + _inducedDipole[jIndex][1]*yr + _inducedDipole[jIndex][2]*zr;
-    RealOpenMM sci7         = qir1*_inducedDipole[jIndex][0] + qir2*_inducedDipole[jIndex][1] + qir3*_inducedDipole[jIndex][2];
-    RealOpenMM sci8         = qkr1*_inducedDipole[iIndex][0] + qkr2*_inducedDipole[iIndex][1] + qkr3*_inducedDipole[iIndex][2];
-    RealOpenMM scip1        = _inducedDipolePolar[iIndex][0]*dk1 + _inducedDipolePolar[iIndex][1]*dk2 + _inducedDipolePolar[iIndex][2]*dk3 + di1*_inducedDipolePolar[jIndex][0] + di2*_inducedDipolePolar[jIndex][1] + di3*_inducedDipolePolar[jIndex][2];
+//    RealOpenMM sci7         = qir1*_inducedDipole[jIndex][0] + qir2*_inducedDipole[jIndex][1] + qir3*_inducedDipole[jIndex][2];
+//    RealOpenMM sci8         = qkr1*_inducedDipole[iIndex][0] + qkr2*_inducedDipole[iIndex][1] + qkr3*_inducedDipole[iIndex][2];
+
+//    RealOpenMM scip1        = _inducedDipolePolar[iIndex][0]*dk1 + _inducedDipolePolar[iIndex][1]*dk2 + _inducedDipolePolar[iIndex][2]*dk3 + di1*_inducedDipolePolar[jIndex][0] + di2*_inducedDipolePolar[jIndex][1] + di3*_inducedDipolePolar[jIndex][2];
     RealOpenMM scip2        = _inducedDipole[iIndex][0]*_inducedDipolePolar[jIndex][0]+_inducedDipole[iIndex][1]*_inducedDipolePolar[jIndex][1]
                           + _inducedDipole[iIndex][2]*_inducedDipolePolar[jIndex][2]+_inducedDipolePolar[iIndex][0]*_inducedDipole[jIndex][0]
                           + _inducedDipolePolar[iIndex][1]*_inducedDipole[jIndex][1]+_inducedDipolePolar[iIndex][2]*_inducedDipole[jIndex][2];
@@ -3401,33 +3404,34 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     RealOpenMM scip3        = _inducedDipolePolar[iIndex][0]*xr + _inducedDipolePolar[iIndex][1]*yr + _inducedDipolePolar[iIndex][2]*zr;
     RealOpenMM scip4        = _inducedDipolePolar[jIndex][0]*xr + _inducedDipolePolar[jIndex][1]*yr + _inducedDipolePolar[jIndex][2]*zr;
 
-    RealOpenMM scip7        = qir1*_inducedDipolePolar[jIndex][0] + qir2*_inducedDipolePolar[jIndex][1] + qir3*_inducedDipolePolar[jIndex][2];
-    RealOpenMM scip8        = qkr1*_inducedDipolePolar[iIndex][0] + qkr2*_inducedDipolePolar[iIndex][1] + qkr3*_inducedDipolePolar[iIndex][2];
+//    RealOpenMM scip7        = qir1*_inducedDipolePolar[jIndex][0] + qir2*_inducedDipolePolar[jIndex][1] + qir3*_inducedDipolePolar[jIndex][2];
+//    RealOpenMM scip8        = qkr1*_inducedDipolePolar[iIndex][0] + qkr2*_inducedDipolePolar[iIndex][1] + qkr3*_inducedDipolePolar[iIndex][2];
 
     // calculate the gl functions for permanent components
 
     RealOpenMM gl0           = ci*ck;
-    RealOpenMM gl1           = ck*sc3 - ci*sc4;
-    RealOpenMM gl2           = ci*sc6 + ck*sc5 - sc3*sc4;
-    RealOpenMM gl3           = sc3*sc6 - sc4*sc5;
-    RealOpenMM gl4           = sc5*sc6;
-    RealOpenMM gl5           = -4.0*sc9;
-    RealOpenMM gl6           = sc2;
-    RealOpenMM gl7           = 2.0 * (sc7-sc8);
-    RealOpenMM gl8           = 2.0 * sc10;
+//    RealOpenMM gl1           = ck*sc3 - ci*sc4;
+//    RealOpenMM gl2           = ci*sc6 + ck*sc5 - sc3*sc4;
+//    RealOpenMM gl3           = sc3*sc6 - sc4*sc5;
+//    RealOpenMM gl4           = sc5*sc6;
+//    RealOpenMM gl5           = -4.0*sc9;
+//    RealOpenMM gl6           = sc2;
+//    RealOpenMM gl7           = 2.0 * (sc7-sc8);
+//    RealOpenMM gl8           = 2.0 * sc10;
 
     // calculate the gl functions for induced components
 
     RealOpenMM gli1          = ck*sci3 - ci*sci4;
-    RealOpenMM gli2          = -sc3*sci4 - sci3*sc4;
-    RealOpenMM gli3          = sci3*sc6 - sci4*sc5;
-    RealOpenMM gli6          = sci1;
-    RealOpenMM gli7          = 2.0 * (sci7-sci8);
+//    RealOpenMM gli2          = -sc3*sci4 - sci3*sc4;
+//    RealOpenMM gli3          = sci3*sc6 - sci4*sc5;
+//    RealOpenMM gli6          = sci1;
+//    RealOpenMM gli7          = 2.0 * (sci7-sci8);
+
     RealOpenMM glip1         = ck*scip3 - ci*scip4;
-    RealOpenMM glip2         = -sc3*scip4 - scip3*sc4;
-    RealOpenMM glip3         = scip3*sc6 - scip4*sc5;
-    RealOpenMM glip6         = scip1;
-    RealOpenMM glip7         = 2.0 * (scip7-scip8);
+//    RealOpenMM glip2         = -sc3*scip4 - scip3*sc4;
+//    RealOpenMM glip3         = scip3*sc6 - scip4*sc5;
+//    RealOpenMM glip6         = scip1;
+//    RealOpenMM glip7         = 2.0 * (scip7-scip8);
 
     bool isSameWater = (particleI.multipoleAtomZs == particleJ.particleIndex) or
             (particleI.multipoleAtomYs == particleJ.particleIndex) or
@@ -3441,8 +3445,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 //    }
     // compute the energy contributions for this interaction
 
-    RealOpenMM e             = bn0*gl0 + bn1*(gl1+gl6) + bn2*(gl2+gl7+gl8) + bn3*(gl3+gl5) + bn4*gl4;
-    RealOpenMM ei            = 0.5 * (bn1*(gli1+gli6) + bn2*(gli2+gli7) + bn3*gli3); 
+    RealOpenMM e             = bn0*gl0;// + bn1*(gl1+gl6) + bn2*(gl2+gl7+gl8) + bn3*(gl3+gl5) + bn4*gl4;
+    //RealOpenMM ei            = 0.5 * (bn1*(gli1+gli6) + bn2*(gli2+gli7) + bn3*gli3); 
+    RealOpenMM ei            = 0.5 * (bn1*gli1);// + bn2*gli2);
 
     // get the real energy without any screening function
 
@@ -3454,14 +3459,14 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     if( isSameWater ) {
         scale1CC = scale3CD = scale3DD = scale5DD = 0.;
     }
-    RealOpenMM erl           =  rr1*gl0*(1 - scale1CC) + // charge-charge
-                                rr3*gl1*(1 - scale3CD) + // charge -dipole
-                                rr3*gl6*(1 - scale3DD);  // dipole-dipole
+    RealOpenMM erl           =  rr1*gl0*(1 - scale1CC); // charge-charge
+                              //  rr3*gl1*(1 - scale3CD) + // charge -dipole
+                              //  rr3*gl6*(1 - scale3DD);  // dipole-dipole
                               // + rr5*(gl2+gl7+gl8)*psc5 + rr7*(gl3+gl5)*psc7 + rr9*gl4;
     RealOpenMM erli          = 0.5*(
-                                  rr3* gli1 * (1 - scale3CD) + // charge - induced     dipole
-                                  rr3 * gli6 * (1 - scale3DD) + // dipole - induced     dipole
-                                  rr5 * gli2 * (1 - scale5DD) ); // dipole - induced   dipole
+                                  rr3* gli1 * (1 - scale3CD)); // charge - induced     dipole
+                                  //rr3 * gli6 * (1 - scale3DD) + // dipole - induced     dipole
+                                  //rr5 * gli2 * (1 - scale5DD) ); // dipole - induced   dipole
                                   // rr5*(gli7)*psc5 + rr7*gli3*psc7);
 
     // e                   = e - (1.0-scalingFactors[M_SCALE])*erl; // scalingFactors[M_SCALE] is 1 in AMOEBA
@@ -3470,6 +3475,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     energy              = (e + ei);
 
+#if 0
     RealOpenMM scale3CC = getAndScaleInverseRs( particleI, particleJ, r, true, 3, TCC);
     RealOpenMM scale5CD = getAndScaleInverseRs( particleI, particleJ, r, true, 5, TCD);
     RealOpenMM scale7DD = getAndScaleInverseRs( particleI, particleJ, r, true, 7, TDD);
@@ -3480,18 +3486,18 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     // intermediate variables for permanent force terms
 
-    RealOpenMM gf1 = bn1*gl0
-    		     + bn2*(gl6)
-                 + bn3*(gl2+gl7+gl8)
-                 + bn4*(gl3+gl5) + bn5*gl4;
-    RealOpenMM gf2 = sc4*bn2 - sc6*bn3;
-    RealOpenMM gf3 = sc3*bn2 + sc5*bn3;
+    RealOpenMM gf1 = bn1*gl0;
+//    		   + bn2*(gl6)
+//                   + bn3*(gl2+gl7+gl8)
+//                   + bn4*(gl3+gl5) + bn5*gl4;
+//    RealOpenMM gf2 = sc4*bn2 - sc6*bn3;
+//    RealOpenMM gf3 = sc3*bn2 + sc5*bn3;
     RealOpenMM gf4 = 2.0*bn2;
-    RealOpenMM gf5 = 2.0*(-ck*bn2+sc4*bn3-sc6*bn4);
-    RealOpenMM gf6 = 2.0*(-ci*bn2-sc3*bn3-sc5*bn4);
+    RealOpenMM gf5 = 2.0*(-ck*bn2);//+sc4*bn3-sc6*bn4);
+    RealOpenMM gf6 = 2.0*(-ci*bn2);//-sc3*bn3-sc5*bn4);
     RealOpenMM gf7 = 4.0*bn3;
 
-	gf1 += bn2*gl1;
+//	gf1 += bn2*gl1;
 	gf2 -= ck*bn1;
 	gf3 += ci*bn1;
 
@@ -3847,11 +3853,12 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 //    ttm3i3 = (ttm3i3-ttm3ri3);
 
     // increment gradient due to force and torque on first site;
-
+#endif
     RealOpenMM conversionFactor  = (_electric/_dielectric);
 
     energy                 *= conversionFactor;
 
+#if 0
     forces[iIndex][0]      -= (ftm21 + ftm2i1)*conversionFactor;
     forces[iIndex][1]      -= (ftm22 + ftm2i2)*conversionFactor;
     forces[iIndex][2]      -= (ftm23 + ftm2i3)*conversionFactor;
@@ -3859,6 +3866,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     forces[jIndex][0]      += (ftm21 + ftm2i1)*conversionFactor;
     forces[jIndex][1]      += (ftm22 + ftm2i2)*conversionFactor;
     forces[jIndex][2]      += (ftm23 + ftm2i3)*conversionFactor;
+#endif
 //
 //    torques[iIndex][0]     += (ttm21 + ttm2i1)*conversionFactor;
 //    torques[iIndex][1]     += (ttm22 + ttm2i2)*conversionFactor;
