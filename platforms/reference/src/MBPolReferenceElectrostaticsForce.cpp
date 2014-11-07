@@ -955,288 +955,104 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
     RealOpenMM rr3      = rr1/r2;
     RealOpenMM rr5      = 3.0*rr3/r2;
     RealOpenMM rr7      = 5.0*rr5/r2;
-    RealOpenMM rr9      = 7.0*rr7/r2;
-    RealOpenMM rr11     = 9.0*rr9/r2;
-
-    // construct necessary auxiliary vectors
-
-    RealVec dixdk      = particleI.dipole.cross( particleK.dipole );
-    RealVec dixuk      = particleI.dipole.cross( _inducedDipole[kIndex] );
-    RealVec dkxui      = particleK.dipole.cross( _inducedDipole[iIndex] );
-    RealVec dixukp     = particleI.dipole.cross( _inducedDipolePolar[kIndex] );
-    RealVec dkxuip     = particleK.dipole.cross( _inducedDipolePolar[iIndex] );
-    RealVec dixr       = particleI.dipole.cross( delta );
-    RealVec dkxr       = particleK.dipole.cross( delta );
-
-    RealVec qir;
-    qir[0] = particleI.quadrupole[QXX]*delta[0] + particleI.quadrupole[QXY]*delta[1] + particleI.quadrupole[QXZ]*delta[2];
-    qir[1] = particleI.quadrupole[QXY]*delta[0] + particleI.quadrupole[QYY]*delta[1] + particleI.quadrupole[QYZ]*delta[2];
-    qir[2] = particleI.quadrupole[QXZ]*delta[0] + particleI.quadrupole[QYZ]*delta[1] + particleI.quadrupole[QZZ]*delta[2];
-
-    RealVec qkr;
-    qkr[0] = particleK.quadrupole[QXX]*delta[0] + particleK.quadrupole[QXY]*delta[1] + particleK.quadrupole[QXZ]*delta[2];
-    qkr[1] = particleK.quadrupole[QXY]*delta[0] + particleK.quadrupole[QYY]*delta[1] + particleK.quadrupole[QYZ]*delta[2];
-    qkr[2] = particleK.quadrupole[QXZ]*delta[0] + particleK.quadrupole[QYZ]*delta[1] + particleK.quadrupole[QZZ]*delta[2];
-
-    RealVec qiqkr;
-    qiqkr[0] = particleI.quadrupole[QXX]*qkr[0] + particleI.quadrupole[QXY]*qkr[1] + particleI.quadrupole[QXZ]*qkr[2];
-    qiqkr[1] = particleI.quadrupole[QXY]*qkr[0] + particleI.quadrupole[QYY]*qkr[1] + particleI.quadrupole[QYZ]*qkr[2];
-    qiqkr[2] = particleI.quadrupole[QXZ]*qkr[0] + particleI.quadrupole[QYZ]*qkr[1] + particleI.quadrupole[QZZ]*qkr[2];
-
-    RealVec qkqir;
-    qkqir[0] = particleK.quadrupole[QXX]*qir[0] + particleK.quadrupole[QXY]*qir[1] + particleK.quadrupole[QXZ]*qir[2];
-    qkqir[1] = particleK.quadrupole[QXY]*qir[0] + particleK.quadrupole[QYY]*qir[1] + particleK.quadrupole[QYZ]*qir[2];
-    qkqir[2] = particleK.quadrupole[QXZ]*qir[0] + particleK.quadrupole[QYZ]*qir[1] + particleK.quadrupole[QZZ]*qir[2];
-
-    RealVec qixqk;
-    qixqk[0] = particleI.quadrupole[QXY]*particleK.quadrupole[QXZ] +
-               particleI.quadrupole[QYY]*particleK.quadrupole[QYZ] +
-               particleI.quadrupole[QYZ]*particleK.quadrupole[QZZ] -
-               particleI.quadrupole[QXZ]*particleK.quadrupole[QXY] -
-               particleI.quadrupole[QYZ]*particleK.quadrupole[QYY] -
-               particleI.quadrupole[QZZ]*particleK.quadrupole[QYZ];
-
-    qixqk[1] = particleI.quadrupole[QXZ]*particleK.quadrupole[QXX] +
-               particleI.quadrupole[QYZ]*particleK.quadrupole[QXY] +
-               particleI.quadrupole[QZZ]*particleK.quadrupole[QXZ] -
-               particleI.quadrupole[QXX]*particleK.quadrupole[QXZ] -
-               particleI.quadrupole[QXY]*particleK.quadrupole[QYZ] -
-               particleI.quadrupole[QXZ]*particleK.quadrupole[QZZ];
-
-    qixqk[2] = particleI.quadrupole[QXX]*particleK.quadrupole[QXY] +
-               particleI.quadrupole[QXY]*particleK.quadrupole[QYY] +
-               particleI.quadrupole[QXZ]*particleK.quadrupole[QYZ] -
-               particleI.quadrupole[QXY]*particleK.quadrupole[QXX] -
-               particleI.quadrupole[QYY]*particleK.quadrupole[QXY] -
-               particleI.quadrupole[QYZ]*particleK.quadrupole[QXZ];
-
-    RealVec rxqir   = delta.cross( qir );
-    RealVec rxqkr   = delta.cross( qkr );
-    RealVec rxqikr  = delta.cross( qiqkr );
-    RealVec rxqkir  = delta.cross( qkqir );
-    RealVec qkrxqir = qkr.cross( qir );
-
-    RealVec qidk,qkdi;
-    qidk[0] = particleI.quadrupole[QXX]*particleK.dipole[0] + particleI.quadrupole[QXY]*particleK.dipole[1] + particleI.quadrupole[QXZ]*particleK.dipole[2];
-    qidk[1] = particleI.quadrupole[QXY]*particleK.dipole[0] + particleI.quadrupole[QYY]*particleK.dipole[1] + particleI.quadrupole[QYZ]*particleK.dipole[2];
-    qidk[2] = particleI.quadrupole[QXZ]*particleK.dipole[0] + particleI.quadrupole[QYZ]*particleK.dipole[1] + particleI.quadrupole[QZZ]*particleK.dipole[2];
-
-    qkdi[0] = particleK.quadrupole[QXX]*particleI.dipole[0] + particleK.quadrupole[QXY]*particleI.dipole[1] + particleK.quadrupole[QXZ]*particleI.dipole[2];
-    qkdi[1] = particleK.quadrupole[QXY]*particleI.dipole[0] + particleK.quadrupole[QYY]*particleI.dipole[1] + particleK.quadrupole[QYZ]*particleI.dipole[2];
-    qkdi[2] = particleK.quadrupole[QXZ]*particleI.dipole[0] + particleK.quadrupole[QYZ]*particleI.dipole[1] + particleK.quadrupole[QZZ]*particleI.dipole[2];
-
-    RealVec qiuk,qkui;
-    qiuk[0] = particleI.quadrupole[QXX]*_inducedDipole[kIndex][0] + particleI.quadrupole[QXY]*_inducedDipole[kIndex][1] + particleI.quadrupole[QXZ]*_inducedDipole[kIndex][2];
-    qiuk[1] = particleI.quadrupole[QXY]*_inducedDipole[kIndex][0] + particleI.quadrupole[QYY]*_inducedDipole[kIndex][1] + particleI.quadrupole[QYZ]*_inducedDipole[kIndex][2];
-    qiuk[2] = particleI.quadrupole[QXZ]*_inducedDipole[kIndex][0] + particleI.quadrupole[QYZ]*_inducedDipole[kIndex][1] + particleI.quadrupole[QZZ]*_inducedDipole[kIndex][2];
-
-    qkui[0] = particleK.quadrupole[QXX]*_inducedDipole[iIndex][0] + particleK.quadrupole[QXY]*_inducedDipole[iIndex][1] + particleK.quadrupole[QXZ]*_inducedDipole[iIndex][2];
-    qkui[1] = particleK.quadrupole[QXY]*_inducedDipole[iIndex][0] + particleK.quadrupole[QYY]*_inducedDipole[iIndex][1] + particleK.quadrupole[QYZ]*_inducedDipole[iIndex][2];
-    qkui[2] = particleK.quadrupole[QXZ]*_inducedDipole[iIndex][0] + particleK.quadrupole[QYZ]*_inducedDipole[iIndex][1] + particleK.quadrupole[QZZ]*_inducedDipole[iIndex][2];
-
-    RealVec qiukp,qkuip;
-    qiukp[0] = particleI.quadrupole[QXX]*_inducedDipolePolar[kIndex][0] + particleI.quadrupole[QXY]*_inducedDipolePolar[kIndex][1] + particleI.quadrupole[QXZ]*_inducedDipolePolar[kIndex][2];
-    qiukp[1] = particleI.quadrupole[QXY]*_inducedDipolePolar[kIndex][0] + particleI.quadrupole[QYY]*_inducedDipolePolar[kIndex][1] + particleI.quadrupole[QYZ]*_inducedDipolePolar[kIndex][2];
-    qiukp[2] = particleI.quadrupole[QXZ]*_inducedDipolePolar[kIndex][0] + particleI.quadrupole[QYZ]*_inducedDipolePolar[kIndex][1] + particleI.quadrupole[QZZ]*_inducedDipolePolar[kIndex][2];
-
-    qkuip[0] = particleK.quadrupole[QXX]*_inducedDipolePolar[iIndex][0] + particleK.quadrupole[QXY]*_inducedDipolePolar[iIndex][1] + particleK.quadrupole[QXZ]*_inducedDipolePolar[iIndex][2];
-    qkuip[1] = particleK.quadrupole[QXY]*_inducedDipolePolar[iIndex][0] + particleK.quadrupole[QYY]*_inducedDipolePolar[iIndex][1] + particleK.quadrupole[QYZ]*_inducedDipolePolar[iIndex][2];
-    qkuip[2] = particleK.quadrupole[QXZ]*_inducedDipolePolar[iIndex][0] + particleK.quadrupole[QYZ]*_inducedDipolePolar[iIndex][1] + particleK.quadrupole[QZZ]*_inducedDipolePolar[iIndex][2];
-
-    RealVec dixqkr   = particleI.dipole.cross( qkr );
-    RealVec dkxqir   = particleK.dipole.cross( qir );
-    RealVec uixqkr   = _inducedDipole[iIndex].cross( qkr );
-    RealVec ukxqir   = _inducedDipole[kIndex].cross( qir );
-    RealVec uixqkrp  = _inducedDipolePolar[iIndex].cross( qkr );
-    RealVec ukxqirp  = _inducedDipolePolar[kIndex].cross( qir );
-    RealVec rxqidk   = delta.cross( qidk );
-    RealVec rxqkdi   = delta.cross( qkdi );
-    RealVec rxqiuk   = delta.cross( qiuk );
-    RealVec rxqkui   = delta.cross( qkui );
-    RealVec rxqiukp  = delta.cross( qiukp );
-    RealVec rxqkuip  = delta.cross( qkuip );
-
-    // calculate scalar products for permanent components
-
-    sc[1] = particleI.dipole.dot( particleK.dipole );
-    sc[2] = particleI.dipole.dot( delta );
-    sc[3] = particleK.dipole.dot( delta );
-    sc[4] = qir.dot(delta );
-    sc[5] = qkr.dot( delta );
-    sc[6] = qir.dot(particleK.dipole );
-    sc[7] = qkr.dot( particleI.dipole );
-    sc[8] = qir.dot( qkr );
-    sc[9] = particleI.quadrupole[QXX]*particleK.quadrupole[QXX] + particleI.quadrupole[QXY]*particleK.quadrupole[QXY] + particleI.quadrupole[QXZ]*particleK.quadrupole[QXZ] +
-            particleI.quadrupole[QXY]*particleK.quadrupole[QXY] + particleI.quadrupole[QYY]*particleK.quadrupole[QYY] + particleI.quadrupole[QYZ]*particleK.quadrupole[QYZ] +
-            particleI.quadrupole[QXZ]*particleK.quadrupole[QXZ] + particleI.quadrupole[QYZ]*particleK.quadrupole[QYZ] + particleI.quadrupole[QZZ]*particleK.quadrupole[QZZ];
  
     // calculate scalar products for induced components
 
-    sci[0] = _inducedDipole[iIndex][0]*particleK.dipole[0] + _inducedDipole[iIndex][1]*particleK.dipole[1] + _inducedDipole[iIndex][2]*particleK.dipole[2] +particleI.dipole[0]*_inducedDipole[kIndex][0] +particleI.dipole[1]*_inducedDipole[kIndex][1] +particleI.dipole[2]*_inducedDipole[kIndex][2];
-    sci[1] = _inducedDipole[iIndex][0]*_inducedDipole[kIndex][0] + _inducedDipole[iIndex][1]*_inducedDipole[kIndex][1] + _inducedDipole[iIndex][2]*_inducedDipole[kIndex][2];
-    sci[2] = _inducedDipole[iIndex][0]*delta[0] + _inducedDipole[iIndex][1]*delta[1] + _inducedDipole[iIndex][2]*delta[2];
-    sci[3] = _inducedDipole[kIndex][0]*delta[0] + _inducedDipole[kIndex][1]*delta[1] + _inducedDipole[kIndex][2]*delta[2];
-    sci[6] = qir[0]*_inducedDipole[kIndex][0] + qir[1]*_inducedDipole[kIndex][1] + qir[2]*_inducedDipole[kIndex][2];
-    sci[7] = qkr[0]*_inducedDipole[iIndex][0] + qkr[1]*_inducedDipole[iIndex][1] + qkr[2]*_inducedDipole[iIndex][2];
-    scip[0] = _inducedDipolePolar[iIndex][0]*particleK.dipole[0] + _inducedDipolePolar[iIndex][1]*particleK.dipole[1] + _inducedDipolePolar[iIndex][2]*particleK.dipole[2] +particleI.dipole[0]*_inducedDipolePolar[kIndex][0] +particleI.dipole[1]*_inducedDipolePolar[kIndex][1] +particleI.dipole[2]*_inducedDipolePolar[kIndex][2];
-    scip[1] = _inducedDipole[iIndex][0]*_inducedDipolePolar[kIndex][0]+_inducedDipole[iIndex][1]*_inducedDipolePolar[kIndex][1] + _inducedDipole[iIndex][2]*_inducedDipolePolar[kIndex][2]+_inducedDipolePolar[iIndex][0]*_inducedDipole[kIndex][0] + _inducedDipolePolar[iIndex][1]*_inducedDipole[kIndex][1]+_inducedDipolePolar[iIndex][2]*_inducedDipole[kIndex][2];
-    scip[2] = _inducedDipolePolar[iIndex][0]*delta[0] + _inducedDipolePolar[iIndex][1]*delta[1] + _inducedDipolePolar[iIndex][2]*delta[2];
-    scip[3] = _inducedDipolePolar[kIndex][0]*delta[0] + _inducedDipolePolar[kIndex][1]*delta[1] + _inducedDipolePolar[kIndex][2]*delta[2];
-    scip[6] = qir[0]*_inducedDipolePolar[kIndex][0] + qir[1]*_inducedDipolePolar[kIndex][1] + qir[2]*_inducedDipolePolar[kIndex][2];
-    scip[7] = qkr[0]*_inducedDipolePolar[iIndex][0] + qkr[1]*_inducedDipolePolar[iIndex][1] + qkr[2]*_inducedDipolePolar[iIndex][2];
+    sci[1] = _inducedDipole[iIndex][0]*_inducedDipole[kIndex][0] 
+	   + _inducedDipole[iIndex][1]*_inducedDipole[kIndex][1] 
+	   + _inducedDipole[iIndex][2]*_inducedDipole[kIndex][2];
+    sci[2] = _inducedDipole[iIndex][0]*delta[0] 
+	   + _inducedDipole[iIndex][1]*delta[1] 
+	   + _inducedDipole[iIndex][2]*delta[2];
+    sci[3] = _inducedDipole[kIndex][0]*delta[0] 
+	   + _inducedDipole[kIndex][1]*delta[1] 
+	   + _inducedDipole[kIndex][2]*delta[2];
+
+    scip[1] = _inducedDipole[iIndex][0]*_inducedDipolePolar[kIndex][0]
+	    + _inducedDipole[iIndex][1]*_inducedDipolePolar[kIndex][1]
+	    + _inducedDipole[iIndex][2]*_inducedDipolePolar[kIndex][2]
+	    + _inducedDipolePolar[iIndex][0]*_inducedDipole[kIndex][0] 
+	    + _inducedDipolePolar[iIndex][1]*_inducedDipole[kIndex][1]
+	    + _inducedDipolePolar[iIndex][2]*_inducedDipole[kIndex][2];
+    scip[2] = _inducedDipolePolar[iIndex][0]*delta[0] 
+	    + _inducedDipolePolar[iIndex][1]*delta[1] 
+	    + _inducedDipolePolar[iIndex][2]*delta[2];
+    scip[3] = _inducedDipolePolar[kIndex][0]*delta[0] 
+	    + _inducedDipolePolar[kIndex][1]*delta[1] 
+	    + _inducedDipolePolar[kIndex][2]*delta[2];
 
     // calculate the gl functions for permanent components
 
     gl[0] = particleI.charge*particleK.charge;
-    gl[1] = particleK.charge*sc[2] - particleI.charge*sc[3]; // charge - dipole
-    gl[2] = particleI.charge*sc[5] + particleK.charge*sc[4] - sc[2]*sc[3];
-    gl[3] = sc[2]*sc[5] - sc[3]*sc[4];
-    gl[4] = sc[4]*sc[5];
-    gl[5] = -4.0 * sc[8];
-    gl[6] = sc[1];
-    gl[7] = 2.0 * (sc[6]-sc[7]);
-    gl[8] = 2.0 * sc[9];
 
     // calculate the gl functions for induced components
 
     gli[0] = particleK.charge*sci[2] - particleI.charge*sci[3];
-    gli[1] = -sc[2]*sci[3] - sci[2]*sc[3];
-    gli[2] = sci[2]*sc[5] - sci[3]*sc[4];
-    gli[5] = sci[0];
-    gli[6] = 2.0 * (sci[6]-sci[7]);
+
     glip[0] = particleK.charge*scip[2] - particleI.charge*scip[3];
-    glip[1] = -sc[2]*scip[3] - scip[2]*sc[3];
-    glip[2] = scip[2]*sc[5] - scip[3]*sc[4];
-    glip[5] = scip[0];
-    glip[6] = 2.0 * (scip[6]-scip[7]);
 
     bool isSameWater = (particleI.multipoleAtomZs == particleK.particleIndex) or
-            (particleI.multipoleAtomYs == particleK.particleIndex) or
-            (particleI.multipoleAtomXs == particleK.particleIndex);
-    // Same water atoms have no charge/charge interaction and no induced-dipole/charge interaction
+                       (particleI.multipoleAtomYs == particleK.particleIndex) or
+	   	       (particleI.multipoleAtomXs == particleK.particleIndex);
+    // Same water atoms have no charge/charge interaction and 
+    // no induced-dipole/charge interaction
     if( isSameWater ) {
         gl[0] = 0.;
         gli[0] = 0.;
         glip[0] = 0.;
-
     }
+
     // compute the energy contributions for this interaction
 
     RealOpenMM scale1CC = getAndScaleInverseRs( particleI, particleK, r, true, 1, TCC);
     RealOpenMM scale3CD = getAndScaleInverseRs( particleI, particleK, r, true, 3, TCD);
-    RealOpenMM scale3DD = getAndScaleInverseRs( particleI, particleK, r, true, 3, TDD);
-    RealOpenMM scale5DD = getAndScaleInverseRs( particleI, particleK, r, true, 5, TDD);
 
-    RealOpenMM energy = scale1CC*rr1*gl[0] + // charge-charge
-                        scale3CD*rr3*gl[1] +  // charge - dipole
-                        scale3DD*rr3*gl[6];  // dipole - dipole
-                        // scale5*rr5*gl[2] + // charge - quadrupole
-                        // scale5*rr5*gl[7] + // dipole - quadrupole
-                        // scale5*rr5*gl[8] + // quadrupole - quadrupole
-                        // scale7*rr7*(gl[3]) + // dipole - quadrupole
-                        // scale7*rr7*(gl[5]) + // quadrupole - quadrupole
-                        // rr9*gl[4]; // quadrupole - quadrupole
-
-    energy           += 0.5*(
-                        rr3*(gli[0])*scale3CD + // charge - induced dipole
-                        rr3*(gli[5])*scale3DD + // dipole - induced dipole
-                        rr5*(gli[1])*scale5DD  ); // dipole - induced dipole
-                        // rr5*(gli[6])*psc5 + // quadrupole - induced dipole
-                        // rr7*gli[2]*psc7);  // quadrupole - induced dipole
+    RealOpenMM energy =       rr1* gl[0]*scale1CC  ; // charge-charge
+    energy           += 0.5*( rr3*gli[0]*scale3CD ); // charge - induced dipole
     energy           *= f;
 
     RealOpenMM scale3CC = getAndScaleInverseRs( particleI, particleK, r, true, 3, TCC);
     RealOpenMM scale5CD = getAndScaleInverseRs( particleI, particleK, r, true, 5, TCD);
+    RealOpenMM scale5DD = getAndScaleInverseRs( particleI, particleK, r, true, 5, TDD);
     RealOpenMM scale7DD = getAndScaleInverseRs( particleI, particleK, r, true, 7, TDD);
 
     // intermediate variables for the permanent components
-    gf[0] = rr3*gl[0]*scale3CC + // charge -charge
-            rr5*gl[1]*scale5CD+       // charge - dipole
-            rr5*gl[6]*scale5DD ;      // dipole - dipole
-//            rr7*(gl[2]+gl[7]+gl[8]) + // quadrupole components
-//            rr9*(gl[3]+gl[5]) + // quadrupole components
-//            rr11*gl[4]; // quadrupole - quadrupole
-    gf[1] = -particleK.charge*rr3 + sc[3]*rr5 - sc[5]*rr7;
-    gf[2] =  particleI.charge*rr3 + sc[2]*rr5 + sc[4]*rr7;
-    gf[3] = 2.0*rr5;
-    gf[4] = 2.0*(-particleK.charge*rr5+sc[3]*rr7-sc[5]*rr9);
-    gf[5] = 2.0*(-particleI.charge*rr5-sc[2]*rr7-sc[4]*rr9);
-    gf[6] = 4.0*rr7;
+    gf[0] = rr3*gl[0]*scale3CC ; // charge -charge
 
     // intermediate variables for the induced components
 
-    gfi[0] = 0.5 * rr5 * (gli[0])*scale5CD + // charge - induced dipole
-            0.5 * rr5 * (gli[5])*scale5DD + // dipole - induced dipole
-            0.5 * rr5 * glip[0]*scale5CD +// charge - induced dipole
-            0.5 * rr5 * glip[5]*scale5DD + // dipole - induced dipole
-            0.5 * rr5 *  scip[1]*scale5DD + // induced dipole - induced dipole
-            // 0.5 * rr7 * (gli[6])*psc7 + // quadrupole - induced dipole
-           + 0.5 * rr7 * (gli[1])*scale7DD + // dipole - induced dipole
-           0.5 * rr7 * (glip[6]+glip[1])*scale7DD + // same for polar
-           - 0.5 * rr7 * (sci[2]*scip[3]+scip[2]*sci[3])*scale7DD; // induced dipole - induced dipole
-           //+ 0.5 * rr9 * (gli[2]*psc7+glip[2]*dsc7); // this should be psc9 but we do not have quadrupoles anyway
-
-    gfi[1] = -rr3*particleK.charge + rr5*sc[3] - rr7*sc[5]; // not used
-    gfi[2] =  rr3*particleI.charge + rr5*sc[2] + rr7*sc[4]; // not used
-    gfi[3] = 2.0*rr5;
-    gfi[4] = 0.; // rr7*(sci[3]*psc7+scip[3]*dsc7); // quadrupole - induced dipole
-    gfi[5] = 0.; // -rr7*(sci[2]*psc7+scip[2]*dsc7); // quadrupole - induced dipole
+    gfi[0] = 0.5 * rr5 *  gli[0]*scale5CD + // charge - induced dipole
+             0.5 * rr5 * glip[0]*scale5CD + // charge - induced dipole
+             0.5 * rr5 * scip[1]*scale5DD + // induced dipole - induced dipole
+           - 0.5 * rr7 * (sci[2]*scip[3] + scip[2]*sci[3])*scale7DD; // induced dipole - induced dipole
 
     // get the permanent force components
 
-    RealVec ftm2 = delta*gf[0] +
-                   particleI.dipole*(-particleK.charge*rr3*scale3CD ) +
-                   particleI.dipole*sc[3]*rr5*scale5DD + // dipole - dipole
-                   // particleI.dipole*(- sc[5]*rr7)+ // dipole - quadrupole
-                   particleK.dipole*(particleI.charge*rr3*scale3CD ) +
-                   particleK.dipole*sc[2]*rr5*scale5DD; // dipole - dipole
-//                   particleK.dipole*(sc[4]*rr7)+ // dipole - quadrupole
-//                   (qkdi -qidk)*gf[3] + qir*gf[4] + // quadrupoles
-//                   qkr*gf[5] + (qiqkr+qkqir)*gf[6]; // quadrupoles
+    RealVec ftm2 = delta*gf[0];
 
     // get the induced force components
 
-    RealVec ftm2i  = delta*gfi[0] + qir*gfi[4] + qkr*gfi[5];
+    RealVec ftm2i  = delta*gfi[0];
 
-    ftm2i += (
-            (_inducedDipole[iIndex] + _inducedDipolePolar[iIndex])*(scale5DD * rr5 * sc[3]) +  // idipole_i * dipole_k
-            // (_inducedDipole[iIndex]*psc7 + _inducedDipolePolar[iIndex]*dsc7)*(-rr7*sc[5]) +  // idipole_i * quadrupole_k
-            (_inducedDipole[kIndex] + _inducedDipolePolar[kIndex])*(scale5DD * rr5*sc[2]) +   // idipole_i * dipole_k
-            // (_inducedDipole[kIndex]*psc7 + _inducedDipolePolar[kIndex]*dsc7)*(rr7*sc[4]) +   // idipole_i * quadrupole_k
-            (_inducedDipolePolar[iIndex]*sci[3] + _inducedDipole[iIndex]*scip[3] +// iPdipole_i * idipole_k
-             _inducedDipolePolar[kIndex]*sci[2] + _inducedDipole[kIndex]*scip[2])*(rr5*scale5DD) + //// iPdipole_k * idipole_i
-            particleI.dipole*((sci[3]  + scip[3])*rr5*scale5DD) + // dipole - induced dipole
-            particleK.dipole*((sci[2]  + scip[2])*rr5*scale5DD) // dipole - induced dipole
-            // ((qkui - qiuk)*psc5 + (qkuip - qiukp)*dsc5)*(gfi[3]) // quadrupoles
-    )*0.5;
+    ftm2i += ( _inducedDipolePolar[iIndex] *  sci[3] + // iPdipole_i * idipole_k
+                    _inducedDipole[iIndex] * scip[3] +
+               _inducedDipolePolar[kIndex] *  sci[2] + // iPdipole_k * idipole_i
+	            _inducedDipole[kIndex] * scip[2]  ) * 0.5 * rr5 * scale5DD;
+    
     // Same water atoms have no induced-dipole/charge interaction
     if (not( isSameWater )) {
-
-            ftm2i += ( 
-         (_inducedDipole[iIndex] + _inducedDipolePolar[iIndex])*(-rr3*particleK.charge) +
-         (_inducedDipole[kIndex] + _inducedDipolePolar[kIndex])*(rr3*particleI.charge)
-            )*0.5 * scale3CD;
+	ftm2i += ( 
+                   ( _inducedDipole[iIndex] + 
+		     _inducedDipolePolar[iIndex] )*-particleK.charge +
+                   ( _inducedDipole[kIndex] + 
+		     _inducedDipolePolar[kIndex] )* particleI.charge
+                 ) * 0.5 * rr3 * scale3CD;
     }
 
     // account for partially excluded induced interactions
-
-//    temp3 = rr3 * ((gli[0]+gli[5])*scalingFactors[P_SCALE] +(glip[0]+glip[5])*scalingFactors[D_SCALE]);
-//    temp5 = rr5 * ((gli[1]+gli[6])*scalingFactors[P_SCALE] +(glip[1]+glip[6])*scalingFactors[D_SCALE]);
-//    temp7 = rr7 * (gli[2]*scalingFactors[P_SCALE] +glip[2]*scalingFactors[D_SCALE]);
-//
-//    RealVec fridmp,findmp;
-//    fridmp = (ddsc3*temp3 + ddsc5*temp5 + ddsc7*temp7);
-//
-//    // find some scaling terms for induced-induced force
-//
-//    temp3 =  rr3*scalingFactors[U_SCALE]*scip[1];
-//    temp5 = -rr5*scalingFactors[U_SCALE]*(sci[2]*scip[3]+scip[2]*sci[3]);
-//
-//    findmp = (ddsc3*temp3 + ddsc5*temp5);
-
-    // modify induced force for partially excluded interactions
+    // not needed for MB-pol/water, but will be necessary
+    // for larger systems with 1-4 interactions
     // FIXME check how to disable this in the xml
-    // ftm2i -= ( fridmp + findmp )*0.5;
 
     // MBPol charge derivative terms
 
@@ -1254,16 +1070,20 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
     if (getIncludeChargeRedistribution() and (not (isSameWater))){
 
-        double distanceK, distanceI, scale1I, scale1K, scale3I, scale3K, inducedDipoleI, inducedDipoleK;
-            RealVec deltaI, deltaK;
+        double distanceK, distanceI, 
+	       scale1I, scale1K, scale3I, scale3K, 
+	       inducedDipoleI, inducedDipoleK;
+	RealVec deltaI, deltaK;
 
         for (size_t s = 0; s < 3; ++s) {
 
             // vsH1f, vsH2f, vsMf
 
-            deltaI = particleData[particleI.otherSiteIndex[s]].position-particleK.position;
+            deltaI = particleData[particleI.otherSiteIndex[s]].position
+		   - particleK.position;
             distanceI = SQRT(deltaI.dot(deltaI));
-            deltaK = particleData[particleK.otherSiteIndex[s]].position-particleI.position;
+            deltaK = particleData[particleK.otherSiteIndex[s]].position
+		   - particleI.position;
             distanceK = SQRT(deltaK.dot(deltaK));
 
             scale1I = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleK, distanceI, true, 1, TCC );
@@ -1277,74 +1097,22 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
             for (size_t i = 0; i < 3; ++i) {
 
-
                 ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
-                ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge;// charge - charge
-
+                ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge; // charge - charge
 
                 ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
                 ftm2i[i] -= scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
+
             }
 
         }
     }
-
-//    // correction to convert mutual to direct polarization force
-//
-//    if( getPolarizationType() == MBPolReferenceElectrostaticsForce::Direct ){
-//       RealOpenMM gfd   = (rr5*scip[1]*scale3i - rr7*(scip[2]*sci[3]+sci[2]*scip[3])*scale5i);
-//       temp5            = rr5*scale5i;
-//
-//       RealVec fdir;
-//       fdir = delta*gfd + (_inducedDipolePolar[iIndex]*sci[3] +
-//                           _inducedDipole[iIndex]*scip[3] +
-//                           _inducedDipolePolar[kIndex]*sci[2] +
-//                           _inducedDipole[kIndex]*scip[2])*temp5;
-//
-//       ftm2i += ( findmp - fdir )*0.5;
-//    }
-
-//    // intermediate terms for induced torque on multipoles
-//
-//    gti[1] = 0.5*rr5*(sci[3]*psc5+scip[3]*dsc5);
-//    gti[2] = 0.5*rr5*(sci[2]*psc5+scip[2]*dsc5);
-//    gti[3] = gfi[3];
-//    gti[4] = gfi[4];
-//    gti[5] = gfi[5];
-//
-//    // get the permanent torque components
-//
-//    RealVec ttm2  =  dixdk*(-rr3) + dixr*gf[1] - rxqir*gf[4] +
-//                     (dixqkr + dkxqir + rxqidk - qixqk*2.0)*gf[3] -
-//                     (rxqikr + qkrxqir)*gf[6];
-//
-//    RealVec ttm3  =  dixdk*rr3 + dkxr*gf[2] - rxqkr*gf[5] -
-//                     (dixqkr + dkxqir + rxqkdi - qixqk*2.0)*gf[3] -
-//                     (rxqkir - qkrxqir)*gf[6];
-//
-//    // get the induced torque components
-//
-//    RealVec ttm2i = (dixuk*psc3 + dixukp*dsc3)*(0.5*(-rr3)) +
-//                     dixr*gti[1] +
-//                     ((ukxqir+rxqiuk)*psc5 + (ukxqirp+rxqiukp)*dsc5)*(0.5*gti[3]) -
-//                     rxqir*gti[4];
-//
-//    RealVec ttm3i = (dkxui*psc3 + dkxuip*dsc3)*(0.5*(-rr3)) +
-//                     dkxr*gti[2] -
-//                    ((uixqkr + rxqkui)*psc5 + (uixqkrp + rxqkuip)*dsc5)*(0.5*gti[3]) -
-//                      rxqkr*gti[5];
-
-    // increment forces and torques
-    // remove factor of f from torques and add back in?
 
     RealVec force   = ftm2*scalingFactors[M_SCALE] + ftm2i;
             force  *= f;
 
     forces[iIndex] -= force;
     forces[kIndex] += force;
-
-//    torque[iIndex] += ( ttm2*scalingFactors[M_SCALE] + ttm2i )*f;
-//    torque[kIndex] += ( ttm3*scalingFactors[M_SCALE] + ttm3i )*f;
 
     return energy;
 }
