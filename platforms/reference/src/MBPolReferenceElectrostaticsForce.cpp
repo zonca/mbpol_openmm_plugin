@@ -672,24 +672,15 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn
     RealOpenMM r      = SQRT( deltaR.dot( deltaR ) );
  
     // get scaling factors, if needed
-  
-    RealOpenMM rr3    = getAndScaleInverseRs( particleI, particleJ, r, false, 3, TCC); // charge - charge
-    RealOpenMM rr5    = getAndScaleInverseRs( particleI, particleJ, r, false, 5, TCC);; // charge - charge
-    RealOpenMM rr7    = getAndScaleInverseRs( particleI, particleJ, r, false, 7, TCC);; // charge - charge
-    RealOpenMM rr5_2  = 2.0*rr5;
+     
+    // charge - charge
+    RealOpenMM rr3 = getAndScaleInverseRs( particleI, particleJ,r,false,3,TCC);
 
     // field at particle I due multipoles at particle J
 
-    RealVec qDotDelta;
-    qDotDelta[0]                                = deltaR[0]*particleJ.quadrupole[QXX] + deltaR[1]*particleJ.quadrupole[QXY] + deltaR[2]*particleJ.quadrupole[QXZ];
-    qDotDelta[1]                                = deltaR[0]*particleJ.quadrupole[QXY] + deltaR[1]*particleJ.quadrupole[QYY] + deltaR[2]*particleJ.quadrupole[QYZ];
-    qDotDelta[2]                                = deltaR[0]*particleJ.quadrupole[QXZ] + deltaR[1]*particleJ.quadrupole[QYZ] + deltaR[2]*particleJ.quadrupole[QZZ];
+    RealOpenMM factor                           = rr3*particleJ.charge;
 
-    RealOpenMM dipoleDelta                      = particleJ.dipole.dot( deltaR ); 
-    RealOpenMM qdpoleDelta                      = qDotDelta.dot( deltaR ); 
-    RealOpenMM factor                           = rr3*particleJ.charge - rr5*dipoleDelta + rr7*qdpoleDelta;
-
-    RealVec field                               = deltaR*factor + particleJ.dipole*rr3 - qDotDelta*rr5_2;
+    RealVec field                               = deltaR*factor;
 
     unsigned int particleIndex                  = particleI.particleIndex;
     _fixedElectrostaticsField[particleIndex]        -= field*dScale;
@@ -697,15 +688,9 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn
  
     // field at particle J due multipoles at particle I
 
-    qDotDelta[0]                                = deltaR[0]*particleI.quadrupole[QXX] + deltaR[1]*particleI.quadrupole[QXY] + deltaR[2]*particleI.quadrupole[QXZ];
-    qDotDelta[1]                                = deltaR[0]*particleI.quadrupole[QXY] + deltaR[1]*particleI.quadrupole[QYY] + deltaR[2]*particleI.quadrupole[QYZ];
-    qDotDelta[2]                                = deltaR[0]*particleI.quadrupole[QXZ] + deltaR[1]*particleI.quadrupole[QYZ] + deltaR[2]*particleI.quadrupole[QZZ];
-
-    dipoleDelta                                 = particleI.dipole.dot( deltaR ); 
-    qdpoleDelta                                 = qDotDelta.dot( deltaR ); 
-    factor                                      = rr3*particleI.charge + rr5*dipoleDelta + rr7*qdpoleDelta;
+    factor                                      = rr3*particleI.charge;
  
-    field                                       = deltaR*factor - particleI.dipole*rr3 - qDotDelta*rr5_2;
+    field                                       = deltaR*factor;
     particleIndex                               = particleJ.particleIndex;
     _fixedElectrostaticsField[particleIndex]        += field*dScale;
     _fixedElectrostaticsFieldPolar[particleIndex]   += field*pScale;
