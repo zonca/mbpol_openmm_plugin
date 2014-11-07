@@ -659,8 +659,9 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn
 
     if( particleI.particleIndex == particleJ.particleIndex )return;
 
-    // in MBPol there is no contribution to the Fixed Electrostatics Field from atoms of the same water molecule
-    // multipoleAtomZs is used for defining a reference frame for the water molecules and
+    // in MBPol there is no contribution to the Fixed Electrostatics Field 
+    // from atoms of the same water molecule. multipoleAtomZs is used for 
+    // defining a reference frame for the water molecules and
     // contains the indices to the other 2 atoms in the same water molecule.
 
     bool isSameWater = (particleI.multipoleAtomZs == particleJ.particleIndex) or
@@ -1916,13 +1917,14 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPair
 
     if( particleI.particleIndex == particleJ.particleIndex )return;
 
-    // in MBPol there is no contribution to the Fixed Multipole Field from atoms of the same water molecule
-    // multipoleAtomZs is used for defining a reference frame for the water molecules and
+    // in MBPol there is no contribution to the Fixed Multipole Field 
+    // from atoms of the same water molecule. multipoleAtomZs is used for 
+    // defining a reference frame for the water molecules and
     // contains the indices to the other 2 atoms in the same water molecule.
 
     bool isSameWater = (particleI.multipoleAtomZs == particleJ.particleIndex) or
-            (particleI.multipoleAtomYs == particleJ.particleIndex) or
-            (particleI.multipoleAtomXs == particleJ.particleIndex);
+                       (particleI.multipoleAtomYs == particleJ.particleIndex) or
+                       (particleI.multipoleAtomXs == particleJ.particleIndex);
 
     RealVec deltaR    = particleJ.position - particleI.position;
     getPeriodicDelta( deltaR );
@@ -1943,60 +1945,24 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPair
     alsq2n                *= alsq2;
     RealOpenMM bn1         = (bn0+alsq2n*exp2a)/r2;
 
-    alsq2n                *= alsq2;
-    RealOpenMM bn2         = (3.0*bn1+alsq2n*exp2a)/r2;
+    RealVec fim            = - deltaR * bn1 * particleJ.charge;
+    RealVec fjm            = + deltaR * bn1 * particleI.charge;
 
-    alsq2n                *= alsq2;
-    RealOpenMM bn3         = (5.0*bn2+alsq2n*exp2a)/r2;
-
-    RealOpenMM dir         = particleI.dipole.dot( deltaR );
-
-    RealVec qxI            = RealVec( particleI.quadrupole[QXX], particleI.quadrupole[QXY], particleI.quadrupole[QXZ] );
-    RealVec qyI            = RealVec( particleI.quadrupole[QXY], particleI.quadrupole[QYY], particleI.quadrupole[QYZ] );
-    RealVec qzI            = RealVec( particleI.quadrupole[QXZ], particleI.quadrupole[QYZ], particleI.quadrupole[QZZ] );
-
-    RealVec qi             = RealVec( qxI.dot( deltaR ), qyI.dot( deltaR ), qzI.dot( deltaR ) );
-    RealOpenMM qir         = qi.dot( deltaR );
-
-    RealOpenMM djr         = particleJ.dipole.dot( deltaR );
-
-    RealVec qxJ            = RealVec( particleJ.quadrupole[QXX], particleJ.quadrupole[QXY], particleJ.quadrupole[QXZ] );
-    RealVec qyJ            = RealVec( particleJ.quadrupole[QXY], particleJ.quadrupole[QYY], particleJ.quadrupole[QYZ] );
-    RealVec qzJ            = RealVec( particleJ.quadrupole[QXZ], particleJ.quadrupole[QYZ], particleJ.quadrupole[QZZ] );
-
-    RealVec qj             = RealVec( qxJ.dot( deltaR ), qyJ.dot( deltaR ), qzJ.dot( deltaR ) );
-    RealOpenMM qjr         = qj.dot( deltaR );
-    
-    RealVec fim            = qj*( 2.0*bn2)  - particleJ.dipole*bn1  - deltaR*( bn1*particleJ.charge - bn2*djr+bn3*qjr);
-    RealVec fjm            = qi*(-2.0*bn2)  - particleI.dipole*bn1  + deltaR*( bn1*particleI.charge + bn2*dir+bn3*qir);
-
-//    RealOpenMM rr3    = getAndScaleInverseRs( particleI, particleJ, r, false, 3, TCC); //         charge - charge
-//    RealOpenMM rr5    = getAndScaleInverseRs( particleI, particleJ, r, false, 5, TCC);; //        charge - charge
-//    RealOpenMM rr7    = getAndScaleInverseRs( particleI, particleJ, r, false, 7, TCC);; //        charge - charge
-    RealOpenMM s3    = getAndScaleInverseRs( particleI, particleJ, r, true, 3, TCC); //         charge - charge
-    RealOpenMM s5    = getAndScaleInverseRs( particleI, particleJ, r, true, 5, TCC);; //        charge - charge
-    RealOpenMM s7    = getAndScaleInverseRs( particleI, particleJ, r, true, 7, TCC);; //        charge - charge
+// RealOpenMM rr3 = getAndScaleInverseRs( particleI, particleJ, r, false,3,TCC);
+    // charge - charge
+    RealOpenMM s3 = getAndScaleInverseRs( particleI, particleJ, r, true, 3,TCC);
 
     // FIXME verify this
     if( isSameWater ){
-		s3 = 2;
-		s5 = 2;
-		s7 = 2;
+	s3 = 2;
     }
     RealOpenMM rr3 = (s3 - 1.)/(r2*r);
-    RealOpenMM rr5 = (s5 - 1.)/(r2*r2*r);
-    RealOpenMM rr7 = (s7 - 1.)/(r2*r2*r2*r);
 
-//    RealOpenMM rr3 = (s3 - 1)/(r2*r);
-//    RealOpenMM rr5 = (s5 - 1)/(r2*r2*r);
-//    RealOpenMM rr7 = (s7 - 1)/(r2*r2*r2*r);
+    RealVec fid            = - deltaR * rr3 * particleJ.charge;
+    RealVec fjd            = + deltaR * rr3 * particleI.charge;
 
-
-    RealVec fid            = qj*( 2.0*rr5) - particleJ.dipole*rr3 - deltaR*(rr3*particleJ.charge - rr5*djr+rr7*qjr);
-    RealVec fjd            = qi*(-2.0*rr5) - particleI.dipole*rr3 + deltaR*(rr3*particleI.charge + rr5*dir+rr7*qir);
-
-    RealVec fip            = qj*( 2.0*rr5) - particleJ.dipole*rr3 - deltaR*(rr3*particleJ.charge - rr5*djr+rr7*qjr);
-    RealVec fjp            = qi*(-2.0*rr5) - particleI.dipole*rr3 + deltaR*(rr3*particleI.charge + rr5*dir+rr7*qir);
+    RealVec fip            = - deltaR * rr3 * particleJ.charge;
+    RealVec fjp            = + deltaR * rr3 * particleI.charge;
 
     // increment the field at each site due to this interaction
 
