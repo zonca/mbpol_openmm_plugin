@@ -86,7 +86,7 @@ void testDispersion( double boxDimension, bool addPositionOffset ) {
         particleIndices[1] = jj+1;
         particleIndices[2] = jj+2;
 
-        dispersionForce->addParticle( particleIndices);
+        dispersionForce->addParticle( particleIndices, 'O');
 
     }
 

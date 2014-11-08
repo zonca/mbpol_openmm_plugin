@@ -95,7 +95,7 @@ public:
      * @param reductionFactor the fraction of the distance along the line from the parent particle to this particle
      *                        at which the interaction site should be placed
      */
-    void setParticleParameters(int particleIndex, std::vector<int>& particleIndices);
+    void setParticleParameters(int particleIndex, std::vector<int>& particleIndices, char atomElement);
 
     /**
      * Get the force field parameters for a vdw particle.
@@ -107,7 +107,7 @@ public:
      * @param reductionFactor the fraction of the distance along the line from the parent particle to this particle
      *                        at which the interaction site should be placed
      */
-    void getParticleParameters(int particleIndex, std::vector<int>& particleIndices) const;
+    void getParticleParameters(int particleIndex, std::vector<int>& particleIndices, char & atomElement) const;
 
 
     /**
@@ -120,7 +120,7 @@ public:
      *                        at which the interaction site should be placed
      * @return index of added particle
      */
-    int addParticle(const std::vector<int> & particleIndices);
+    int addParticle(const std::vector<int> & particleIndices, char atomElement);
 
     int getNumMolecules(void) const;
     /**
@@ -192,12 +192,13 @@ private:
 class MBPolDispersionForce::DispersionInfo {
 public:
     std::vector<int> particleIndices;
+    char atomElement;
 
     DispersionInfo() {
 
     }
-    DispersionInfo( std::vector<int> particleIndices) :
-        particleIndices(particleIndices)  {
+    DispersionInfo( std::vector<int> particleIndices, char atomElement) :
+        particleIndices(particleIndices), atomElement(atomElement)  {
     }
 };
 

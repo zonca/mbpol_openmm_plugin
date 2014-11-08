@@ -135,11 +135,10 @@ void testWater14( FILE* log ) {
                                             thole, 0.000294, 0.000294 );
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
                                                     thole,  0.001310,  0.);
-
         mbpolOneBodyForce->addOneBody(jj, jj+1, jj+2);
         mbpolTwoBodyForce->addParticle( particleIndices);
         mbpolThreeBodyForce->addParticle( particleIndices);
-        dispersionForce->addParticle( particleIndices);
+        dispersionForce->addParticle( particleIndices, 'O');
 
     }
 

@@ -133,7 +133,7 @@ void testThreeBody( FILE* log ) {
         mbpolOneBodyForce->addOneBody(jj, jj+1, jj+2);
         mbpolTwoBodyForce->addParticle( particleIndices);
         mbpolThreeBodyForce->addParticle( particleIndices);
-        dispersionForce->addParticle( particleIndices);
+        dispersionForce->addParticle( particleIndices, 'O');
 
     }
 
