@@ -32,6 +32,8 @@
 
 using std::vector;
 using OpenMM::RealVec;
+using namespace MBPolPlugin;
+
 
 MBPolReferenceDispersionForce::MBPolReferenceDispersionForce( ) : _nonbondedMethod(NoCutoff), _cutoff(1.0e+10) {
 
