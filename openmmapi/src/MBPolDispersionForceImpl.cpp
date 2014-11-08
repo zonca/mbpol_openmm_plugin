@@ -42,9 +42,72 @@ using namespace  OpenMM;
 using namespace MBPolPlugin;
 using namespace std;
 
+
 using std::pair;
 using std::vector;
 using std::set;
+
+
+template <int N>
+struct Factorial
+{
+    enum { value = N * Factorial<N - 1>::value };
+};
+
+template <>
+struct Factorial<0>
+{
+    enum { value = 1 };
+};
+
+double tang_toennies(int n, const double& x)
+{
+    assert(n >= 0);
+
+    int nn = n;
+
+    double sum = 1.0 + x/nn;
+    while (--nn != 0)
+        sum = 1.0 + sum*x/nn;
+
+    double tt = 1.0 - sum*std::exp(-x);
+
+    if (std::fabs(tt) < 1.0e-8) {
+
+        double term(1);
+        for (nn = n; nn != 0; --nn)
+            term *= x/nn;
+
+        sum = 0.0;
+        for (nn = n + 1; nn < 1000; ++nn) {
+            term *= x/nn;
+            sum += term;
+
+            if (std::fabs(term/sum) < 1.0e-8)
+                break;
+        }
+
+        tt = sum*std::exp(-x);
+    }
+
+    return tt;
+}
+
+double tang_toennies_long_range(const double& x)
+{
+    int n = 6;
+    const double if6 = 1.0/Factorial<6>::value;
+    double tang_toennies_lr = tang_toennies(n, x) / std::pow(x, (n - 3)) + std::exp(-x)*(x*x*(3.0 + x) + 6*(1.0 + x)) * if6 ;
+
+   tang_toennies_lr = tang_toennies_lr/(n - 3);
+   return tang_toennies_lr;
+}
+
+double energy_long_range_correction(double cutoff, double c6, double d6)
+{
+    double el12 = -c6 * pow(d6, 3) * tang_toennies_long_range(d6*cutoff);
+    return el12;
+}
 
 MBPolDispersionForceImpl::MBPolDispersionForceImpl(const MBPolDispersionForce& owner) : owner(owner) {
 }
@@ -81,52 +144,39 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
         return 0.0;
 
     // Identify all particle classes (defined by sigma and epsilon), and count the number of
-    // particles in each class.
-
-    map<pair<double, double>, int> classCounts;
-    for (int i = 0; i < force.getNumParticles(); i++) {
-        double charge, sigma, epsilon;
-        sigma = 1.;
-        epsilon = 1.;
-        pair<double, double> key = make_pair(sigma, epsilon);
-        map<pair<double, double>, int>::iterator entry = classCounts.find(key);
-        if (entry == classCounts.end())
-            classCounts[key] = 1;
-        else
-            entry->second++;
-    }
-
-    // Loop over all pairs of classes to compute the coefficient.
-
-    double sum1 = 0, sum2 = 0, sum3 = 0;
-    double cutoff = force.getCutoff();
-    for (map<pair<double, double>, int>::const_iterator entry = classCounts.begin(); entry != classCounts.end(); ++entry) {
-        double sigma = entry->first.first;
-        double epsilon = entry->first.second;
-        double count = (double) entry->second;
-        count *= (count + 1) / 2;
-        double sigma2 = sigma*sigma;
-        double sigma6 = sigma2*sigma2*sigma2;
-        sum1 += count*epsilon*sigma6*sigma6;
-        sum2 += count*epsilon*sigma6;
-    }
-    for (map<pair<double, double>, int>::const_iterator class1 = classCounts.begin(); class1 != classCounts.end(); ++class1)
-        for (map<pair<double, double>, int>::const_iterator class2 = classCounts.begin(); class2 != class1; ++class2) {
-            double sigma = 0.5*(class1->first.first+class2->first.first);
-            double epsilon = sqrt(class1->first.second*class2->first.second);
-            double count = (double) class1->second;
-            count *= (double) class2->second;
-            double sigma2 = sigma*sigma;
-            double sigma6 = sigma2*sigma2*sigma2;
-            sum1 += count*epsilon*sigma6*sigma6;
-            sum2 += count*epsilon*sigma6;
-        }
-    double numParticles = (double) system.getNumParticles();
-    double numInteractions = (numParticles*(numParticles+1))/2;
-    sum1 /= numInteractions;
-    sum2 /= numInteractions;
-    sum3 /= numInteractions;
-    return 8*numParticles*numParticles*M_PI*(sum1/(9*pow(cutoff, 9))-sum2/(3*pow(cutoff, 3))+sum3);
+//    // particles in each class.
+//
+//    map<char, int> classCounts;
+//    for (int i = 0; i < force.getNumParticles(); i++) {
+//        char atomElement;
+//        force.getParticleParameters(atomElement);
+//        map<char, int>::iterator entry = classCounts.find(atomElement);
+//        if (entry == classCounts.end())
+//            classCounts[atomElement] = 1;
+//        else
+//            entry->second++;
+//    }
+//
+//    // Loop over all pairs of classes to compute the coefficient.
+//
+//    // example = {("O", "H"):(1.234, 2.345)}
+//    map<pair<char, char>, pair<double, double>> c6d6Data;
+//
+//    double cutoff = force.getCutoff();
+    double energy = 0.;
+//    for (map<char, int>::const_iterator class1 = classCounts.begin(); class1 != classCounts.end(); ++class1)
+//        for (map<char, int>::const_iterator class2 = class1; class2 != classCounts.end(); ++class2) {
+//            map<pair<char, char>, pair<double, double>> ::iterator entry = c6d6Data.find(make_pair(class1->first, class2->first));
+//            pair<double, double> c6d6;
+//            if (entry == c6d6Data.end())
+//                entry = c6d6Data.find(make_pair(class2->first, class1->first));
+//            c6d6 = entry->second;
+//            double count = (double) class1->second;
+//            count *= (double) class2->second;
+//            double energy_correction = energy_long_range_correction(cutoff, c6d6.first, c6d6.second);
+//            energy += 2 * count * M_PI * energy_correction;
+//        }
+    return energy;
 }
 
 
