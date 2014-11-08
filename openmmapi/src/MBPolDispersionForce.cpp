@@ -42,8 +42,8 @@ using std::vector;
 MBPolDispersionForce::MBPolDispersionForce() : nonbondedMethod(CutoffNonPeriodic), cutoff(1.0e+10) {
 }
 
-int MBPolDispersionForce::addParticle(const std::vector<int> & particleIndices, char atomElement ) {
-    parameters.push_back(DispersionInfo(particleIndices, atomElement));
+int MBPolDispersionForce::addParticle(char atomElement ) {
+    parameters.push_back(DispersionInfo(atomElement));
     return parameters.size()-1;
 }
 
@@ -51,13 +51,11 @@ int MBPolDispersionForce::getNumMolecules() const {
     return parameters.size();
 }
 
-void MBPolDispersionForce::getParticleParameters(int particleIndex, std::vector<int>& particleIndices, char & atomElement ) const {
-    particleIndices     = parameters[particleIndex].particleIndices;
+void MBPolDispersionForce::getParticleParameters(int particleIndex, char & atomElement ) const {
     atomElement = parameters[particleIndex].atomElement;
 }
 
-void MBPolDispersionForce::setParticleParameters(int particleIndex, std::vector<int>& particleIndices, char atomElement  ) {
-      parameters[particleIndex].particleIndices =particleIndices;
+void MBPolDispersionForce::setParticleParameters(int particleIndex, char atomElement  ) {
       parameters[particleIndex].atomElement = atomElement;
 }
 

@@ -572,8 +572,7 @@ void ReferenceCalcMBPolDispersionForceKernel::initialize(const OpenMM::System& s
 
         char atomElement;
         std::vector<int> particleIndices;
-        force.getParticleParameters(ii, particleIndices, atomElement );
-        allParticleIndices[ii] = particleIndices;
+        force.getParticleParameters(ii,  atomElement );
 
     }
 
@@ -631,10 +630,8 @@ void ReferenceCalcMBPolDispersionForceKernel::copyParametersToContext(ContextImp
 
     for (int i = 0; i < numParticles; ++i) {
 
-        std::vector<int> particleIndices;
         char atomElement;
-        force.getParticleParameters(i, particleIndices, atomElement);
-        allParticleIndices[i] = particleIndices;
+        force.getParticleParameters(i, atomElement);
 
     }
 }

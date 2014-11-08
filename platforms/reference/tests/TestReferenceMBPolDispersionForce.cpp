@@ -79,14 +79,13 @@ void testDispersion( double boxDimension, bool addPositionOffset ) {
 
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
         system.addParticle( 1.5999000e+01 );
-        system.addParticle( 1.0080000e+00 );
-        system.addParticle( 1.0080000e+00 );
+        dispersionForce->addParticle( 'O');
 
-        particleIndices[0] = jj;
-        particleIndices[1] = jj+1;
-        particleIndices[2] = jj+2;
+        system.addParticle( 1.0080000e+00 );
+        dispersionForce->addParticle( 'H');
 
-        dispersionForce->addParticle( particleIndices, 'O');
+        system.addParticle( 1.0080000e+00 );
+        dispersionForce->addParticle( 'H');
 
     }
 
