@@ -75,17 +75,15 @@ void testDispersion( double boxDimension, bool addPositionOffset ) {
     unsigned int particlesPerMolecule = 3;
     int numberOfParticles          = numberOfWaterMolecules * particlesPerMolecule;
 
-    std::vector<int> particleIndices(particlesPerMolecule);
-
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
         system.addParticle( 1.5999000e+01 );
-        dispersionForce->addParticle( 'O');
+        dispersionForce->addParticle( "O");
 
         system.addParticle( 1.0080000e+00 );
-        dispersionForce->addParticle( 'H');
+        dispersionForce->addParticle( "H");
 
         system.addParticle( 1.0080000e+00 );
-        dispersionForce->addParticle( 'H');
+        dispersionForce->addParticle( "H");
 
     }
 

@@ -567,13 +567,12 @@ void ReferenceCalcMBPolDispersionForceKernel::initialize(const OpenMM::System& s
     // per-particle parameters
 
     numParticles = force.getNumMolecules();
-    allParticleIndices.resize(numParticles);
+    allParticleElements.resize(numParticles);
     for( int ii = 0; ii < numParticles; ii++ ){
 
-        char atomElement;
-        std::vector<int> particleIndices;
+        string atomElement;
         force.getParticleParameters(ii,  atomElement );
-
+        allParticleElements[ii] = atomElement;
     }
 
     useCutoff              = (force.getNonbondedMethod() != MBPolDispersionForce::NoCutoff);
@@ -587,20 +586,15 @@ void ReferenceCalcMBPolDispersionForceKernel::initialize(const OpenMM::System& s
 double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
 
     vector<RealVec>& allPosData   = extractPositions(context);
-    vector<RealVec> posData;
-    posData.resize(numParticles);
     vector<set<int> > allExclusions;
     allExclusions.resize(numParticles);
-    // posData has only oxygens
-    for( int ii = 0; ii < numParticles; ii++ ){
-        posData[ii] = allPosData[allParticleIndices[ii][0]];
-    }
+
     vector<RealVec>& forceData = extractForces(context);
     MBPolReferenceDispersionForce dispersionForce;
     RealOpenMM energy;
     dispersionForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
-    computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+    computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
 
     RealOpenMM dispersionCorrection = 0;
     if( usePBC ){
@@ -616,7 +610,7 @@ double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bo
         dispersionForce.setNonbondedMethod( MBPolReferenceDispersionForce::CutoffNonPeriodic);
     }
     // here we need allPosData, every atom!
-    energy  = dispersionForce.calculateForceAndEnergy( numParticles, allPosData, allParticleIndices, *neighborList, forceData);
+    energy  = dispersionForce.calculateForceAndEnergy( numParticles, allPosData, allParticleElements, *neighborList, forceData);
     energy += dispersionCorrection;
 
     return static_cast<double>(energy);
@@ -630,8 +624,9 @@ void ReferenceCalcMBPolDispersionForceKernel::copyParametersToContext(ContextImp
 
     for (int i = 0; i < numParticles; ++i) {
 
-        char atomElement;
+        string atomElement;
         force.getParticleParameters(i, atomElement);
+        allParticleElements[i] = atomElement;
 
     }
 }

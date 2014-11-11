@@ -35,6 +35,9 @@
 #include "openmm/Force.h"
 #include "internal/windowsExportMBPol.h"
 #include <vector>
+#include <string>
+
+using std::string;
 
 using namespace OpenMM;
 
@@ -107,7 +110,7 @@ public:
      * @param reductionFactor the fraction of the distance along the line from the parent particle to this particle
      *                        at which the interaction site should be placed
      */
-    void getParticleParameters(int particleIndex, char & atomElement) const;
+    void getParticleParameters(int particleIndex, string & atomElement) const;
 
 
     /**
@@ -120,7 +123,7 @@ public:
      *                        at which the interaction site should be placed
      * @return index of added particle
      */
-    int addParticle(char atomElement);
+    int addParticle(string atomElement);
 
     int getNumMolecules(void) const;
     /**
@@ -191,13 +194,12 @@ private:
 
 class MBPolDispersionForce::DispersionInfo {
 public:
-    std::vector<int> particleIndices;
-    char atomElement;
+    string atomElement;
 
     DispersionInfo() {
 
     }
-    DispersionInfo( char atomElement) :
+    DispersionInfo( string atomElement) :
         atomElement(atomElement)  {
     }
 };

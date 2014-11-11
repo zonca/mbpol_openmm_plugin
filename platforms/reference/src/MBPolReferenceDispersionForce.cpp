@@ -29,15 +29,43 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
+#include <map>
+#include <string>
+#include <iostream>
+
+using std::pair;
+using std::string;
+using std::map;
+using std::make_pair;
 
 using std::vector;
 using OpenMM::RealVec;
 using namespace MBPolPlugin;
 
 
+const double C6_HH = 2.009358600184719e+01; // kcal/mol * A^(-6)
+const double C6_OH = 8.349556669872743e+01; // kcal/mol * A^(-6)
+const double C6_OO = 2.373212214147944e+02; // kcal/mol * A^(-6)
+
+const double d6_HH =  9.406475169954112e+00; // A^(-1)
+const double d6_OH =  9.775202425217957e+00; // A^(-1)
+const double d6_OO =  9.295485815062264e+00; // A^(-1)
+
 MBPolReferenceDispersionForce::MBPolReferenceDispersionForce( ) : _nonbondedMethod(NoCutoff), _cutoff(1.0e+10) {
 
     _periodicBoxDimensions = RealVec( 0.0, 0.0, 0.0 );
+
+    _c6d6Data[make_pair("H", "H")] = make_pair(C6_HH, d6_HH);
+    _c6d6Data[make_pair("O", "H")] = make_pair(C6_OH, d6_OH);
+    _c6d6Data[make_pair("O", "O")] = make_pair(C6_OO, d6_OO);
+
+    c6d6Datatype :: const_iterator entry =
+            _c6d6Data.find(make_pair("O", "H"));
+//    if (entry == _c6d6Data.end())
+//        entry = _c6d6Data.find(make_pair(allParticleElements[siteI], allParticleElements[siteJ]));
+    pair<double, double> c6d6 = entry->second;
+    std::cout << c6d6.first << std::endl;
+
 }
 
 MBPolReferenceDispersionForce::NonbondedMethod MBPolReferenceDispersionForce::getNonbondedMethod( void ) const {
@@ -64,13 +92,11 @@ RealVec MBPolReferenceDispersionForce::getPeriodicBox( void ) const {
     return _periodicBoxDimensions;
 }
 
-const double C6_HH = 2.009358600184719e+01; // kcal/mol * A^(-6)
-const double C6_OH = 8.349556669872743e+01; // kcal/mol * A^(-6)
-const double C6_OO = 2.373212214147944e+02; // kcal/mol * A^(-6)
+void MBPolReferenceDispersionForce::setC6d6Data( const c6d6Datatype& c6d6Data) {
+    _c6d6Data = c6d6Data;
+}
 
-const double d6_HH =  9.406475169954112e+00; // A^(-1)
-const double d6_OH =  9.775202425217957e+00; // A^(-1)
-const double d6_OO =  9.295485815062264e+00; // A^(-1)
+
 
 template <int N>
 struct Factorial
@@ -154,50 +180,31 @@ inline double x6(const double& C6, const double& d6,
 
 RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ,
                                                       const std::vector<RealVec>& particlePositions,
-                                                      const std::vector<std::vector<int> >& allParticleIndices,
+                                                      const std::vector<string>& allParticleElements,
                                                       vector<RealVec>& forces ) const {
 
-        // siteI and siteJ are indices in a oxygen-only array, in order to get the position of an oxygen, we need:
-        // allParticleIndices[siteI][0]
-        // first hydrogen: allParticleIndices[siteI][1]
-        // second hydrogen: allParticleIndices[siteI][2]
-        // same for the second water molecule
-
-
-        OpenMM::RealVec& gOa  = forces[allParticleIndices[siteI][0]];
-        OpenMM::RealVec& gHa1 = forces[allParticleIndices[siteI][1]];
-        OpenMM::RealVec& gHa2 = forces[allParticleIndices[siteI][2]];
-
-        OpenMM::RealVec& gOb  = forces[allParticleIndices[siteJ][0]];
-        OpenMM::RealVec& gHb1 = forces[allParticleIndices[siteJ][1]];
-        OpenMM::RealVec& gHb2 = forces[allParticleIndices[siteJ][2]];
+        if ((std::abs(siteI-siteJ) == 1) and (allParticleElements[siteI] != "O"))
+            return 0;
+        if ((std::abs(siteI-siteJ) == 2) and (allParticleElements[siteJ] == "O"))
+            return 0;
 
         std::vector<RealVec> allPositions;
 
-        for (unsigned int i=0; i < 3; i++)
-            allPositions.push_back(particlePositions[allParticleIndices[siteI][i]] * nm_to_A);
-        for (unsigned int i=0; i < 3; i++)
-            allPositions.push_back(particlePositions[allParticleIndices[siteJ][i]] * nm_to_A);
+        allPositions.push_back(particlePositions[siteI] * nm_to_A);
+        allPositions.push_back(particlePositions[siteJ] * nm_to_A);
 
         if( _nonbondedMethod == CutoffPeriodic )
-            imageMolecules(_periodicBoxDimensions, allPositions);
+            imageParticles(_periodicBoxDimensions, allPositions[0], allPositions[1]);
 
-        const double HH6 =
-               x6(C6_HH, d6_HH, allPositions[Ha1], allPositions[Hb1], gHa1, gHb1)
-             + x6(C6_HH, d6_HH, allPositions[Ha1], allPositions[Hb2], gHa1, gHb2)
-             + x6(C6_HH, d6_HH, allPositions[Ha2], allPositions[Hb1], gHa2, gHb1)
-             + x6(C6_HH, d6_HH, allPositions[Ha2], allPositions[Hb2], gHa2, gHb2);
+        c6d6Datatype :: const_iterator entry =
+                _c6d6Data.find(make_pair(allParticleElements[siteI], allParticleElements[siteJ]));
+        if (entry == _c6d6Data.end())
+            entry = _c6d6Data.find(make_pair(allParticleElements[siteJ], allParticleElements[siteI]));
+        pair<double, double> c6d6 = entry->second;
 
-        const double OH6 =
-           x6(C6_OH, d6_OH, allPositions[Oa ], allPositions[Hb1], gOa, gHb1)
-         + x6(C6_OH, d6_OH, allPositions[Oa ], allPositions[Hb2], gOa, gHb2)
-         + x6(C6_OH, d6_OH, allPositions[Ob ], allPositions[Ha1], gOb, gHa1)
-         + x6(C6_OH, d6_OH, allPositions[Ob ], allPositions[Ha2], gOb, gHa2);
-
-        const double OO6 =
-           x6(C6_OO, d6_OO, allPositions[Oa ], allPositions[Ob ], gOa, gOb);
-
-        RealOpenMM energy= (HH6 + OH6 + OO6);
+        std::cout << siteI << ", " << siteJ << " | " << allParticleElements[siteI] <<  allParticleElements[siteJ] << std::endl;
+        std::cout << c6d6.first << ", " << c6d6.second << std::endl;
+        RealOpenMM energy= x6(c6d6.first, c6d6.second, allPositions[0], allPositions[1], forces[siteI], forces[siteJ]);
 
         return energy;
 
@@ -205,7 +212,7 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
 
 RealOpenMM MBPolReferenceDispersionForce::calculateForceAndEnergy( int numParticles,
                                                              const vector<RealVec>& particlePositions,
-                                                             const std::vector<std::vector<int> >& allParticleIndices,
+                                                             const std::vector<string>& allParticleElements,
                                                              const NeighborList& neighborList,
                                                              vector<RealVec>& forces ) const {
 
@@ -218,7 +225,7 @@ RealOpenMM MBPolReferenceDispersionForce::calculateForceAndEnergy( int numPartic
         int siteJ                   = pair.second;
 
         energy                     += calculatePairIxn( siteI, siteJ,
-                particlePositions, allParticleIndices, forces );
+                particlePositions, allParticleElements, forces );
 
     }
 
