@@ -117,6 +117,8 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
                                                       const std::vector<string>& allParticleElements,
                                                       vector<RealVec>& forces ) const {
 
+        // FIXME improve exclusion of virtual sites and same-molecule interactions
+
         if ((allParticleElements[siteI] == "M") or (allParticleElements[siteJ] == "M"))
             return 0;
         if ((std::abs(siteI-siteJ) == 1) and (allParticleElements[siteI] != "O"))
