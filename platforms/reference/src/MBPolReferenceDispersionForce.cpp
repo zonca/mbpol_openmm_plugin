@@ -22,6 +22,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#include "openmm/OpenMMException.h"
 
 #include "MBPolReferenceForce.h"
 #include "MBPolReferenceDispersionForce.h"
@@ -88,7 +89,7 @@ RealVec MBPolReferenceDispersionForce::getPeriodicBox( void ) const {
     return _periodicBoxDimensions;
 }
 
-void MBPolReferenceDispersionForce::setC6d6Data( const c6d6Datatype& c6d6Data) {
+void MBPolReferenceDispersionForce::setDispersionParameters( const c6d6Datatype& c6d6Data) {
     _c6d6Data = c6d6Data;
 }
 
@@ -150,17 +151,18 @@ inline double x6(const double& C6, const double& d6,
     const double rsq = dx*dx + dy*dy + dz*dz;
     const double r = std::sqrt(rsq);
 
-    const double d6r = d6*r;
+    const double kcal_permol_Aminus6_to_kJ_permol_nmminus6 = 4.184e6;
+    const double d6r = d6*r/nm_to_A;
     const double tt6 = tang_toennies(6, d6r);
 
     const double inv_rsq = 1.0/rsq;
     const double inv_r6 = inv_rsq*inv_rsq*inv_rsq;
 
-    const double e6 = C6*tt6*inv_r6;
+    const double e6 = C6*tt6*inv_r6/kcal_permol_Aminus6_to_kJ_permol_nmminus6;
 
     const double if6 = 1.0/Factorial<6>::value;
 
-    const double grd = 6*e6*inv_rsq - C6*std::pow(d6, 7)*if6*std::exp(-d6r)/r;
+    const double grd = 6*e6*inv_rsq - C6/kcal_permol_Aminus6_to_kJ_permol_nmminus6*std::pow(d6/nm_to_A, 7)*if6*std::exp(-d6r)/r;
 
     g1[0] += dx*grd * cal2joule * -nm_to_A;
     g2[0] -= dx*grd * cal2joule * -nm_to_A;
@@ -196,6 +198,9 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
                 _c6d6Data.find(make_pair(allParticleElements[siteI], allParticleElements[siteJ]));
         if (entry == _c6d6Data.end())
             entry = _c6d6Data.find(make_pair(allParticleElements[siteJ], allParticleElements[siteI]));
+        if (entry == _c6d6Data.end())
+            throw OpenMMException("Dispersion force parameters need to be defined for all pairs of elements");
+
         pair<double, double> c6d6 = entry->second;
 
         RealOpenMM energy= x6(c6d6.first, c6d6.second, allPositions[0], allPositions[1], forces[siteI], forces[siteJ]);

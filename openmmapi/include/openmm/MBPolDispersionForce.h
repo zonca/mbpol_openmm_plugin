@@ -36,10 +36,18 @@
 #include "internal/windowsExportMBPol.h"
 #include <vector>
 #include <string>
+#include <map>
+
 
 using std::string;
+using std::vector;
 
+using std::map;
+using std::pair;
 using namespace OpenMM;
+
+typedef map< pair<const string, const string>, pair<double, double> > c6d6Datatype;
+
 
 namespace MBPolPlugin {
 
@@ -125,6 +133,10 @@ public:
      */
     int addParticle(string atomElement);
 
+    void addDispersionParameters(string firstElement, string secondElement, double c6, double d6);
+
+    c6d6Datatype getDispersionParameters( void ) const;
+
     int getNumMolecules(void) const;
     /**
      * Set the cutoff distance.
@@ -187,7 +199,7 @@ private:
     double cutoff;
 
     std::vector<DispersionInfo> parameters;
-    std::vector< std::vector< std::vector<double> > > sigEpsTable;
+    c6d6Datatype c6d6Data;
     bool useDispersionCorrection;
 
 };

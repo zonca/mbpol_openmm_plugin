@@ -285,6 +285,7 @@ private:
     double cutoff;
     double dispersionCoefficient;
     std::vector< string > allParticleElements;
+    c6d6Datatype c6d6Data;
     const System& system;
     NeighborList* neighborList;
 };

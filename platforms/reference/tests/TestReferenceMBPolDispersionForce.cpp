@@ -87,6 +87,20 @@ void testDispersion( double boxDimension, bool addPositionOffset ) {
 
     }
 
+
+    const double C6_HH = 2.009358600184719e+01; // kcal/mol * A^(-6)
+    const double C6_OH = 8.349556669872743e+01; // kcal/mol * A^(-6)
+    const double C6_OO = 2.373212214147944e+02; // kcal/mol * A^(-6)
+
+    const double d6_HH =  9.406475169954112e+00; // A^(-1)
+    const double d6_OH =  9.775202425217957e+00; // A^(-1)
+    const double d6_OO =  9.295485815062264e+00; // A^(-1)
+
+    // <!-- Units: c6 [kJ mol^{-1} nm^{-6}], d6 [nm^{-1}] -->
+    dispersionForce->addDispersionParameters("O", "O", 9.92951990e+08, 9.29548582e+01);
+    dispersionForce->addDispersionParameters("O", "H", 3.49345451e+08, 9.77520243e+01);
+    dispersionForce->addDispersionParameters("H", "H", 8.40715638e+07, 9.40647517e+01);
+
     system.addForce(dispersionForce);
 
     LangevinIntegrator integrator(0.0, 0.1, 0.01);

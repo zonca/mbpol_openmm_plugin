@@ -28,6 +28,7 @@
 #include "openmm/reference/RealVec.h"
 #include "openmm/Vec3.h"
 #include "openmm/reference/ReferenceNeighborList.h"
+#include "openmm/MBPolDispersionForce.h"
 #include "MBPolConstants.h"
 #include <string>
 #include <vector>
@@ -40,7 +41,6 @@ using std::pair;
 using std::vector;
 using std::map;
 
-typedef map< pair<const string, const string>, pair<double, double> > c6d6Datatype;
 
 class MBPolReferenceDispersionForce;
 // typedef  RealOpenMM (MBPolReferenceDispersionForce::*CombiningFunction)( RealOpenMM x, RealOpenMM y) const;
@@ -143,7 +143,7 @@ public:
     
     RealVec getPeriodicBox( void ) const;
 
-    void setC6d6Data( const c6d6Datatype& c6d6Data);
+    void setDispersionParameters( const c6d6Datatype& c6d6Data);
 
     /**---------------------------------------------------------------------------------------
     

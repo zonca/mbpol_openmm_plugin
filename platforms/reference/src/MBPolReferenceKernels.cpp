@@ -575,6 +575,8 @@ void ReferenceCalcMBPolDispersionForceKernel::initialize(const OpenMM::System& s
         allParticleElements[ii] = atomElement;
     }
 
+    c6d6Data = force.getDispersionParameters();
+
     useCutoff              = (force.getNonbondedMethod() != MBPolDispersionForce::NoCutoff);
     usePBC                 = (force.getNonbondedMethod() == MBPolDispersionForce::CutoffPeriodic);
     cutoff                 = force.getCutoff();
@@ -596,6 +598,7 @@ double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bo
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
     computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
 
+    dispersionForce.setDispersionParameters(c6d6Data);
     RealOpenMM dispersionCorrection = 0;
     if( usePBC ){
         dispersionForce.setNonbondedMethod( MBPolReferenceDispersionForce::CutoffPeriodic);
