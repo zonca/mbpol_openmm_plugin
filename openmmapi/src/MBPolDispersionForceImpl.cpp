@@ -134,38 +134,38 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
         return 0.0;
 
     // Identify all particle classes (defined by sigma and epsilon), and count the number of
-//    // particles in each class.
-//
-//    map<char, int> classCounts;
-//    for (int i = 0; i < force.getNumParticles(); i++) {
-//        char atomElement;
-//        force.getParticleParameters(atomElement);
-//        map<char, int>::iterator entry = classCounts.find(atomElement);
-//        if (entry == classCounts.end())
-//            classCounts[atomElement] = 1;
-//        else
-//            entry->second++;
-//    }
-//
-//    // Loop over all pairs of classes to compute the coefficient.
-//
-//    // example = {("O", "H"):(1.234, 2.345)}
-//    map<pair<char, char>, pair<double, double>> c6d6Data;
-//
-//    double cutoff = force.getCutoff();
+    // particles in each class.
+
+    map<string, int> classCounts;
+    for (int i = 0; i < force.getNumParticles(); i++) {
+        string atomElement;
+        force.getParticleParameters(i, atomElement);
+        map<string, int>::iterator entry = classCounts.find(atomElement);
+        if (entry == classCounts.end())
+            classCounts[atomElement] = 1;
+        else
+            entry->second++;
+    }
+
+    // Loop over all pairs of classes to compute the coefficient.
+
+    double cutoff = force.getCutoff();
     double energy = 0.;
-//    for (map<char, int>::const_iterator class1 = classCounts.begin(); class1 != classCounts.end(); ++class1)
-//        for (map<char, int>::const_iterator class2 = class1; class2 != classCounts.end(); ++class2) {
-//            map<pair<char, char>, pair<double, double>> ::iterator entry = c6d6Data.find(make_pair(class1->first, class2->first));
-//            pair<double, double> c6d6;
-//            if (entry == c6d6Data.end())
-//                entry = c6d6Data.find(make_pair(class2->first, class1->first));
-//            c6d6 = entry->second;
-//            double count = (double) class1->second;
-//            count *= (double) class2->second;
-//            double energy_correction = energy_long_range_correction(cutoff, c6d6.first, c6d6.second);
-//            energy += 2 * count * M_PI * energy_correction;
-//        }
+
+    c6d6Datatype c6d6Data = force.getDispersionParameters();
+
+    for (map<string, int>::const_iterator class1 = classCounts.begin(); class1 != classCounts.end(); ++class1)
+        for (map<string, int>::const_iterator class2 = class1; class2 != classCounts.end(); ++class2) {
+            c6d6Datatype ::iterator entry = c6d6Data.find(make_pair(class1->first, class2->first));
+            pair<double, double> c6d6;
+            if (entry == c6d6Data.end())
+                entry = c6d6Data.find(make_pair(class2->first, class1->first));
+            c6d6 = entry->second;
+            double count = (double) class1->second;
+            count *= (double) class2->second;
+            double energy_correction = energy_long_range_correction(cutoff, c6d6.first, c6d6.second);
+            energy += 2 * count * M_PI * energy_correction;
+        }
     return energy;
 }
 
