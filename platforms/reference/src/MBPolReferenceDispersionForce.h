@@ -29,7 +29,7 @@
 #include "openmm/Vec3.h"
 #include "openmm/reference/ReferenceNeighborList.h"
 #include "openmm/MBPolDispersionForce.h"
-#include "MBPolConstants.h"
+#include "openmm/internal/MBPolConstants.h"
 #include <string>
 #include <vector>
 #include <map>

@@ -23,6 +23,7 @@
  */
 
 #include "openmm/OpenMMException.h"
+#include "openmm/internal/MBPolDispersionForceImpl.h"
 
 #include "MBPolReferenceForce.h"
 #include "MBPolReferenceDispersionForce.h"
@@ -43,26 +44,9 @@ using std::vector;
 using OpenMM::RealVec;
 using namespace MBPolPlugin;
 
-
-const double C6_HH = 2.009358600184719e+01; // kcal/mol * A^(-6)
-const double C6_OH = 8.349556669872743e+01; // kcal/mol * A^(-6)
-const double C6_OO = 2.373212214147944e+02; // kcal/mol * A^(-6)
-
-const double d6_HH =  9.406475169954112e+00; // A^(-1)
-const double d6_OH =  9.775202425217957e+00; // A^(-1)
-const double d6_OO =  9.295485815062264e+00; // A^(-1)
-
 MBPolReferenceDispersionForce::MBPolReferenceDispersionForce( ) : _nonbondedMethod(NoCutoff), _cutoff(1.0e+10) {
 
     _periodicBoxDimensions = RealVec( 0.0, 0.0, 0.0 );
-
-    _c6d6Data[make_pair("H", "H")] = make_pair(C6_HH, d6_HH);
-    _c6d6Data[make_pair("O", "H")] = make_pair(C6_OH, d6_OH);
-    _c6d6Data[make_pair("O", "O")] = make_pair(C6_OO, d6_OO);
-
-    c6d6Datatype :: const_iterator entry =
-            _c6d6Data.find(make_pair("O", "H"));
-
 }
 
 MBPolReferenceDispersionForce::NonbondedMethod MBPolReferenceDispersionForce::getNonbondedMethod( void ) const {
@@ -93,53 +77,6 @@ void MBPolReferenceDispersionForce::setDispersionParameters( const c6d6Datatype&
     _c6d6Data = c6d6Data;
 }
 
-
-
-template <int N>
-struct Factorial
-{
-    enum { value = N * Factorial<N - 1>::value };
-};
-
-template <>
-struct Factorial<0>
-{
-    enum { value = 1 };
-};
-
-double tang_toennies(int n, const double& x)
-{
-    assert(n >= 0);
-
-    int nn = n;
-
-    double sum = 1.0 + x/nn;
-    while (--nn != 0)
-        sum = 1.0 + sum*x/nn;
-
-    double tt = 1.0 - sum*std::exp(-x);
-
-    if (std::fabs(tt) < 1.0e-8) {
-
-        double term(1);
-        for (nn = n; nn != 0; --nn)
-            term *= x/nn;
-
-        sum = 0.0;
-        for (nn = n + 1; nn < 1000; ++nn) {
-            term *= x/nn;
-            sum += term;
-
-            if (std::fabs(term/sum) < 1.0e-8)
-                break;
-        }
-
-        tt = sum*std::exp(-x);
-    }
-
-    return tt;
-}
-
 inline double x6(const double& C6, const double& d6,
                  const OpenMM::RealVec& p1, const OpenMM::RealVec& p2,
                  OpenMM::RealVec& g1,       OpenMM::RealVec& g2)
@@ -151,7 +88,6 @@ inline double x6(const double& C6, const double& d6,
     const double rsq = dx*dx + dy*dy + dz*dz;
     const double r = std::sqrt(rsq);
 
-    const double kcal_permol_Aminus6_to_kJ_permol_nmminus6 = 4.184e6;
     const double d6r = d6*r/nm_to_A;
     const double tt6 = tang_toennies(6, d6r);
 

@@ -40,6 +40,20 @@
 #include <set>
 #include <string>
 
+template <int N>
+struct Factorial
+{
+    enum { value = N * Factorial<N - 1>::value };
+};
+
+template <>
+struct Factorial<0>
+{
+    enum { value = 1 };
+};
+
+double tang_toennies(const int n, const double& x);
+
 namespace MBPolPlugin {
 
 /**

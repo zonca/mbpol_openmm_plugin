@@ -34,6 +34,7 @@
 #endif
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/internal/MBPolDispersionForceImpl.h"
+#include "openmm/internal/MBPolConstants.h"
 #include "openmm/mbpolKernels.h"
 #include <map>
 #include <cmath>
@@ -49,19 +50,7 @@ using std::vector;
 using std::set;
 
 
-template <int N>
-struct Factorial
-{
-    enum { value = N * Factorial<N - 1>::value };
-};
-
-template <>
-struct Factorial<0>
-{
-    enum { value = 1 };
-};
-
-double tang_toennies(int n, const double& x)
+double tang_toennies(const int n, const double& x)
 {
     assert(n >= 0);
 
@@ -96,7 +85,7 @@ double tang_toennies(int n, const double& x)
 
 double tang_toennies_long_range(const double& x)
 {
-    int n = 6;
+    const int n = 6;
     const double if6 = 1.0/Factorial<6>::value;
     double tang_toennies_lr = tang_toennies(n, x) / std::pow(x, (n - 3)) + std::exp(-x)*(x*x*(3.0 + x) + 6*(1.0 + x)) * if6 ;
 
@@ -106,7 +95,7 @@ double tang_toennies_long_range(const double& x)
 
 double energy_long_range_correction(double cutoff, double c6, double d6)
 {
-    double el12 = -c6 * pow(d6, 3) * tang_toennies_long_range(d6*cutoff);
+    double el12 = -c6/kcal_permol_Aminus6_to_kJ_permol_nmminus6 * pow(d6/10., 3) * tang_toennies_long_range(d6/10.*cutoff);
     return el12;
 }
 
