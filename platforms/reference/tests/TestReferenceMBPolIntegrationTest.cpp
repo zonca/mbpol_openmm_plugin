@@ -136,9 +136,14 @@ void testThreeBody( FILE* log ) {
         dispersionForce->addParticle( "O");
         dispersionForce->addParticle( "H");
         dispersionForce->addParticle( "H");
-
+        dispersionForce->addParticle( "M");
 
     }
+
+    // <!-- Units: c6 [kJ mol^{-1} nm^{-6}], d6 [nm^{-1}] -->
+    dispersionForce->addDispersionParameters("O", "O", 9.92951990e+08, 9.29548582e+01);
+    dispersionForce->addDispersionParameters("O", "H", 3.49345451e+08, 9.77520243e+01);
+    dispersionForce->addDispersionParameters("H", "H", 8.40715638e+07, 9.40647517e+01);
 
     system.addForce(mbpolElectrostaticsForce);
     system.addForce(mbpolOneBodyForce);

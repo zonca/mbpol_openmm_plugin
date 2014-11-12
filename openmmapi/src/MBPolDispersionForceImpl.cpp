@@ -140,11 +140,14 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
     for (int i = 0; i < force.getNumParticles(); i++) {
         string atomElement;
         force.getParticleParameters(i, atomElement);
+        if (atomElement != "M")
+        {
         map<string, int>::iterator entry = classCounts.find(atomElement);
         if (entry == classCounts.end())
             classCounts[atomElement] = 1;
         else
             entry->second++;
+        }
     }
 
     // Loop over all pairs of classes to compute the coefficient.
