@@ -61,10 +61,6 @@ MBPolReferenceDispersionForce::MBPolReferenceDispersionForce( ) : _nonbondedMeth
 
     c6d6Datatype :: const_iterator entry =
             _c6d6Data.find(make_pair("O", "H"));
-//    if (entry == _c6d6Data.end())
-//        entry = _c6d6Data.find(make_pair(allParticleElements[siteI], allParticleElements[siteJ]));
-    pair<double, double> c6d6 = entry->second;
-    std::cout << c6d6.first << std::endl;
 
 }
 
@@ -202,8 +198,6 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
             entry = _c6d6Data.find(make_pair(allParticleElements[siteJ], allParticleElements[siteI]));
         pair<double, double> c6d6 = entry->second;
 
-        std::cout << siteI << ", " << siteJ << " | " << allParticleElements[siteI] <<  allParticleElements[siteJ] << std::endl;
-        std::cout << c6d6.first << ", " << c6d6.second << std::endl;
         RealOpenMM energy= x6(c6d6.first, c6d6.second, allPositions[0], allPositions[1], forces[siteI], forces[siteJ]);
 
         return energy;
