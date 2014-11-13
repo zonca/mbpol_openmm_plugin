@@ -28,9 +28,11 @@
 #include <cctype>
 #include "mbpol_2body_constants.h"
 #include "poly-2b-v6x.h"
+#include "openmm/internal/MBPolConstants.h"
 
 using std::vector;
 using OpenMM::RealVec;
+using namespace MBPolPlugin;
 
 MBPolReferenceTwoBodyForce::MBPolReferenceTwoBodyForce( ) : _nonbondedMethod(NoCutoff), _cutoff(1.0e+10) {
 
@@ -112,8 +114,6 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
         // first hydrogen: allParticleIndices[siteI][1]
         // second hydrogen: allParticleIndices[siteI][2]
         // same for the second water molecule
-        const double nm_to_A = 10.;
-
         // offsets
 
         std::vector<RealVec> allPositions;
