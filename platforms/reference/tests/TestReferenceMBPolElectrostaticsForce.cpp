@@ -1490,9 +1490,9 @@ int main( int numberOfArguments, char* argv[] ) {
 
 		mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
 
-//        testWater3VirtualSitePMEHugeBox( log );
+        testWater3VirtualSitePMEHugeBox( log );
 
-//        testWater3VirtualSitePMESmallBox( log );
+        testWater3VirtualSitePMESmallBox( log );
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;

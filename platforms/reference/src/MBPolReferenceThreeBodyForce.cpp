@@ -145,19 +145,17 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
         if( _nonbondedMethod == CutoffPeriodic )
             imageMolecules(_periodicBoxDimensions, allPositions);
 
-        double rab[3], rac[3], rbc[3];
+        RealVec rab, rac, rbc;
         double drab(0), drac(0), drbc(0);
 
-        for (int n = 0; n < 3; ++n) {
-            rab[n] = (Oa[n] - Ob[n])*nm_to_A;
-            drab += rab[n]*rab[n];
+        rab = (allPositions[Oa] - allPositions[Ob])*nm_to_A;
+        drab += rab.dot(rab);
 
-            rac[n] = (Oa[n] - Oc[n])*nm_to_A;
-            drac += rac[n]*rac[n];
+        rac = (allPositions[Oa] - allPositions[Oc])*nm_to_A;
+        drac += rac.dot(rac);
 
-            rbc[n] = (Ob[n] - Oc[n])*nm_to_A;
-            drbc += rbc[n]*rbc[n];
-        }
+        rbc = (allPositions[Ob] - allPositions[Oc])*nm_to_A;
+        drbc += rbc.dot(rbc);
 
         drab = std::sqrt(drab);
         drac = std::sqrt(drac);
@@ -208,24 +206,6 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
 
           double g[36];
           double retval = poly_3b_v2x::eval(thefit, x, g);
-
-          double rab[3], rac[3], rbc[3];
-          double drab(0), drac(0), drbc(0);
-
-          for (int n = 0; n < 3; ++n) {
-              rab[n] = (allPositions[Oa][n] - allPositions[Ob][n])*nm_to_A;
-              drab += rab[n]*rab[n];
-
-              rac[n] = (allPositions[Oa][n] - allPositions[Oc][n])*nm_to_A;
-              drac += rac[n]*rac[n];
-
-              rbc[n] = (allPositions[Ob][n] - allPositions[Oc][n])*nm_to_A;
-              drbc += rbc[n]*rbc[n];
-          }
-
-          drab = std::sqrt(drab);
-          drac = std::sqrt(drac);
-          drbc = std::sqrt(drbc);
 
           double gab, gac, gbc;
 
