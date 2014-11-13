@@ -39,6 +39,7 @@
 #include "openmm/NonbondedForce.h"
 #include "openmm/System.h"
 #include "openmm/internal/NonbondedForceImpl.h"
+#include <iostream>
 
 #include <cmath>
 #ifdef _MSC_VER
@@ -222,6 +223,8 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
             pmeGridDimension[0] = gridSizeX;
             pmeGridDimension[1] = gridSizeY;
             pmeGridDimension[2] = gridSizeZ;
+            std::cout << "Computed PME parameters for MBPolElectrostaticsForce, alphaEwald:" <<
+                    alphaEwald << " pmeGrid: " <<  gridSizeX << "," <<  gridSizeY << ","<<  gridSizeZ << std::endl;
         }    
     } else {
         usePme = false;

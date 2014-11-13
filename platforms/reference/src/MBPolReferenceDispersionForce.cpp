@@ -139,7 +139,8 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
         if (entry == _c6d6Data.end())
             entry = _c6d6Data.find(make_pair(allParticleElements[siteJ], allParticleElements[siteI]));
         if (entry == _c6d6Data.end())
-            throw OpenMMException("Dispersion force parameters need to be defined for all pairs of elements");
+            throw OpenMMException("Dispersion force parameters need to be defined for all pairs of elements: " +
+                    allParticleElements[siteI] + ", " + allParticleElements[siteJ] + " missing");
 
         pair<double, double> c6d6 = entry->second;
 
