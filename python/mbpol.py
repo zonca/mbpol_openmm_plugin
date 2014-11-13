@@ -92,6 +92,14 @@ class MBPolTwoBodyForceGenerator:
 
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
 
+        methodMap = {app.NoCutoff:mbpolplugin.MBPolTwoBodyForce.NoCutoff,
+                     app.PME:mbpolplugin.MBPolTwoBodyForce.CutoffPeriodic,
+                     app.CutoffPeriodic:mbpolplugin.MBPolTwoBodyForce.CutoffPeriodic,
+                     app.CutoffNonPeriodic:mbpolplugin.MBPolTwoBodyForce.CutoffNonPeriodic}
+
+        if nonbondedMethod not in methodMap:
+            raise ValueError('Illegal nonbonded method for MBPolTwoBodyForce')
+
         existing = [sys.getForce(i) for i in range(sys.getNumForces())]
         existing = [f for f in existing if type(f) == mbpolplugin.MBPolTwoBodyForce]
 
@@ -101,6 +109,8 @@ class MBPolTwoBodyForceGenerator:
             sys.addForce(force)
         else:
             force = existing[0]
+
+        force.setNonbondedMethod(methodMap[nonbondedMethod])
 
         for i in range(len(data.angles)):
             angle = data.angles[i]
@@ -153,6 +163,14 @@ class MBPolThreeBodyForceGenerator:
 
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
 
+        methodMap = {app.NoCutoff:mbpolplugin.MBPolThreeBodyForce.NoCutoff,
+                     app.PME:mbpolplugin.MBPolThreeBodyForce.CutoffPeriodic,
+                     app.CutoffPeriodic:mbpolplugin.MBPolThreeBodyForce.CutoffPeriodic,
+                     app.CutoffNonPeriodic:mbpolplugin.MBPolThreeBodyForce.CutoffNonPeriodic}
+
+        if nonbondedMethod not in methodMap:
+            raise ValueError('Illegal nonbonded method for MBPolThreeBodyForce')
+
         existing = [sys.getForce(i) for i in range(sys.getNumForces())]
         existing = [f for f in existing if type(f) == mbpolplugin.MBPolThreeBodyForce]
 
@@ -162,6 +180,8 @@ class MBPolThreeBodyForceGenerator:
             sys.addForce(force)
         else:
             force = existing[0]
+
+        force.setNonbondedMethod(methodMap[nonbondedMethod])
 
         for i in range(len(data.angles)):
             angle = data.angles[i]
@@ -222,6 +242,11 @@ class MBPolDispersionForceGenerator:
 
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
 
+        methodMap = {app.NoCutoff:mbpolplugin.MBPolDispersionForce.NoCutoff,
+                     app.PME:mbpolplugin.MBPolDispersionForce.CutoffPeriodic,
+                     app.CutoffPeriodic:mbpolplugin.MBPolDispersionForce.CutoffPeriodic,
+                     app.CutoffNonPeriodic:mbpolplugin.MBPolDispersionForce.CutoffNonPeriodic}
+
         existing = [sys.getForce(i) for i in range(sys.getNumForces())]
         existing = [f for f in existing if type(f) == mbpolplugin.MBPolDispersionForce]
 
@@ -231,6 +256,8 @@ class MBPolDispersionForceGenerator:
             sys.addForce(force)
         else:
             force = existing[0]
+
+        force.setNonbondedMethod(methodMap[nonbondedMethod])
 
         for atom in data.atoms:
             if atom.element:

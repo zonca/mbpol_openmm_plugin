@@ -127,9 +127,11 @@ public:
 
     double getCutoff(void) const;
 
-    // NonbondedMethod getNonbondedMethod() const;
 
-    // void setNonbondedMethod(NonbondedMethod method);
+    enum NonbondedMethod { NoCutoff, CutoffPeriodic, CutoffNonPeriodic };
+
+    NonbondedMethod getNonbondedMethod() const;
+    void setNonbondedMethod(NonbondedMethod method);
 
     void updateParametersInContext(Context& context);
 
@@ -152,8 +154,11 @@ public:
 
     double getCutoff(void) const;
 
-    //NonbondedMethod getNonbondedMethod() const;
-    // void setNonbondedMethod(NonbondedMethod method);
+    enum NonbondedMethod { NoCutoff, CutoffPeriodic, CutoffNonPeriodic };
+
+
+    NonbondedMethod getNonbondedMethod() const;
+    void setNonbondedMethod(NonbondedMethod method);
 
     void updateParametersInContext(Context& context);
 };
@@ -164,6 +169,10 @@ public:
 
     int getNumParticles() const;
     void setParticleParameters(int particleIndex, std::string atomElement);
+
+    enum NonbondedMethod { NoCutoff, CutoffPeriodic, CutoffNonPeriodic };
+    NonbondedMethod getNonbondedMethod() const;
+    void setNonbondedMethod(NonbondedMethod method);
 
     void getParticleParameters(int particleIndex, std::string & atomElement) const;
 
