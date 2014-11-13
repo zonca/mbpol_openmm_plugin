@@ -911,7 +911,7 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
     std::string testName      = "testWater3VirtualSitePMEHugeBox";
     std::cout << "Test START: " << testName << std::endl;
 
-    int numberOfParticles     = 4*2;
+    int numberOfParticles     = 4*3;
     double cutoff             = 10.;
 
     std::vector<double> outputElectrostaticsMoments;
@@ -1447,52 +1447,52 @@ int main( int numberOfArguments, char* argv[] ) {
 
         FILE* log = NULL;
 
-//        testGetAndScaleInverseRs( log );
-//        testGetAndScaleInverseRsInterMulecolar( log );
-//
-//        WrappedMBPolReferenceElectrostaticsForceForIndDipole* mbpolReferenceElectrostaticsForce = new WrappedMBPolReferenceElectrostaticsForceForIndDipole();
-//        mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon(1e-7);
-//        mbpolReferenceElectrostaticsForce->wrapCalculateInducedDipolePairIxns();
-//
-//        WrappedMBPolReferenceElectrostaticsForceForPmeDipole* mbpolReferenceElectrostaticsForcePme = new WrappedMBPolReferenceElectrostaticsForceForPmeDipole();
-//        mbpolReferenceElectrostaticsForcePme->setMutualInducedDipoleTargetEpsilon(1e-7);
-//        mbpolReferenceElectrostaticsForcePme->setCutoffDistance( 10. );
-//        mbpolReferenceElectrostaticsForcePme->setAlphaEwald( 1e-15 );
-//        std::vector<int> pmeGrid(3);
-//        std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
-//        mbpolReferenceElectrostaticsForcePme->setPmeGridDimensions(pmeGrid);
-//        RealVec boxSize;
-//        boxSize[0] = boxSize[1] = boxSize[2] = 50;
-//        mbpolReferenceElectrostaticsForcePme->setPeriodicBoxSize(boxSize);
-//
-//        mbpolReferenceElectrostaticsForcePme->wrapCalculateInducedDipolePairIxns();
+        testGetAndScaleInverseRs( log );
+        testGetAndScaleInverseRsInterMulecolar( log );
+
+        WrappedMBPolReferenceElectrostaticsForceForIndDipole* mbpolReferenceElectrostaticsForce = new WrappedMBPolReferenceElectrostaticsForceForIndDipole();
+        mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon(1e-7);
+        mbpolReferenceElectrostaticsForce->wrapCalculateInducedDipolePairIxns();
+
+        WrappedMBPolReferenceElectrostaticsForceForPmeDipole* mbpolReferenceElectrostaticsForcePme = new WrappedMBPolReferenceElectrostaticsForceForPmeDipole();
+        mbpolReferenceElectrostaticsForcePme->setMutualInducedDipoleTargetEpsilon(1e-7);
+        mbpolReferenceElectrostaticsForcePme->setCutoffDistance( 10. );
+        mbpolReferenceElectrostaticsForcePme->setAlphaEwald( 1e-15 );
+        std::vector<int> pmeGrid(3);
+        std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
+        mbpolReferenceElectrostaticsForcePme->setPmeGridDimensions(pmeGrid);
+        RealVec boxSize;
+        boxSize[0] = boxSize[1] = boxSize[2] = 50;
+        mbpolReferenceElectrostaticsForcePme->setPeriodicBoxSize(boxSize);
+
+        mbpolReferenceElectrostaticsForcePme->wrapCalculateInducedDipolePairIxns();
 //
         WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn* wrapperForComputeElectrostaticPairIxn = new WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn();
         wrapperForComputeElectrostaticPairIxn->testCalculateElectrostaticPairIxn(log);
-//
-//        WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge* wrapperForComputeWaterCharge = new WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge();
-//        wrapperForComputeWaterCharge->testComputeWaterCharge();
-//
-//        testWater3( log );
-//
-//        testWater3VirtualSite( log );
+
+        WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge* wrapperForComputeWaterCharge = new WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge();
+        wrapperForComputeWaterCharge->testComputeWaterCharge();
+
+        testWater3( log );
+
+        testWater3VirtualSite( log );
 
         WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn* mbpolReferenceElectrostaticsForcePmePair = new WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn();
 		mbpolReferenceElectrostaticsForcePmePair->setMutualInducedDipoleTargetEpsilon(1e-7);
 		mbpolReferenceElectrostaticsForcePmePair->setCutoffDistance( 10. );
 		mbpolReferenceElectrostaticsForcePmePair->setAlphaEwald( 1e-15 );
-		std::vector<int> pmeGrid(3);
+		// std::vector<int> pmeGrid(3);
 		std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
 		mbpolReferenceElectrostaticsForcePmePair->setPmeGridDimensions(pmeGrid);
-		RealVec boxSize;
+		// RealVec boxSize;
 		boxSize[0] = boxSize[1] = boxSize[2] = 50;
 		mbpolReferenceElectrostaticsForcePmePair->setPeriodicBoxSize(boxSize);
 
 		mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
 
-//        testWater3VirtualSitePMEHugeBox( log );
+        testWater3VirtualSitePMEHugeBox( log );
 
-//        testWater3VirtualSitePMESmallBox( log );
+        testWater3VirtualSitePMESmallBox( log );
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
