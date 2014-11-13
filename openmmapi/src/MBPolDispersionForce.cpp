@@ -68,7 +68,7 @@ void MBPolDispersionForce::getParticleParameters(int particleIndex, string & ato
     atomElement = parameters[particleIndex].atomElement;
 }
 
-void MBPolDispersionForce::setParticleParameters(int particleIndex, char atomElement  ) {
+void MBPolDispersionForce::setParticleParameters(int particleIndex, string atomElement  ) {
       parameters[particleIndex].atomElement = atomElement;
 }
 

@@ -203,11 +203,11 @@ class MBPolDispersionForceGenerator:
         forceField._forces.append(generator)
 
         # <MBPolDispersionForce>
-        #     <Residue class1="OW" class2="HW" class3="HW" />
+        #     <Residue name="HOH" class1="O" class2="H" class3="H" />
+        #     <Parameters type1="MBPol-O" type2="MBPol-O" c6="9.92951990e+08" d6="9.29548582e+01" />
+        #     <Parameters type1="MBPol-O" type2="MBPol-H" c6="3.49345451e+08" d6="9.77520243e+01" />
+        #     <Parameters type1="MBPol-H" type2="MBPol-H" c6="8.40715638e+07" d6="9.40647517e+01" />
         # </MBPolDispersionForce>
-        # <AmoebaStretchBendForce stretchBendUnit="1.0">
-        # <StretchBend class1="2" class2="1" class3="3" k1="5.25776946506" k2="5.25776946506" />
-        # <StretchBend class1="2" class2="1" class3="4" k1="3.14005676385" k2="3.14005676385" />
 
         for MBPolDispersionForce_template in element.findall('MBPolDispersionForce'):
             types = forceField._findAtomTypes(MBPolDispersionForce_template.attrib, 3)

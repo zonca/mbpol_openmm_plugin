@@ -106,7 +106,7 @@ public:
      * @param reductionFactor the fraction of the distance along the line from the parent particle to this particle
      *                        at which the interaction site should be placed
      */
-    void setParticleParameters(int particleIndex, char atomElement);
+    void setParticleParameters(int particleIndex, string atomElement);
 
     /**
      * Get the force field parameters for a vdw particle.
