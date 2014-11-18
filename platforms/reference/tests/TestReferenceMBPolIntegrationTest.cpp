@@ -273,7 +273,7 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolIntegrationTest running test..." << std::endl;
 
-        double boxDimension = 20;
+        double boxDimension = 0;
         runTest( boxDimension );
 
     } catch(const std::exception& e) {
