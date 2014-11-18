@@ -3263,7 +3263,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 			      	  + glip1 * (1 - scale5CD)   // charge - inddip 
 				  + scip2 * (1 - scale5DD) ) // inddip - inddip
 	    //FIXME Should there be an rr7 in front of sci3*scip4????!?
-	                    - (sci3*scip4+scip3*sci4)
+	                  - rr7 * (sci3*scip4+scip3*sci4)
 			                  * (1 - scale7DD)   // inddip - inddip
 			   );
 
