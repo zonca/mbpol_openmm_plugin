@@ -338,7 +338,9 @@ class MBPolElectrostaticsForceGenerator:
 
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
 
+        # CutoffNonPeriodic defaults to NoCutoff
         methodMap = {app.NoCutoff:mbpolplugin.MBPolElectrostaticsForce.NoCutoff,
+                     app.CutoffNonPeriodic:mbpolplugin.MBPolElectrostaticsForce.NoCutoff,
                      app.PME:mbpolplugin.MBPolElectrostaticsForce.PME}
         if nonbondedMethod not in methodMap:
             raise ValueError('Illegal nonbonded method for MBPolElectrostaticsForce')
