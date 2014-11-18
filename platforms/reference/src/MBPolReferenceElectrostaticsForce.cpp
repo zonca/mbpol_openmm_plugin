@@ -1667,7 +1667,7 @@ const RealOpenMM MBPolReferencePmeElectrostaticsForce::SQRT_PI = 1.77245385091;
 
 MBPolReferencePmeElectrostaticsForce::MBPolReferencePmeElectrostaticsForce( void ) :
                MBPolReferenceElectrostaticsForce(PME),
-               _cutoffDistance(1.0), _cutoffDistanceSquared(1.0),
+               _cutoffDistance(0.9), _cutoffDistanceSquared(0.81),
                _pmeGridSize(0), _totalGridSize(0), _alphaEwald(0.0) 
 {
 
