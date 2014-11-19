@@ -128,7 +128,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
         extraPoints.resize(4);
 
         if( _nonbondedMethod == CutoffPeriodic )
-            imageMolecules(_periodicBoxDimensions, allPositions);
+            imageMolecules(_periodicBoxDimensions * nm_to_A, allPositions);
 
         RealVec dOO = allPositions[Oa] - allPositions[Ob];
 
