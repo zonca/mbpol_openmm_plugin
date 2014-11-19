@@ -131,7 +131,7 @@ RealOpenMM MBPolReferenceDispersionForce::calculatePairIxn( int siteI, int siteJ
         allPositions.push_back(particlePositions[siteJ] * nm_to_A);
 
         if( _nonbondedMethod == CutoffPeriodic )
-            imageParticles(_periodicBoxDimensions, allPositions[0], allPositions[1]);
+            imageParticles(_periodicBoxDimensions * nm_to_A, allPositions[0], allPositions[1]);
 
         c6d6Datatype :: const_iterator entry =
                 _c6d6Data.find(make_pair(allParticleElements[siteI], allParticleElements[siteJ]));
