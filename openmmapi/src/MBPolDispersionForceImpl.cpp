@@ -137,6 +137,7 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
     // particles in each class.
 
     map<string, int> classCounts;
+    int totalNumParticles = 0;
     for (int i = 0; i < force.getNumParticles(); i++) {
         string atomElement;
         force.getParticleParameters(i, atomElement);
@@ -147,6 +148,7 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
             classCounts[atomElement] = 1;
         else
             entry->second++;
+        totalNumParticles++;
         }
     }
 
@@ -169,6 +171,9 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
             double energy_correction = energy_long_range_correction(cutoff, c6d6.first, c6d6.second);
             energy += 2 * count * M_PI * energy_correction;
         }
+    double numInteractions = (totalNumParticles*(totalNumParticles+1))/2;
+    energy /= numInteractions;
+
     return energy;
 }
 
