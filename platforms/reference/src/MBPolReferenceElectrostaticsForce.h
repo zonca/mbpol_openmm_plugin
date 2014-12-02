@@ -1150,7 +1150,8 @@ protected:
       * @param forces            vector of particle forces to be updated
       * @param torques           vector of particle torques to be updated
       */
-     RealOpenMM calculatePmeDirectElectrostaticPairIxn( const ElectrostaticsParticleData& particleI, const ElectrostaticsParticleData& particleJ,
+     RealOpenMM calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
+							unsigned int iIndex, unsigned int jIndex,
                                                         std::vector<RealVec>& forces, std::vector<RealVec>& torques ) const;
 
 

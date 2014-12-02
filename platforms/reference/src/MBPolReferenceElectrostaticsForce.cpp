@@ -3111,14 +3111,15 @@ void MBPolReferencePmeElectrostaticsForce::calculatePmeSelfTorque( const std::ve
     return;
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const ElectrostaticsParticleData& particleI, 
-                                                                                     const ElectrostaticsParticleData& particleJ,
-                                                                                     std::vector<RealVec>& forces,
-                                                                                     std::vector<RealVec>& torques ) const 
+RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
+											 unsigned int iIndex,
+											 unsigned int jIndex,
+                                                                                         std::vector<RealVec>& forces,
+                                                                                         std::vector<RealVec>& torques ) const 
 {
 
-    unsigned int iIndex = particleI.particleIndex;
-    unsigned int jIndex = particleJ.particleIndex;
+    ElectrostaticsParticleData particleI = particleData[iIndex];
+    ElectrostaticsParticleData particleJ = particleData[jIndex];
 
     RealOpenMM energy;
     RealVec deltaR   = particleJ.position - particleI.position;
@@ -3580,7 +3581,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
                 getElectrostaticsScaleFactors( ii, jj, scaleFactors);
             }
 
-            energy += calculatePmeDirectElectrostaticPairIxn( particleData[ii], particleData[jj], forces, torques );
+            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, torques );
 
             if( jj <= _maxScaleIndex[ii] ){
                 for( unsigned int kk = 0; kk < LAST_SCALE_TYPE_INDEX; kk++ ){
