@@ -221,7 +221,7 @@ void runTest( double boxDimension ) {
     for( unsigned int ii = 0; ii < expectedForces.size(); ii++ ){
         expectedForces[ii] *= -1;
     }
-    expectedEnergy        = -8.78893485;
+    expectedEnergy        = -8.92353;
 
     std::string platformName;
     #define AngstromToNm 0.1    
@@ -243,9 +243,14 @@ void runTest( double boxDimension ) {
         }
     }    
 
-    double tolerance = 1.0e-03;
+    double tolerance = 1.0e-02;
 
-
+    vector<string> forceLabels;
+    forceLabels.push_back("Electrostatics");
+    forceLabels.push_back("OneBody");
+    forceLabels.push_back("TwoBody");
+    forceLabels.push_back("ThreeBody");
+    forceLabels.push_back("Dispersion");
     double energy = state.getPotentialEnergy() / CalToJoule;
 
     std::cout << "Total Energy: " << energy << " Kcal/mol "<< std::endl;
@@ -253,7 +258,7 @@ void runTest( double boxDimension ) {
 
     for ( unsigned int ii = 0; ii < 5; ii++ ){
         state                      = context.getState(State::Energy, false, pow(2, ii));
-        std::cout << "Energy component " << ii << ": " << state.getPotentialEnergy() / CalToJoule << " Kcal/mol "<< std::endl;
+        std::cout << "Energy " << forceLabels[ii] << ": " << state.getPotentialEnergy() / CalToJoule << " Kcal/mol "<< std::endl;
     }
 
 //    std::cout  << std::endl << "Forces:" << std::endl;
@@ -267,7 +272,7 @@ void runTest( double boxDimension ) {
 //
 //
 //
-//   ASSERT_EQUAL_TOL( expectedEnergy, energy, tolerance );
+     ASSERT_EQUAL_TOL( expectedEnergy, energy, tolerance );
 //
 //   for( unsigned int ii = 0; ii < forces.size(); ii++ ){
 //       ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
@@ -281,7 +286,7 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolIntegrationTest running test..." << std::endl;
 
-        double boxDimension = 5;
+        double boxDimension = 1.8;
         runTest( boxDimension );
 
     } catch(const std::exception& e) {
