@@ -572,6 +572,51 @@ void MBPolReferenceElectrostaticsForce::applyRotationMatrix( std::vector<Electro
     return;
 }
 
+#if 1
+RealOpenMM MBPolReferencePmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM r, int interactionOrder) const
+{
+    // calculate the real space error function terms
+
+    RealOpenMM ralpha = _alphaEwald*r;
+    RealOpenMM bn0    = erfc(ralpha)/r;
+
+    RealOpenMM r2 = r*r;
+
+    RealOpenMM alsq2  = 2.0*_alphaEwald*_alphaEwald;
+    RealOpenMM alsq2n = 0.0;
+    if( _alphaEwald > 0.0 ){
+        alsq2n = 1.0/(SQRT_PI*_alphaEwald);
+    }
+    RealOpenMM exp2a  = EXP(-(ralpha*ralpha));
+
+    alsq2n           *= alsq2;
+    RealOpenMM bn1    = (bn0+alsq2n*exp2a)/r2;
+
+    alsq2n           *= alsq2;
+    RealOpenMM bn2    = (3.0*bn1+alsq2n*exp2a)/r2;
+
+    alsq2n           *= alsq2;
+    RealOpenMM bn3    = (5.0*bn2+alsq2n*exp2a)/r2;
+
+    switch (interactionOrder) {
+
+        case 1:
+	    return bn0;
+
+        case 3:
+	    return bn1;
+
+        case 5:
+	    return bn2;
+
+        case 7:
+	    return bn3;
+
+    }
+}
+#endif
+
+
 RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
                                                           RealOpenMM r, bool justScale, int interactionOrder, int interactionType) const

@@ -1140,6 +1140,8 @@ protected:
       */
      void resizePmeArrays( void );
 
+    RealOpenMM ewaldScalingReal( RealOpenMM r, int interactionOrder) const;
+
 
      /**
       * Calculate direct space electrostatic interaction between particles I and J.
