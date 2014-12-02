@@ -3586,59 +3586,82 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     energy                 *= conversionFactor;
 
 #if 1
-    if (getIncludeChargeRedistribution() and (not (isSameWater))){
+    //if (getIncludeChargeRedistribution() and (not (isSameWater))){
+    if (getIncludeChargeRedistribution()){
 
         double distanceJ, distanceI, 
-	       scale1I, scale1J, scale3I, scale3J, 
 	       inducedDipoleI, inducedDipoleJ;
 	RealVec deltaI, deltaJ;
 
         for (size_t s = 0; s < 3; ++s) {
 
             // vsH1f, vsH2f, vsMf
+	    if(particleI.otherSiteIndex[s] != jIndex){
 
-            deltaI = particleData[particleI.otherSiteIndex[s]].position
-		   - particleJ.position;
-	    getPeriodicDelta( deltaI );
-            distanceI = SQRT(deltaI.dot(deltaI));
+                deltaI = particleData[particleI.otherSiteIndex[s]].position
+	               - particleJ.position;
+	        getPeriodicDelta( deltaI );
+                distanceI = SQRT(deltaI.dot(deltaI));
 
-            deltaJ = particleData[particleJ.otherSiteIndex[s]].position
-		   - particleI.position;
-	    getPeriodicDelta( deltaJ );
-            distanceJ = SQRT(deltaJ.dot(deltaJ));
+		double rr1I_screen, rr3I_screen;
+	        if( isSameWater ) {
+	            rr1I_screen = rr3I_screen = 0.;
+	        }else{
+                    rr1I_screen = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, false, 1, TCC );
+                    rr3I_screen = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, false, 3, TCC );
+	        }
+		const double rr1I_ewald = ewaldScalingReal( distanceI, 1);
+		const double rr3I_ewald = ewaldScalingReal( distanceI, 3);
 
-            scale1I = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, true, 1, TCC );
-            scale3I = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, true, 3, TCC );
+		const double rr1I = 1.0/distanceI;
+		const double rr3I = rr1I*rr1I*rr1I;
 
-            scale1J = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, true, 1, TCC );
-            scale3J = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, true, 3, TCC );
+                inducedDipoleI = _inducedDipole[jIndex].dot(deltaI);
 
-            inducedDipoleI = _inducedDipole[jIndex].dot(deltaI);
-            inducedDipoleJ = _inducedDipole[iIndex].dot(deltaJ);
+                ftm21 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][0] * particleJ.charge; // charge - charge
+                ftm2i1 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][0] * inducedDipoleI;// charge - charge
 
-//            for (size_t i = 0; i < 3; ++i) {
-//
-//                ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleJ.charge; // charge - charge
-//                ftm2[i] -=  scale1J * (1.0/distanceJ) * particleJ.chargeDerivatives[s][i] * particleI.charge; // charge - charge
-//
-//                ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
-//                ftm2i[i] -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][i] * inducedDipoleJ;// charge - charge
-//
-//            }
-            ftm21 +=  scale1I *    (1.0/distanceI)   * particleI.chargeDerivatives[s][0] * particleJ.charge; // charge - charge
-            ftm21 -=  scale1J *    (1.0/distanceJ)   * particleJ.chargeDerivatives[s][0] * particleI.charge; // charge - charge
-            ftm2i1 += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][0] * inducedDipoleI;// charge - charge
-            ftm2i1 -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][0] * inducedDipoleJ;// charge - charge
+                ftm22 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][1] * particleJ.charge; // charge - charge
+                ftm2i2 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][1] * inducedDipoleI;// charge - charge
 
-            ftm22 +=  scale1I *    (1.0/distanceI)   * particleI.chargeDerivatives[s][1] * particleJ.charge; // charge - charge
-            ftm22 -=  scale1J *    (1.0/distanceJ)   * particleJ.chargeDerivatives[s][1] * particleI.charge; // charge - charge
-            ftm2i2 += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][1] * inducedDipoleI;// charge - charge
-            ftm2i2 -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][1] * inducedDipoleJ;// charge - charge
+                ftm23 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][2] * particleJ.charge; // charge - charge
+                ftm2i3 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][2] * inducedDipoleI;// charge - charge
 
-            ftm23 +=  scale1I *    (1.0/distanceI)   * particleI.chargeDerivatives[s][2] * particleJ.charge; // charge - charge
-            ftm23 -=  scale1J *    (1.0/distanceJ)   * particleJ.chargeDerivatives[s][2] * particleI.charge; // charge - charge
-            ftm2i3 += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][2] * inducedDipoleI;// charge - charge
-	    ftm2i3 -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][2] * inducedDipoleJ;// charge - charge
+	    }
+
+	    if(particleJ.otherSiteIndex[s] != iIndex){
+
+                deltaJ = particleData[particleJ.otherSiteIndex[s]].position
+	               - particleI.position;
+	        getPeriodicDelta( deltaJ );
+                distanceJ = SQRT(deltaJ.dot(deltaJ));
+
+	       double rr1J_screen, rr3J_screen;
+	        if( isSameWater ) {
+	            rr1J_screen = rr3J_screen = 0.;
+	        }else{
+                    rr1J_screen = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, false, 1, TCC );
+                    rr3J_screen = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, false, 3, TCC );
+	        }
+
+		const double rr1J_ewald = ewaldScalingReal( distanceJ, 1);
+		const double rr3J_ewald = ewaldScalingReal( distanceJ, 3);
+
+		const double rr1J = 1.0/distanceJ;
+		const double rr3J = rr1J*rr1J*rr1J;
+
+                inducedDipoleJ = _inducedDipole[iIndex].dot(deltaJ);
+
+                ftm21 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][0] * particleI.charge; // charge - charge
+                ftm2i1 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][0] * inducedDipoleJ;// charge - charge
+
+                ftm22 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][1] * particleI.charge; // charge - charge
+                ftm2i2 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][1] * inducedDipoleJ;// charge - charge
+
+                ftm23 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][2] * particleI.charge; // charge - charge
+	        ftm2i3 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][2] * inducedDipoleJ;// charge - charge
+
+	    }
 
         }
     }
