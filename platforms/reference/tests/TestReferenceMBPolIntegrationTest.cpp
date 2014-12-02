@@ -1241,6 +1241,8 @@ void runTest( double boxDimension ) {
 
     double energy = state.getPotentialEnergy() / CalToJoule;
 
+    double expectedEnergy = 0;
+
     std::cout << "Total Energy: " << energy << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy << " Kcal/mol "<< std::endl;
 
