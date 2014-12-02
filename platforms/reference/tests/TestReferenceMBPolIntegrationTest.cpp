@@ -1241,12 +1241,13 @@ void runTest( double boxDimension ) {
 
     double energy = state.getPotentialEnergy() / CalToJoule;
 
-
 //    std::cout  << std::endl << "Forces:" << std::endl;
 
 //    for (int i=0; i<numberOfParticles; i++) {
 //           std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl << std::endl;
 //       }
+    double expectedEnergy = 0;
+
     std::cout << "Total Energy: " << energy << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy << " Kcal/mol "<< std::endl;
 
