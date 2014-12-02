@@ -1065,67 +1065,62 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
 
     const double eps = 1.0e-4;
 
-//    double x_orig;
-//
-//    std::vector<Vec3> finiteDifferenceForces(numberOfParticles);
-//    for (int i=0; i<numberOfParticles; i++) {
-//        finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
-//    }
-//    for (int i=0; i<numberOfParticles; i++) {
-//        for (int xyz=0; xyz<3; xyz++) {
-//            x_orig = positions[i][xyz];
-//
-//            positions[i][xyz] = x_orig + eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double Ep  = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig + 2*eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double E2p  = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig - eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double Em   = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig - 2*eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double E2m   = state.getPotentialEnergy();
-//
-//            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
-//            positions[i][xyz] = x_orig;
-//        }
-//        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
-//    }
-//
-//    for (int i=0; i<numberOfParticles; i++) {
-//           for (int j=0; j<3; j++) {
-//            finiteDifferenceForces[i][j] /= -1*cal2joule*10;
-//           }
-//
-//       }
-//
+    double x_orig;
+
+    std::vector<Vec3> finiteDifferenceForces(numberOfParticles);
+    for (int i=0; i<numberOfParticles; i++) {
+        finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
+    }
+    for (int i=0; i<numberOfParticles; i++) {
+        for (int xyz=0; xyz<3; xyz++) {
+            x_orig = positions[i][xyz];
+
+            positions[i][xyz] = x_orig + eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double Ep  = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig + 2*eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double E2p  = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig - eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double Em   = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig - 2*eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double E2m   = state.getPotentialEnergy();
+
+            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
+	    finiteDifferenceForces[i][xyz] /= -1*cal2joule*10;
+            positions[i][xyz] = x_orig;
+        }
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
+        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
+    }
+
 //    for (int i=0; i<numberOfParticles; i++) {
 //        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
 //        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
 //        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
 //    }
 //
-//    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
-//
-////    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
-////
-////    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-////        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
-////    }
+    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
+
+    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
+
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
+    }
 
     std::cout << "Test Successful: " << testName << std::endl << std::endl;
 

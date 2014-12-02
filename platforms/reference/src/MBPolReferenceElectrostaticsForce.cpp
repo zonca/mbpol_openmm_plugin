@@ -3541,6 +3541,62 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     energy                 *= conversionFactor;
 
 #if 1
+    if (getIncludeChargeRedistribution() and (not (isSameWater))){
+
+        double distanceJ, distanceI, 
+	       scale1I, scale1J, scale3I, scale3J, 
+	       inducedDipoleI, inducedDipoleJ;
+	RealVec deltaI, deltaJ;
+
+        for (size_t s = 0; s < 3; ++s) {
+
+            // vsH1f, vsH2f, vsMf
+
+            deltaI = particleData[particleI.otherSiteIndex[s]].position
+		   - particleJ.position;
+            distanceI = SQRT(deltaI.dot(deltaI));
+            deltaJ = particleData[particleJ.otherSiteIndex[s]].position
+		   - particleI.position;
+            distanceJ = SQRT(deltaJ.dot(deltaJ));
+
+            scale1I = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, true, 1, TCC );
+            scale3I = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, true, 3, TCC );
+
+            scale1J = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, true, 1, TCC );
+            scale3J = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, true, 3, TCC );
+
+            inducedDipoleI = _inducedDipole[jIndex].dot(deltaI);
+            inducedDipoleJ = _inducedDipole[iIndex].dot(deltaJ);
+
+//            for (size_t i = 0; i < 3; ++i) {
+//
+//                ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleJ.charge; // charge - charge
+//                ftm2[i] -=  scale1J * (1.0/distanceJ) * particleJ.chargeDerivatives[s][i] * particleI.charge; // charge - charge
+//
+//                ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
+//                ftm2i[i] -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][i] * inducedDipoleJ;// charge - charge
+//
+//            }
+            ftm21 +=  scale1I *    (1.0/distanceI)   * particleI.chargeDerivatives[s][0] * particleJ.charge; // charge - charge
+            ftm21 -=  scale1J *    (1.0/distanceJ)   * particleJ.chargeDerivatives[s][0] * particleI.charge; // charge - charge
+            ftm2i1 += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][0] * inducedDipoleI;// charge - charge
+            ftm2i1 -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][0] * inducedDipoleJ;// charge - charge
+
+            ftm22 +=  scale1I *    (1.0/distanceI)   * particleI.chargeDerivatives[s][1] * particleJ.charge; // charge - charge
+            ftm22 -=  scale1J *    (1.0/distanceJ)   * particleJ.chargeDerivatives[s][1] * particleI.charge; // charge - charge
+            ftm2i2 += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][1] * inducedDipoleI;// charge - charge
+            ftm2i2 -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][1] * inducedDipoleJ;// charge - charge
+
+            ftm23 +=  scale1I *    (1.0/distanceI)   * particleI.chargeDerivatives[s][2] * particleJ.charge; // charge - charge
+            ftm23 -=  scale1J *    (1.0/distanceJ)   * particleJ.chargeDerivatives[s][2] * particleI.charge; // charge - charge
+            ftm2i3 += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][2] * inducedDipoleI;// charge - charge
+	    ftm2i3 -= scale3J * pow(1.0/distanceJ,3) * particleJ.chargeDerivatives[s][2] * inducedDipoleJ;// charge - charge
+
+        }
+    }
+#endif
+
+#if 1
     forces[iIndex][0]      -= (ftm21 + ftm2i1)*conversionFactor;
     forces[iIndex][1]      -= (ftm22 + ftm2i2)*conversionFactor;
     forces[iIndex][2]      -= (ftm23 + ftm2i3)*conversionFactor;
