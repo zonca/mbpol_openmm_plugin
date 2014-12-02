@@ -3554,9 +3554,12 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
             deltaI = particleData[particleI.otherSiteIndex[s]].position
 		   - particleJ.position;
+	    getPeriodicDelta( deltaI );
             distanceI = SQRT(deltaI.dot(deltaI));
+
             deltaJ = particleData[particleJ.otherSiteIndex[s]].position
 		   - particleI.position;
+	    getPeriodicDelta( deltaJ );
             distanceJ = SQRT(deltaJ.dot(deltaJ));
 
             scale1I = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, true, 1, TCC );
