@@ -95,7 +95,8 @@ double tang_toennies_long_range(const double& x)
 
 double energy_long_range_correction(double cutoff, double c6, double d6)
 {
-    double el12 = -c6/kcal_permol_Aminus6_to_kJ_permol_nmminus6 * pow(d6/10., 3) * tang_toennies_long_range(d6/10.*cutoff);
+    double el12 = -c6/kcal_permol_Aminus6_to_kJ_permol_nmminus6 * pow(d6/10., 3) * tang_toennies_long_range(d6*cutoff);
+    el12 *= cal2joule;
     return el12;
 }
 
