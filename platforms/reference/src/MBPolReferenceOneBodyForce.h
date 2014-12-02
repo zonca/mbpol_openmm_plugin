@@ -28,6 +28,7 @@
 #include "openmm/reference/RealVec.h"
 #include <vector>
 
+using OpenMM::RealVec;
 // ---------------------------------------------------------------------------------------
 
 class MBPolReferenceOneBodyForce {
@@ -70,15 +71,8 @@ public:
      
         --------------------------------------------------------------------------------------- */
 
-    RealOpenMM calculateForceAndEnergy( int numAngles, std::vector<OpenMM::RealVec>& posData,
-                                        const std::vector<int>& particle1,
-                                        const std::vector<int>&  particle2,
-                                        const std::vector<int>&  particle3,
-                                        const std::vector<RealOpenMM>& lengthABParameters,
-                                        const std::vector<RealOpenMM>& lengthCBParameters,
-                                        const std::vector<RealOpenMM>&  angle,
-                                        const std::vector<RealOpenMM>&  kQuadratic,
-                                        std::vector<OpenMM::RealVec>& forceData ) const;
+    RealOpenMM calculateForceAndEnergy( int numOneBodys, const std::vector<RealVec>& particlePositions, const std::vector<std::vector<int> >& allParticleIndices,
+                                                                           std::vector<RealVec>& forces) const;
 
 
 private:

@@ -76,7 +76,7 @@ public:
      * @param k             the force constant for the stretch-bend
      * @return the index of the stretch-bend that was added
      */
-    int addOneBody(int particle1, int particle2, int particle3);
+    int addOneBody(const std::vector<int> & particleIndices    );
 
     /**
      * Get the force field parameters for a stretch-bend term.
@@ -90,7 +90,7 @@ public:
      * @param angle         the equilibrium angle in radians
      * @param k             the force constant for the stretch-bend
      */
-    void getOneBodyParameters(int index, int& particle1, int& particle2, int& particle3 ) const;
+    void getOneBodyParameters(int particleIndex, std::vector<int>& particleIndices ) const;
 
     /**
      * Set the force field parameters for a stretch-bend term.
@@ -104,7 +104,7 @@ public:
      * @param angle         the equilibrium angle in radians
      * @param k             the force constant for the stretch-bend
      */
-    void setOneBodyParameters(int index, int particle1, int particle2, int particle3 );
+    void setOneBodyParameters(int index, std::vector<int>& particleIndices  );
     /**
      * Update the per-stretch-bend term parameters in a Context to match those stored in this Force object.  This method provides
      * an efficient method to update certain parameters in an existing Context without needing to reinitialize it.
@@ -125,15 +125,12 @@ private:
 
 class MBPolOneBodyForce::OneBodyInfo {
 public:
-    int particle1, particle2, particle3;
+    std::vector<int> particleIndices;
 
     OneBodyInfo() {
-        particle1 = particle2  = particle3 = -1;
-
     }
-    OneBodyInfo(int particle1, int particle2, int particle3 ) :
-                    particle1(particle1), particle2(particle2), particle3(particle3) {
-     
+    OneBodyInfo( std::vector<int> particleIndices) :
+        particleIndices(particleIndices)  {
     }
 };
 

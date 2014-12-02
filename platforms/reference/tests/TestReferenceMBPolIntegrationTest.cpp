@@ -159,7 +159,7 @@ void runTest( double boxDimension ) {
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
                                                     thole,  0.001310,  0.);
 
-        mbpolOneBodyForce->addOneBody(jj, jj+1, jj+2);
+        mbpolOneBodyForce->addOneBody(particleIndices);
         mbpolTwoBodyForce->addParticle( particleIndices);
         mbpolThreeBodyForce->addParticle( particleIndices);
         dispersionForce->addParticle( "O");
