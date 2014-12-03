@@ -73,6 +73,7 @@ private:
     int numOneBodys;
     std::vector< std::vector<int> > allParticleIndices;
     const System& system;
+    int usePBC;
 };
 
 /**

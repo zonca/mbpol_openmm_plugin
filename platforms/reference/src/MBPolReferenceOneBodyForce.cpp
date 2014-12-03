@@ -25,6 +25,7 @@
 #include "MBPolReferenceOneBodyForce.h"
 #include <vector>
 #include "mbpol_interaction_constants.h"
+#include "MBPolReferenceTwoBodyForce.h"
 
 using std::vector;
 using OpenMM::RealVec;
@@ -40,6 +41,29 @@ using OpenMM::RealVec;
    @return energy
 
    --------------------------------------------------------------------------------------- */
+
+
+MBPolReferenceOneBodyForce::MBPolReferenceOneBodyForce( ) : _nonbondedMethod(NonPeriodic) {
+
+    _periodicBoxDimensions = RealVec( 0.0, 0.0, 0.0 );
+}
+
+void MBPolReferenceOneBodyForce::setPeriodicBox( const RealVec& box ){
+    _periodicBoxDimensions = box;
+}
+
+RealVec MBPolReferenceOneBodyForce::getPeriodicBox( void ) const {
+    return _periodicBoxDimensions;
+}
+
+
+MBPolReferenceOneBodyForce::NonbondedMethod MBPolReferenceOneBodyForce::getNonbondedMethod( void ) const {
+    return _nonbondedMethod;
+}
+
+void MBPolReferenceOneBodyForce::setNonbondedMethod( MBPolReferenceOneBodyForce::NonbondedMethod nonbondedMethod ){
+    _nonbondedMethod = nonbondedMethod;
+}
 
 
 double MBPolReferenceOneBodyForce::calculateOneBodyIxn(const RealVec& positionO, const RealVec& positionH1, const RealVec& positionH2,

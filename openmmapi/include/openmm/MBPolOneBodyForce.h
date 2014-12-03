@@ -52,6 +52,17 @@ class OPENMM_EXPORT_MBPOL MBPolOneBodyForce : public Force {
 
 public:
 
+    enum NonbondedMethod {
+
+        NonPeriodic = 0,
+
+        Periodic = 1,
+    };
+
+   NonbondedMethod getNonbondedMethod() const;
+
+   void setNonbondedMethod(NonbondedMethod method);
+
     /**
      * Create an MBPolOneBodyForce.
      */
@@ -121,6 +132,7 @@ protected:
 private:
     class OneBodyInfo;
     std::vector<OneBodyInfo> stretchBends;
+    NonbondedMethod nonbondedMethod;
 };
 
 class MBPolOneBodyForce::OneBodyInfo {

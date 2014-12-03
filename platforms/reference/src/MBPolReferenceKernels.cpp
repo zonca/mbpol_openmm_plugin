@@ -72,6 +72,8 @@ static RealVec& extractBoxSize(ContextImpl& context) {
 
 ReferenceCalcMBPolOneBodyForceKernel::ReferenceCalcMBPolOneBodyForceKernel(std::string name, const Platform& platform, const OpenMM::System& system) :
                    CalcMBPolOneBodyForceKernel(name, platform), system(system) {
+    usePBC = 0;
+
 }
 
 ReferenceCalcMBPolOneBodyForceKernel::~ReferenceCalcMBPolOneBodyForceKernel() {
@@ -88,13 +90,22 @@ void ReferenceCalcMBPolOneBodyForceKernel::initialize(const OpenMM::System& syst
         allParticleIndices[ii] = particleIndices;
 
     }
+    usePBC                 = (force.getNonbondedMethod() == MBPolOneBodyForce::Periodic);
+
 }
 
 double ReferenceCalcMBPolOneBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
     vector<RealVec>& posData   = extractPositions(context);
     vector<RealVec>& forceData = extractForces(context);
-    MBPolReferenceOneBodyForce MBPolReferenceOneBodyForce;
-    RealOpenMM energy      = MBPolReferenceOneBodyForce.calculateForceAndEnergy( numOneBodys, posData, allParticleIndices, forceData );
+    MBPolReferenceOneBodyForce force;
+
+    if (usePBC)
+    {
+        force.setNonbondedMethod( MBPolReferenceOneBodyForce::Periodic);
+        RealVec& box = extractBoxSize(context);
+        force.setPeriodicBox(box);
+    }
+    RealOpenMM energy      = force.calculateForceAndEnergy( numOneBodys, posData, allParticleIndices, forceData );
     return static_cast<double>(energy);
 }
 
