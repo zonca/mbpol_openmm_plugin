@@ -210,6 +210,9 @@ RealOpenMM MBPolReferenceOneBodyForce::calculateForceAndEnergy( int numOneBodys,
         for (unsigned int i=0; i < 3; i++)
             allPositions.push_back(particlePositions[allParticleIndices[ii][i]]);
 
+        if( _nonbondedMethod == Periodic )
+            imageMolecules(_periodicBoxDimensions, allPositions);
+
         energy                 +=  calculateOneBodyIxn(allPositions[0], allPositions[1], allPositions[2],
                 forces[allParticleIndices[ii][0]], forces[allParticleIndices[ii][1]], forces[allParticleIndices[ii][2]]);
 
