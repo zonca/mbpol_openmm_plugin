@@ -37,14 +37,24 @@ class MBPolOneBodyForceGenerator:
 
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
 
+        methodMap = {app.NoCutoff:mbpolplugin.MBPolOneBodyForce.NonPeriodic,
+                     app.PME:mbpolplugin.MBPolOneBodyForce.Periodic,
+                     app.CutoffPeriodic:mbpolplugin.MBPolOneBodyForce.Periodic,
+                     app.CutoffNonPeriodic:mbpolplugin.MBPolOneBodyForce.NonPeriodic}
+
         existing = [sys.getForce(i) for i in range(sys.getNumForces())]
         existing = [f for f in existing if type(f) == mbpolplugin.MBPolOneBodyForce]
+
+        if nonbondedMethod not in methodMap:
+            raise ValueError('Illegal nonbonded method for MBPolOneBodyForce')
 
         if len(existing) == 0:
             force = mbpolplugin.MBPolOneBodyForce()
             sys.addForce(force)
         else:
             force = existing[0]
+
+        force.setNonbondedMethod(methodMap[nonbondedMethod])
 
         for i in range(len(data.angles)):
             angle = data.angles[i]
