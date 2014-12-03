@@ -53,7 +53,11 @@ class MBPolOneBodyForceGenerator:
             atom3 = data.atoms[angle[2]]
             if atom1.residue.name == 'HOH' and atom2.residue.name == 'HOH' and atom3.residue.name == 'HOH':
                 # FIXME loop through all residues of MBPolOneBodyForce and match their name
-                force.addOneBody(atom2.index, atom1.index, atom3.index)
+                v = mbpolplugin.vectori()
+                v.push_back(atom2.index)
+                v.push_back(atom1.index)
+                v.push_back(atom3.index)
+                force.addOneBody(v);
 
 app.forcefield.parsers["MBPolOneBodyForce"] = MBPolOneBodyForceGenerator.parseElement
 
