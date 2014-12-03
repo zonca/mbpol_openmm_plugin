@@ -72,6 +72,8 @@ static RealVec& extractBoxSize(ContextImpl& context) {
 
 ReferenceCalcMBPolOneBodyForceKernel::ReferenceCalcMBPolOneBodyForceKernel(std::string name, const Platform& platform, const OpenMM::System& system) :
                    CalcMBPolOneBodyForceKernel(name, platform), system(system) {
+    usePBC = 0;
+
 }
 
 ReferenceCalcMBPolOneBodyForceKernel::~ReferenceCalcMBPolOneBodyForceKernel() {
@@ -80,22 +82,30 @@ ReferenceCalcMBPolOneBodyForceKernel::~ReferenceCalcMBPolOneBodyForceKernel() {
 void ReferenceCalcMBPolOneBodyForceKernel::initialize(const OpenMM::System& system, const MBPolOneBodyForce& force) {
 
     numOneBodys = force.getNumOneBodys();
-    for ( int ii = 0; ii < numOneBodys; ii++) {
-        int particle1Index, particle2Index, particle3Index;
-        double lengthAB, lengthCB, angle, k;
-        force.getOneBodyParameters(ii, particle1Index, particle2Index, particle3Index);
-        particle1.push_back( particle1Index ); 
-        particle2.push_back( particle2Index ); 
-        particle3.push_back( particle3Index ); 
+
+    allParticleIndices.resize(numOneBodys);
+    for( int ii = 0; ii < numOneBodys; ii++ ){
+        std::vector<int> particleIndices;
+        force.getOneBodyParameters(ii, particleIndices );
+        allParticleIndices[ii] = particleIndices;
+
     }
+    usePBC                 = (force.getNonbondedMethod() == MBPolOneBodyForce::Periodic);
+
 }
 
 double ReferenceCalcMBPolOneBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
     vector<RealVec>& posData   = extractPositions(context);
     vector<RealVec>& forceData = extractForces(context);
-    MBPolReferenceOneBodyForce MBPolReferenceOneBodyForce;
-    RealOpenMM energy      = MBPolReferenceOneBodyForce.calculateForceAndEnergy( numOneBodys, posData, particle1, particle2, particle3,
-                                                                                      lengthABParameters, lengthCBParameters, angleParameters, kParameters, forceData );
+    MBPolReferenceOneBodyForce force;
+
+    if (usePBC)
+    {
+        force.setNonbondedMethod( MBPolReferenceOneBodyForce::Periodic);
+        RealVec& box = extractBoxSize(context);
+        force.setPeriodicBox(box);
+    }
+    RealOpenMM energy      = force.calculateForceAndEnergy( numOneBodys, posData, allParticleIndices, forceData );
     return static_cast<double>(energy);
 }
 
@@ -104,12 +114,10 @@ void ReferenceCalcMBPolOneBodyForceKernel::copyParametersToContext(ContextImpl& 
         throw OpenMMException("updateParametersInContext: The number of stretch-bends has changed");
 
     // Record the values.
-
     for (int i = 0; i < numOneBodys; ++i) {
-        int particle1Index, particle2Index, particle3Index;
-        force.getOneBodyParameters(i, particle1Index, particle2Index, particle3Index);
-        if (particle1Index != particle1[i] || particle2Index != particle2[i] || particle3Index != particle3[i])
-            throw OpenMMException("updateParametersInContext: The set of particles in a stretch-bend has changed");
+        std::vector<int> particleIndices;
+        force.getOneBodyParameters(i, particleIndices);
+        allParticleIndices[i] = particleIndices;
     }
 }
 

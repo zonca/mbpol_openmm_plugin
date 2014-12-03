@@ -234,7 +234,7 @@ void simulate14WaterCluster() {
         }
 
 
-        mbpolOneBodyForce->addOneBody(jj, jj+1, jj+2);
+        mbpolOneBodyForce->addOneBody(particleIndices);
         mbpolTwoBodyForce->addParticle( particleIndices);
         mbpolThreeBodyForce->addParticle( particleIndices);
         dispersionForce->addParticle( "O");

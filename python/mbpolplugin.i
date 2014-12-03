@@ -100,11 +100,15 @@ public:
 
     int getNumOneBodys() const;
 
-    int addOneBody(int particle1, int particle2, int particle3);
+    enum NonbondedMethod { Periodic, NonPeriodic };
 
-    void getOneBodyParameters(int index, int& particle1, int& particle2, int& particle3 ) const;
+    void setNonbondedMethod(NonbondedMethod method);
+    NonbondedMethod getNonbondedMethod() const;
 
-    void setOneBodyParameters(int index, int particle1, int particle2, int particle3 );
+    int addOneBody(const std::vector<int> & particleIndices);
+
+    void getOneBodyParameters(int particleIndex, std::vector<int>& particleIndices ) const;
+    void setOneBodyParameters(int index, std::vector<int>& particleIndices  );
 
     void updateParametersInContext(Context& context);
 

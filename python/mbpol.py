@@ -37,14 +37,24 @@ class MBPolOneBodyForceGenerator:
 
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
 
+        methodMap = {app.NoCutoff:mbpolplugin.MBPolOneBodyForce.NonPeriodic,
+                     app.PME:mbpolplugin.MBPolOneBodyForce.Periodic,
+                     app.CutoffPeriodic:mbpolplugin.MBPolOneBodyForce.Periodic,
+                     app.CutoffNonPeriodic:mbpolplugin.MBPolOneBodyForce.NonPeriodic}
+
         existing = [sys.getForce(i) for i in range(sys.getNumForces())]
         existing = [f for f in existing if type(f) == mbpolplugin.MBPolOneBodyForce]
+
+        if nonbondedMethod not in methodMap:
+            raise ValueError('Illegal nonbonded method for MBPolOneBodyForce')
 
         if len(existing) == 0:
             force = mbpolplugin.MBPolOneBodyForce()
             sys.addForce(force)
         else:
             force = existing[0]
+
+        force.setNonbondedMethod(methodMap[nonbondedMethod])
 
         for i in range(len(data.angles)):
             angle = data.angles[i]
@@ -53,7 +63,11 @@ class MBPolOneBodyForceGenerator:
             atom3 = data.atoms[angle[2]]
             if atom1.residue.name == 'HOH' and atom2.residue.name == 'HOH' and atom3.residue.name == 'HOH':
                 # FIXME loop through all residues of MBPolOneBodyForce and match their name
-                force.addOneBody(atom2.index, atom1.index, atom3.index)
+                v = mbpolplugin.vectori()
+                v.push_back(atom2.index)
+                v.push_back(atom1.index)
+                v.push_back(atom3.index)
+                force.addOneBody(v);
 
 app.forcefield.parsers["MBPolOneBodyForce"] = MBPolOneBodyForceGenerator.parseElement
 
