@@ -52,6 +52,14 @@ void MBPolOneBodyForce::setOneBodyParameters(int index, std::vector<int>& partic
     stretchBends[index].particleIndices =particleIndices;
 }
 
+MBPolOneBodyForce::NonbondedMethod MBPolOneBodyForce::getNonbondedMethod() const {
+    return nonbondedMethod;
+}
+
+void MBPolOneBodyForce::setNonbondedMethod(NonbondedMethod method) {
+    nonbondedMethod = method;
+}
+
 ForceImpl* MBPolOneBodyForce::createImpl() const {
     return new MBPolOneBodyForceImpl(*this);
 }
