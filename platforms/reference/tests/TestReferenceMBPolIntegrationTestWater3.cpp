@@ -221,7 +221,13 @@ void runTest( double boxDimension ) {
     for( unsigned int ii = 0; ii < expectedForces.size(); ii++ ){
         expectedForces[ii] *= -1;
     }
-    expectedEnergy        = -8.92353;
+
+    if (boxDimension == 1.8)
+    {
+        expectedEnergy        = -8.92353;
+    } else { // cluster or large box
+        expectedEnergy        = -8.78893485;
+    }
 
     std::string platformName;
     #define AngstromToNm 0.1    
@@ -285,8 +291,10 @@ int main( int numberOfArguments, char* argv[] ) {
 
     try {
         std::cout << "TestReferenceMBPolIntegrationTest running test..." << std::endl;
+        double boxDimension = 0;
+        runTest( boxDimension );
 
-        double boxDimension = 1.8;
+        boxDimension = 1.8;
         runTest( boxDimension );
 
     } catch(const std::exception& e) {
