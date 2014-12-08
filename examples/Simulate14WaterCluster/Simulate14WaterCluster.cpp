@@ -235,6 +235,7 @@ void simulate14WaterCluster() {
         dispersionForce->addParticle( "O");
         dispersionForce->addParticle( "H");
         dispersionForce->addParticle( "H");
+        dispersionForce->addParticle( "M");
 
     }
 
