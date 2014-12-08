@@ -572,6 +572,51 @@ void MBPolReferenceElectrostaticsForce::applyRotationMatrix( std::vector<Electro
     return;
 }
 
+#if 1
+RealOpenMM MBPolReferencePmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM r, int interactionOrder) const
+{
+    // calculate the real space error function terms
+
+    RealOpenMM ralpha = _alphaEwald*r;
+    RealOpenMM bn0    = erfc(ralpha)/r;
+
+    RealOpenMM r2 = r*r;
+
+    RealOpenMM alsq2  = 2.0*_alphaEwald*_alphaEwald;
+    RealOpenMM alsq2n = 0.0;
+    if( _alphaEwald > 0.0 ){
+        alsq2n = 1.0/(SQRT_PI*_alphaEwald);
+    }
+    RealOpenMM exp2a  = EXP(-(ralpha*ralpha));
+
+    alsq2n           *= alsq2;
+    RealOpenMM bn1    = (bn0+alsq2n*exp2a)/r2;
+
+    alsq2n           *= alsq2;
+    RealOpenMM bn2    = (3.0*bn1+alsq2n*exp2a)/r2;
+
+    alsq2n           *= alsq2;
+    RealOpenMM bn3    = (5.0*bn2+alsq2n*exp2a)/r2;
+
+    switch (interactionOrder) {
+
+        case 1:
+	    return bn0;
+
+        case 3:
+	    return bn1;
+
+        case 5:
+	    return bn2;
+
+        case 7:
+	    return bn3;
+
+    }
+}
+#endif
+
+
 RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
                                                           RealOpenMM r, bool justScale, int interactionOrder, int interactionType) const
@@ -3111,14 +3156,15 @@ void MBPolReferencePmeElectrostaticsForce::calculatePmeSelfTorque( const std::ve
     return;
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const ElectrostaticsParticleData& particleI, 
-                                                                                     const ElectrostaticsParticleData& particleJ,
-                                                                                     std::vector<RealVec>& forces,
-                                                                                     std::vector<RealVec>& torques ) const 
+RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
+											 unsigned int iIndex,
+											 unsigned int jIndex,
+                                                                                         std::vector<RealVec>& forces,
+                                                                                         std::vector<RealVec>& torques ) const 
 {
 
-    unsigned int iIndex = particleI.particleIndex;
-    unsigned int jIndex = particleJ.particleIndex;
+    ElectrostaticsParticleData particleI = particleData[iIndex];
+    ElectrostaticsParticleData particleJ = particleData[jIndex];
 
     RealOpenMM energy;
     RealVec deltaR   = particleJ.position - particleI.position;
@@ -3540,6 +3586,88 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     energy                 *= conversionFactor;
 
 #if 1
+    //if (getIncludeChargeRedistribution() and (not (isSameWater))){
+    if (getIncludeChargeRedistribution()){
+
+        double distanceJ, distanceI, 
+	       inducedDipoleI, inducedDipoleJ;
+	RealVec deltaI, deltaJ;
+
+        for (size_t s = 0; s < 3; ++s) {
+
+            // vsH1f, vsH2f, vsMf
+	    if(particleI.otherSiteIndex[s] != jIndex){
+
+                deltaI = particleData[particleI.otherSiteIndex[s]].position
+	               - particleJ.position;
+	        getPeriodicDelta( deltaI );
+                distanceI = SQRT(deltaI.dot(deltaI));
+
+		double rr1I_screen, rr3I_screen;
+	        if( isSameWater ) {
+	            rr1I_screen = rr3I_screen = 0.;
+	        }else{
+                    rr1I_screen = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, false, 1, TCC );
+                    rr3I_screen = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, false, 3, TCC );
+	        }
+		const double rr1I_ewald = ewaldScalingReal( distanceI, 1);
+		const double rr3I_ewald = ewaldScalingReal( distanceI, 3);
+
+		const double rr1I = 1.0/distanceI;
+		const double rr3I = rr1I*rr1I*rr1I;
+
+                inducedDipoleI = _inducedDipole[jIndex].dot(deltaI);
+
+                ftm21 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][0] * particleJ.charge; // charge - charge
+                ftm2i1 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][0] * inducedDipoleI;// charge - charge
+
+                ftm22 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][1] * particleJ.charge; // charge - charge
+                ftm2i2 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][1] * inducedDipoleI;// charge - charge
+
+                ftm23 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][2] * particleJ.charge; // charge - charge
+                ftm2i3 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][2] * inducedDipoleI;// charge - charge
+
+	    }
+
+	    if(particleJ.otherSiteIndex[s] != iIndex){
+
+                deltaJ = particleData[particleJ.otherSiteIndex[s]].position
+	               - particleI.position;
+	        getPeriodicDelta( deltaJ );
+                distanceJ = SQRT(deltaJ.dot(deltaJ));
+
+	       double rr1J_screen, rr3J_screen;
+	        if( isSameWater ) {
+	            rr1J_screen = rr3J_screen = 0.;
+	        }else{
+                    rr1J_screen = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, false, 1, TCC );
+                    rr3J_screen = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, false, 3, TCC );
+	        }
+
+		const double rr1J_ewald = ewaldScalingReal( distanceJ, 1);
+		const double rr3J_ewald = ewaldScalingReal( distanceJ, 3);
+
+		const double rr1J = 1.0/distanceJ;
+		const double rr3J = rr1J*rr1J*rr1J;
+
+                inducedDipoleJ = _inducedDipole[iIndex].dot(deltaJ);
+
+                ftm21 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][0] * particleI.charge; // charge - charge
+                ftm2i1 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][0] * inducedDipoleJ;// charge - charge
+
+                ftm22 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][1] * particleI.charge; // charge - charge
+                ftm2i2 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][1] * inducedDipoleJ;// charge - charge
+
+                ftm23 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][2] * particleI.charge; // charge - charge
+	        ftm2i3 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][2] * inducedDipoleJ;// charge - charge
+
+	    }
+
+        }
+    }
+#endif
+
+#if 1
     forces[iIndex][0]      -= (ftm21 + ftm2i1)*conversionFactor;
     forces[iIndex][1]      -= (ftm22 + ftm2i2)*conversionFactor;
     forces[iIndex][2]      -= (ftm23 + ftm2i3)*conversionFactor;
@@ -3580,7 +3708,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
                 getElectrostaticsScaleFactors( ii, jj, scaleFactors);
             }
 
-            energy += calculatePmeDirectElectrostaticPairIxn( particleData[ii], particleData[jj], forces, torques );
+            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, torques );
 
             if( jj <= _maxScaleIndex[ii] ){
                 for( unsigned int kk = 0; kk < LAST_SCALE_TYPE_INDEX; kk++ ){
