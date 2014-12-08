@@ -108,7 +108,7 @@ void runTest( double boxDimension ) {
         double ewaldErrorTol = 1e-3;
         mbpolElectrostaticsForce->setEwaldErrorTolerance(ewaldErrorTol);
 
-        //mbpolOneBodyForce->setNonbondedMethod(MBPolOneBodyForce::Periodic);
+        mbpolOneBodyForce->setNonbondedMethod(MBPolOneBodyForce::Periodic);
 
         mbpolTwoBodyForce->setNonbondedMethod(MBPolTwoBodyForce::CutoffPeriodic);
 
