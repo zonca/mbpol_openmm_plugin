@@ -1249,16 +1249,20 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
-    std::vector<Vec3> expectedForces(numberOfParticles);
-    expectedForces[0]         = Vec3(  2.38799956, 0.126835228,   8.86189407  );
-    expectedForces[1]         = Vec3( -4.21263312, -0.72316292,   3.37076777  );
-    expectedForces[2]         = Vec3(  2.19240288, -2.24806806,   1.96210789  );
-    expectedForces[4]         = Vec3(  3.59486021, -2.16710895,   3.57138432  );
-    expectedForces[5]         = Vec3( -4.54547068, -4.58639226,  -17.4258666  );
-    expectedForces[6]         = Vec3( -3.27239433, -1.96722979,    1.1170853  );
-    expectedForces[8]         = Vec3( -1.44387205, -3.22471108,  -2.61329967  );
-    expectedForces[9]         = Vec3(  3.35011312,  6.07136704, -0.197008793  );
-    expectedForces[10]         = Vec3(  1.94899441,   8.7184708,   1.35293571  );
+    std::vector<Vec3> expectedForces;
+    expectedForces.push_back(Vec3( -2.32662, -0.0215643, -8.9463 ));
+    expectedForces.push_back(Vec3( 4.17346, 0.664051, -3.33561 ));
+    expectedForces.push_back(Vec3( -2.21919, 2.20524, -1.9436 ));
+    expectedForces.push_back(Vec3( -0, -0, -0 ));
+    expectedForces.push_back(Vec3( -3.57208, 2.2761, -3.66722 ));
+    expectedForces.push_back(Vec3( 4.54289, 4.54649, 17.4865 ));
+    expectedForces.push_back(Vec3( 3.2676, 1.92351, -1.05576 ));
+    expectedForces.push_back(Vec3( -0, -0, -0 ));
+    expectedForces.push_back(Vec3( 1.47085, 3.31187, 2.5387 ));
+    expectedForces.push_back(Vec3( -3.36353, -6.13306, 0.230528 ));
+    expectedForces.push_back(Vec3( -1.97036, -8.77306, -1.30534 ));
+    expectedForces.push_back(Vec3( -0, -0, -0 ));
+
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -1330,12 +1334,12 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 //           }
 //
 //       }
-//
-//    for (int i=0; i<numberOfParticles; i++) {
-//        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
-//    }
+
+    for (int i=0; i<numberOfParticles; i++) {
+        // std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
+        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
+    }
 
     std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
 //
