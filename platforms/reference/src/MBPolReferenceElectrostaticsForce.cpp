@@ -2810,6 +2810,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
         f              *= (_electric);
         forces[i]      -= f;
 
+        //FIXMEGREG
+        // Need to add charge derivatives here
+
     }
     return (0.5*_electric*energy);
 }
@@ -2927,7 +2930,10 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
         f[2]           *= scale[2];
         f              *= (0.5*_electric);
         forces[iIndex] -= f;
+
+        // FIXMEGREG add charge derivatives
     }
+
     return (0.5*_electric*energy);
 }
 
