@@ -1205,6 +1205,7 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
                                             thole, 0.000294, 0. );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
                                             thole, 0.000294, 0. );
+        std::cout << "POLARIZABILITY SET TO ZERO"<< std::endl;
 //        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
 //                                            thole, 0.001310, 0.001310 );
 //        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
