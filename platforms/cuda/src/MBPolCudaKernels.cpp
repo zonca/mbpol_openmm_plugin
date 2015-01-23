@@ -59,30 +59,23 @@ using namespace std;
  *                            MBPolBondForce                                 *
  * -------------------------------------------------------------------------- */
 
-class CudaCalcMBPolBondForceKernel::ForceInfo : public CudaForceInfo {
+class CudaCalcMBPolOneBodyForceKernel::ForceInfo : public CudaForceInfo {
 public:
     ForceInfo(const MBPolBondForce& force) : force(force) {
     }
     int getNumParticleGroups() {
-        return force.getNumBonds();
+        return force.getNumOneBodys();
     }
     void getParticlesInGroup(int index, std::vector<int>& particles) {
-        int particle1, particle2;
-        double length, k;
-        force.getBondParameters(index, particle1, particle2, length, k);
-        particles.resize(2);
-        particles[0] = particle1;
-        particles[1] = particle2;
+        force.getOneBodyParameters(index, particles);
     }
     bool areGroupsIdentical(int group1, int group2) {
-        int particle1, particle2;
-        double length1, length2, k1, k2;
-        force.getBondParameters(group1, particle1, particle2, length1, k1);
-        force.getBondParameters(group2, particle1, particle2, length2, k2);
-        return (length1 == length2 && k1 == k2);
+        // They can be identical only if they are the same
+        // FIXME we could optionally check all distances.
+        return (group1 == group2)
     }
 private:
-    const MBPolBondForce& force;
+    const MBPolOneBodyForce& force;
 };
 
 CudaCalcMBPolBondForceKernel::CudaCalcMBPolBondForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) : 
