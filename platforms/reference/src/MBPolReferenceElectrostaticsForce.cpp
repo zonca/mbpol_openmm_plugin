@@ -2801,7 +2801,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
 #endif
 
         RealVec f = RealVec( 0.0, 0.0, 0.0);
-        for (int k = 0; k < 10; k++) {
+        for (int k = 0; k < 1; k++) {
+        //for (int k = 0; k < 10; k++) {
             energy += multipole[k]*phi[k];
             f[0]   += multipole[k]*phi[deriv1[k]];
             f[1]   += multipole[k]*phi[deriv2[k]];
@@ -2813,9 +2814,15 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
 	// Need to multiply electrostatic potential by the charge derivative
 
        	// Reciprocal sum, so never the same water
+#if 1
 	if (getIncludeChargeRedistribution()){
 
+//	    std::cerr << i << ' ';
 	    for (size_t s = 0; s < 3; ++s) {
+
+		const int is = particleData[i].otherSiteIndex[s];
+//		std::cerr << is << ' ';
+		const RealOpenMM* phi_s = &_phi[20*is];
 
 		// vsH1f, vsH2f, vsMf
 		//if(particleData[i].otherSiteIndex[s] != jIndex){
@@ -2824,13 +2831,15 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
 //			std::cerr << "i: " << i 
 //			          << ' ' << particleData[i].chargeDerivatives[s][k] 
 //			          << ' ' <<  phi[k] << std::endl;
-			f[k] += particleData[i].chargeDerivatives[s][k] * phi[0];
-//			ftm2i1 += particleI.chargeDerivatives[s][0] * inducedDipoleI;
+			f[k] += particleData[i].chargeDerivatives[s][k] * phi_s[0];
+//			f[k] += particleData[i].chargeDerivatives[s][k] * phi[0];
 		    }
                 //}
 
 	    }
+//	    std::cerr << std::endl;
 	} // charge redistribution
+#endif
 
 
         f[0]           *= scale[0];
