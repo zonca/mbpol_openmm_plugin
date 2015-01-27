@@ -1506,6 +1506,12 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std
 
     mapTorqueToForce( particleData, multipoleAtomXs, multipoleAtomYs, multipoleAtomZs, axisTypes, torques, forces );
 
+    double cal2joule = 4.184;
+
+    for (int i=0; i<particlePositions.size(); i++) {
+        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+    }
+
     return energy;
 }
 
