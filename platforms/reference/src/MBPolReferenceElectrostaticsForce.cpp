@@ -2830,17 +2830,18 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
 //		std::cerr << is << ' ';
 		const RealOpenMM* phi_s = &_phi[20*is];
 
-		// vsH1f, vsH2f, vsMf
-		//if(particleData[i].otherSiteIndex[s] != jIndex){
+		//if(particleData[i].otherSiteIndex[s] != i){
 
-		    for (int k = 0; k < 3; ++k){
+		// vsH1f, vsH2f, vsMf
+
+		for (int k = 0; k < 3; ++k){
 //			std::cerr << "i: " << i 
 //			          << ' ' << particleData[i].chargeDerivatives[s][k] 
 //			          << ' ' <<  phi[k] << std::endl;
 			f[k] += particleData[i].chargeDerivatives[s][k] * phi_s[0];
 //			f[k] += particleData[i].chargeDerivatives[s][k] * phi[0];
 		    }
-                //}
+        //}
 
 	    }
 //	    std::cerr << std::endl;
