@@ -37,25 +37,23 @@
 
 namespace MBPolPlugin {
 
-class CudaCalcMBPolGeneralizedKirkwoodForceKernel;
-
 /**
- * This kernel is invoked by MBPolBondForce to calculate the forces acting on the system and the energy of the system.
+ * This kernel is invoked by MBPolOneBodyForce to calculate the forces acting on the system and the energy of the system.
  */
-class CudaCalcMBPolBondForceKernel : public CalcMBPolBondForceKernel {
+class CudaCalcMBPolOneBodyForceKernel : public CalcMBPolOneBodyForceKernel {
 public:
-    CudaCalcMBPolBondForceKernel(std::string name, 
+    CudaCalcMBPolOneBodyForceKernel(std::string name, 
                                           const Platform& platform,
                                           CudaContext& cu,
                                           const System& system);
-    ~CudaCalcMBPolBondForceKernel();
+    ~CudaCalcMBPolOneBodyForceKernel();
     /**
      * Initialize the kernel.
      * 
      * @param system     the System this kernel will be applied to
-     * @param force      the MBPolBondForce this kernel will be used for
+     * @param force      the MBPolOneBodyForce this kernel will be used for
      */
-    void initialize(const System& system, const MBPolBondForce& force);
+    void initialize(const System& system, const MBPolOneBodyForce& force);
     /**
      * Execute the kernel to calculate the forces and/or energy.
      *
@@ -69,12 +67,12 @@ public:
      * Copy changed parameters over to a context.
      *
      * @param context    the context to copy parameters to
-     * @param force      the MBPolBondForce to copy the parameters from
+     * @param force      the MBPolOneBodyForce to copy the parameters from
      */
-    void copyParametersToContext(ContextImpl& context, const MBPolBondForce& force);
+    void copyParametersToContext(ContextImpl& context, const MBPolOneBodyForce& force);
 private:
     class ForceInfo;
-    int numBonds;
+    int numOneBodys;
     CudaContext& cu;
     const System& system;
     CudaArray* params;
@@ -525,54 +523,15 @@ private:
     class ForceInfo;
     CudaContext& cu;
     const System& system;
-    bool hasInitializedNonbonded;
+    bool hasInitializedNonBonded;
     double dispersionCoefficient;
     CudaArray* sigmaEpsilon;
-    CudaArray* bondReductionAtoms;
-    CudaArray* bondReductionFactors;
+    CudaArray* BondReductionAtoms;
+    CudaArray* BondReductionFactors;
     CudaArray* tempPosq;
     CudaArray* tempForces;
-    CudaNonbondedUtilities* nonbonded;
+    CudaNonBondedUtilities* nonBonded;
     CUfunction prepareKernel, spreadKernel;
-};
-
-/**
- * This kernel is invoked to calculate the WCA dispersion forces acting on the system and the energy of the system.
- */
-class CudaCalcMBPolWcaDispersionForceKernel : public CalcMBPolWcaDispersionForceKernel {
-public:
-    CudaCalcMBPolWcaDispersionForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
-    ~CudaCalcMBPolWcaDispersionForceKernel();
-    /**
-     * Initialize the kernel.
-     * 
-     * @param system     the System this kernel will be applied to
-     * @param force      the MBPolMultipoleForce this kernel will be used for
-     */
-    void initialize(const System& system, const MBPolWcaDispersionForce& force);
-    /**
-     * Execute the kernel to calculate the forces and/or energy.
-     *
-     * @param context        the context in which to execute this kernel
-     * @param includeForces  true if forces should be calculated
-     * @param includeEnergy  true if the energy should be calculated
-     * @return the potential energy due to the force
-     */
-    double execute(ContextImpl& context, bool includeForces, bool includeEnergy);
-    /**
-     * Copy changed parameters over to a context.
-     *
-     * @param context    the context to copy parameters to
-     * @param force      the MBPolWcaDispersionForce to copy the parameters from
-     */
-    void copyParametersToContext(ContextImpl& context, const MBPolWcaDispersionForce& force);
-private:
-    class ForceInfo;
-    CudaContext& cu;
-    const System& system;
-    double totalMaximumDispersionEnergy;
-    CudaArray* radiusEpsilon;
-    CUfunction forceKernel;
 };
 
 } // namespace MBPolPlugin
