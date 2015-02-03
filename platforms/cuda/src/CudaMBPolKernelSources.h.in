@@ -1,5 +1,5 @@
-#ifndef OPENMM_CUDAEXAMPLEKERNELSOURCES_H_
-#define OPENMM_CUDAEXAMPLEKERNELSOURCES_H_
+#ifndef OPENMM_CUDAMBPOLKERNELSOURCES_H_
+#define OPENMM_CUDAMBPOLKERNELSOURCES_H_
 
 /* -------------------------------------------------------------------------- *
  *                                   OpenMM                                   *
@@ -34,7 +34,7 @@
 
 #include <string>
 
-namespace ExamplePlugin {
+namespace MBPolPlugin {
 
 /**
  * This class is a central holding place for the source code of CUDA kernels.
@@ -42,11 +42,11 @@ namespace ExamplePlugin {
  * kernels subfolder.
  */
 
-class CudaExampleKernelSources {
+class CudaMBPolKernelSources {
 public:
 @CUDA_FILE_DECLARATIONS@
 };
 
-} // namespace ExamplePlugin
+} // namespace MBPolPlugin
 
-#endif /*OPENMM_CUDAEXAMPLEKERNELSOURCES_H_*/
+#endif /*OPENMM_CUDAMBPOLKERNELSOURCES_H_*/

@@ -1,5 +1,5 @@
-#ifndef CUDA_EXAMPLE_KERNELS_H_
-#define CUDA_EXAMPLE_KERNELS_H_
+#ifndef CUDA_MBPOL_KERNELS_H_
+#define CUDA_MBPOL_KERNELS_H_
 
 /* -------------------------------------------------------------------------- *
  *                                   OpenMM                                   *
@@ -32,28 +32,28 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-#include "ExampleKernels.h"
+#include "openmm/mbpolKernels.h"
 #include "openmm/cuda/CudaContext.h"
 #include "openmm/cuda/CudaArray.h"
 
-namespace ExamplePlugin {
+namespace MBPolPlugin {
 
 /**
- * This kernel is invoked by ExampleForce to calculate the forces acting on the system and the energy of the system.
+ * This kernel is invoked by MBPolForce to calculate the forces acting on the system and the energy of the system.
  */
-class CudaCalcExampleForceKernel : public CalcExampleForceKernel {
+class CudaCalcMBPolOneBodyForceKernel : public CalcMBPolOneBodyForceKernel {
 public:
-    CudaCalcExampleForceKernel(std::string name, const OpenMM::Platform& platform, OpenMM::CudaContext& cu, const OpenMM::System& system) :
-            CalcExampleForceKernel(name, platform), hasInitializedKernel(false), cu(cu), system(system), params(NULL) {
+    CudaCalcMBPolOneBodyForceKernel(std::string name, const OpenMM::Platform& platform, OpenMM::CudaContext& cu, const OpenMM::System& system) :
+            CalcMBPolOneBodyForceKernel(name, platform), hasInitializedKernel(false), cu(cu), system(system), params(NULL) {
     }
-    ~CudaCalcExampleForceKernel();
+    ~CudaCalcMBPolOneBodyForceKernel();
     /**
      * Initialize the kernel.
      * 
      * @param system     the System this kernel will be applied to
-     * @param force      the ExampleForce this kernel will be used for
+     * @param force      the MBPolOneBodyForce this kernel will be used for
      */
-    void initialize(const OpenMM::System& system, const ExampleForce& force);
+    void initialize(const OpenMM::System& system, const MBPolOneBodyForce& force);
     /**
      * Execute the kernel to calculate the forces and/or energy.
      *
@@ -67,9 +67,9 @@ public:
      * Copy changed parameters over to a context.
      *
      * @param context    the context to copy parameters to
-     * @param force      the ExampleForce to copy the parameters from
+     * @param force      the MBPolOneBodyForce to copy the parameters from
      */
-    void copyParametersToContext(OpenMM::ContextImpl& context, const ExampleForce& force);
+    void copyParametersToContext(OpenMM::ContextImpl& context, const MBPolOneBodyForce& force);
 private:
     int numBonds;
     bool hasInitializedKernel;
@@ -78,6 +78,6 @@ private:
     OpenMM::CudaArray* params;
 };
 
-} // namespace ExamplePlugin
+} // namespace MBPolPlugin
 
-#endif /*CUDA_EXAMPLE_KERNELS_H_*/
+#endif /*CUDA_MBPOL_KERNELS_H_*/

@@ -1,5 +1,8 @@
+#ifndef OPENMM_CUDAMBPOLKERNELFACTORY_H_
+#define OPENMM_CUDAMBPOLKERNELFACTORY_H_
+
 /* -------------------------------------------------------------------------- *
- *                              OpenMMExample                                   *
+ *                                   OpenMM                                   *
  * -------------------------------------------------------------------------- *
  * This is part of the OpenMM molecular simulation toolkit originating from   *
  * Simbios, the NIH National Center for Physics-Based Simulation of           *
@@ -29,44 +32,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-#include <exception>
+#include "openmm/KernelFactory.h"
 
-#include "CudaExampleKernelFactory.h"
-#include "CudaExampleKernels.h"
-#include "openmm/internal/windowsExport.h"
-#include "openmm/internal/ContextImpl.h"
-#include "openmm/OpenMMException.h"
+namespace OpenMM {
 
-using namespace ExamplePlugin;
-using namespace OpenMM;
+/**
+ * This KernelFactory creates kernels for the CUDA implementation of the Mbpol plugin.
+ */
 
-extern "C" OPENMM_EXPORT void registerPlatforms() {
-}
+class CudaMBPolKernelFactory : public KernelFactory {
+public:
+    KernelImpl* createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const;
+};
 
-extern "C" OPENMM_EXPORT void registerKernelFactories() {
-    try {
-        Platform& platform = Platform::getPlatformByName("CUDA");
-        CudaExampleKernelFactory* factory = new CudaExampleKernelFactory();
-        platform.registerKernelFactory(CalcExampleForceKernel::Name(), factory);
-    }
-    catch (std::exception ex) {
-        // Ignore
-    }
-}
+} // namespace OpenMM
 
-extern "C" OPENMM_EXPORT void registerExampleCudaKernelFactories() {
-    try {
-        Platform::getPlatformByName("CUDA");
-    }
-    catch (...) {
-        Platform::registerPlatform(new CudaPlatform());
-    }
-    registerKernelFactories();
-}
-
-KernelImpl* CudaExampleKernelFactory::createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const {
-    CudaContext& cu = *static_cast<CudaPlatform::PlatformData*>(context.getPlatformData())->contexts[0];
-    if (name == CalcExampleForceKernel::Name())
-        return new CudaCalcExampleForceKernel(name, platform, cu, context.getSystem());
-    throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
-}
+#endif /*OPENMM_CUDAMBPOLKERNELFACTORY_H_*/
