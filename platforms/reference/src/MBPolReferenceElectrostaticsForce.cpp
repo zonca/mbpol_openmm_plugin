@@ -3639,6 +3639,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     RealOpenMM conversionFactor  = (_electric/_dielectric);
 
     energy                 *= conversionFactor;
+    double localforce = 0.;
 
 #if 1
     //if (getIncludeChargeRedistribution() and (not (isSameWater))){
@@ -3647,6 +3648,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
         double distanceJ, distanceI, 
 	       inducedDipoleI, inducedDipoleJ;
 	RealVec deltaI, deltaJ;
+
 
         for (size_t s = 0; s < 3; ++s) {
 
@@ -3673,6 +3675,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
                 inducedDipoleI = _inducedDipole[jIndex].dot(deltaI);
 
+                if ((iIndex==0)) {
+                    localforce += (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][0] * particleJ.charge;
+                }
                 ftm21 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][0] * particleJ.charge; // charge - charge
                 ftm2i1 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][0] * inducedDipoleI;// charge - charge
 
@@ -3707,6 +3712,10 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
                 inducedDipoleJ = _inducedDipole[iIndex].dot(deltaJ);
 
+                if ((iIndex==0)) {
+                    localforce += (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][0] * particleI.charge; // charge - charge
+                }
+
                 ftm21 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][0] * particleI.charge; // charge - charge
                 ftm2i1 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][0] * inducedDipoleJ;// charge - charge
 
@@ -3714,7 +3723,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
                 ftm2i2 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][1] * inducedDipoleJ;// charge - charge
 
                 ftm23 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][2] * particleI.charge; // charge - charge
-	        ftm2i3 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][2] * inducedDipoleJ;// charge - charge
+	            ftm2i3 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][2] * inducedDipoleJ;// charge - charge
 
 	    }
 
@@ -3731,6 +3740,10 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     forces[jIndex][1]      += (ftm22 + ftm2i2)*conversionFactor;
     forces[jIndex][2]      += (ftm23 + ftm2i3)*conversionFactor;
 #endif
+
+    if ((iIndex==0)) {
+            std::cout << "x component of force on Oxygen from charge redistribution interaction with atom " << jIndex << ": " << -localforce*conversionFactor / (4.184*10) << " Kcal/mol/A " << std::endl;
+    }
 //
 //    torques[iIndex][0]     += (ttm21 + ttm2i1)*conversionFactor;
 //    torques[iIndex][1]     += (ttm22 + ttm2i2)*conversionFactor;
@@ -3773,10 +3786,35 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
         }
     }
 
+    double cal2joule = 4.184;
+    std::cout << std::endl << "Direct Space" << std::endl;
+
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+    }
+
     calculatePmeSelfTorque( particleData, torques );
     energy += computeReciprocalSpaceInducedDipoleForceAndEnergy( getPolarizationType(), particleData, forces, torques );
+
+    std::cout << std::endl << "Reciprocal Space Induced" << std::endl;
+
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+    }
+
     energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, torques );
+
+    std::cout << std::endl << "Reciprocal Space Fixed" << std::endl;
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+    }
+
     energy += calculatePmeSelfEnergy( particleData );
+
+    std::cout << std::endl << "PME self energy" << std::endl;
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+    }
 
     return energy;
 }

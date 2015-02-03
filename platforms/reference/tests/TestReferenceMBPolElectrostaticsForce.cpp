@@ -1139,7 +1139,7 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     std::string testName      = "testWater3VirtualSitePMESmallBox";
     std::cout << "Test START: " << testName << std::endl;
 
-    int numberOfParticles     = 12;
+    int numberOfParticles     = 4;
     double cutoff             = 10.;
     cutoff = .9;
 
@@ -1233,16 +1233,16 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     positions[3]             = Vec3( -1.43230412, -0.33360265,  1.64727446 );
 
 
-    positions[4]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
-    positions[5]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
-    positions[6]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
-    positions[7]             = Vec3( -1.95661974, -0.48654484, -1.18917052 );
+//    positions[4]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
+//    positions[5]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
+//    positions[6]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
+//    positions[7]             = Vec3( -1.95661974, -0.48654484, -1.18917052 );
 
 
-    positions[8]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
-    positions[9]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
-    positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
-    positions[11]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 );
+//    positions[8]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
+//    positions[9]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
+//    positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
+//    positions[11]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 );
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
