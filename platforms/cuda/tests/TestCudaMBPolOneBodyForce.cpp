@@ -30,119 +30,124 @@
  * -------------------------------------------------------------------------- */
 
 /**
- * This tests the Reference implementation of ExampleForce.
+ * This tests the Reference implementation of MBPolOneBodyForce.
  */
 
-#include "ExampleForce.h"
+#include "OpenMMMBPol.h"
 #include "openmm/internal/AssertionUtilities.h"
 #include "openmm/Context.h"
 #include "openmm/Platform.h"
 #include "openmm/System.h"
-#include "openmm/VerletIntegrator.h"
+#include "openmm/LangevinIntegrator.h"
 #include <cmath>
 #include <iostream>
 #include <vector>
 
-using namespace ExamplePlugin;
+using namespace MBPolPlugin;
 using namespace OpenMM;
 using namespace std;
 
-extern "C" OPENMM_EXPORT void registerExampleCudaKernelFactories();
+const double DegreesToRadians = 3.14159265/180.0;
+
+extern "C" OPENMM_EXPORT void registerMBPolCudaKernelFactories();
 
 void testForce() {
-    // Create a chain of particles connected by bonds.
-    
-    const int numBonds = 10;
-    const int numParticles = numBonds+1;
-    System system;
-    vector<Vec3> positions(numParticles);
-    for (int i = 0; i < numParticles; i++) {
+        System system;
+    int numberOfParticles = 3;
+    for( int ii = 0; ii < numberOfParticles; ii++ ){
         system.addParticle(1.0);
-        positions[i] = Vec3(i, 0.1*i, -0.3*i);
     }
-    ExampleForce* force = new ExampleForce();
-    system.addForce(force);
-    for (int i = 0; i < numBonds; i++)
-        force->addBond(i, i+1, 1.0+sin(0.8*i), cos(0.3*i));
-    
-    // Compute the forces and energy.
 
-    VerletIntegrator integ(1.0);
-    Platform& platform = Platform::getPlatformByName("CUDA");
-    Context context(system, integ, platform);
-    context.setPositions(positions);
-    State state = context.getState(State::Energy | State::Forces);
-    
-    // See if the energy is correct.
-    
-    double expectedEnergy = 0;
-    for (int i = 0; i < numBonds; i++) {
-        double length = 1.0+sin(0.8*i);
-        double k = cos(0.3*i);
-        Vec3 delta = positions[i+1]-positions[i];
-        double dr = sqrt(delta.dot(delta))-length;
-        expectedEnergy += k*dr*dr*dr*dr;
-    }
-    ASSERT_EQUAL_TOL(expectedEnergy, state.getPotentialEnergy(), 1e-5);
+    LangevinIntegrator integrator(0.0, 0.1, 0.01);
 
-    // Validate the forces by moving each particle along each axis, and see if the energy changes by the correct amount.
-    
-    double offset = 1e-3;
-    for (int i = 0; i < numParticles; i++)
-        for (int j = 0; j < 3; j++) {
-            vector<Vec3> offsetPos = positions;
-            offsetPos[i][j] = positions[i][j]-offset;
-            context.setPositions(offsetPos);
-            double e1 = context.getState(State::Energy).getPotentialEnergy();
-            offsetPos[i][j] = positions[i][j]+offset;
-            context.setPositions(offsetPos);
-            double e2 = context.getState(State::Energy).getPotentialEnergy();
-            ASSERT_EQUAL_TOL(state.getForces()[i][j], (e1-e2)/(2*offset), 1e-3);
+    MBPolOneBodyForce* mbpolOneBodyForce = new MBPolOneBodyForce();
+
+    double abLength         = 0.144800000E+01;
+    double cbLength         = 0.101500000E+01;
+    double angleOneBody = 0.108500000E+03*DegreesToRadians;
+    //double kOneBody     = 0.750491578E-01;
+    double kOneBody     = 1.0;
+
+    std::vector<int> particleIndices;
+    particleIndices.push_back(0);
+    particleIndices.push_back(1);
+    particleIndices.push_back(2);
+
+    mbpolOneBodyForce->addOneBody(particleIndices);
+
+    system.addForce(mbpolOneBodyForce);
+    Context context(system, integrator, Platform::getPlatformByName( "CUDA"));
+
+    std::vector<Vec3> positions(numberOfParticles);
+
+    positions[0]             = Vec3( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
+    positions[1]             = Vec3( -6.218989773e-01, -6.009430735e-01,  1.572437625e+00  );
+    positions[2]             = Vec3( -2.017613812e+00, -4.190350349e-01,  2.239642849e+00  );
+
+    for (int i=0; i<numberOfParticles; i++) {
+        for (int j=0; j<3; j++) {
+            positions[i][j] *= 1e-1;
         }
-}
+    }
 
-void testChangingParameters() {
-    const double k = 1.5;
-    const double length = 0.5;
-    Platform& platform = Platform::getPlatformByName("CUDA");
-    
-    // Create a system with one bond.
-    
-    System system;
-    system.addParticle(1.0);
-    system.addParticle(1.0);
-    ExampleForce* force = new ExampleForce();
-    force->addBond(0, 1, length, k);
-    system.addForce(force);
-    vector<Vec3> positions(2);
-    positions[0] = Vec3(1, 0, 0);
-    positions[1] = Vec3(2, 0, 0);
-    
-    // Check the energy.
-    
-    VerletIntegrator integ(1.0);
-    Context context(system, integ, platform);
     context.setPositions(positions);
-    State state = context.getState(State::Energy);
-    ASSERT_EQUAL_TOL(k*pow(1.0-length, 4), state.getPotentialEnergy(), 1e-5);
     
-    // Modify the parameters.
-    
-    const double k2 = 2.2;
-    const double length2 = 0.9;
-    force->setBondParameters(0, 0, 1, length2, k2);
-    force->updateParametersInContext(context);
-    state = context.getState(State::Energy);
-    ASSERT_EQUAL_TOL(k2*pow(1.0-length2, 4), state.getPotentialEnergy(), 1e-5);
+    State state                      = context.getState(State::Forces | State::Energy);
+    std::vector<Vec3> forces   = state.getForces();
+    double cal2joule = 4.184;
+
+    std::vector<Vec3> expectedForces(numberOfParticles);
+
+    expectedForces[0]         = Vec3(-27.48162433,     8.92495995,   2.80995323 );
+    expectedForces[1]         = Vec3( 30.78909844,   -11.48714187,  -0.27204770 );
+    expectedForces[2]         = Vec3( -3.30747410,     2.56218193,  -2.53790553 );
+
+    // MBPol gives the gradients, we use forces in OpenMM, need to flip sign
+    for (int i=0; i<numberOfParticles; i++) {
+            for (int j=0; j<3; j++) {
+                expectedForces[i][j] *= -1;
+            }
+        }
+
+    double tolerance=1e-4;
+    double expectedEnergy = 0.55975882;
+
+    std::cout  << std::endl << "Forces:" << std::endl;
+
+    for (int i=0; i<numberOfParticles; i++) {
+           for (int j=0; j<3; j++) {
+            forces[i][j] /= cal2joule*10;
+           }
+       }
+
+    for (int i=0; i<numberOfParticles; i++) {
+         std::cout << forces[i] << " Kcal/mol/A " << std::endl;
+    }
+
+    std::cout  << std::endl << "Expected forces:" << std::endl;
+
+    for (int i=0; i<numberOfParticles; i++) {
+         std::cout << expectedForces[i] << " Kcal/mol/A " << std::endl;
+    }
+
+    double energy = state.getPotentialEnergy();
+
+    std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
+    std::cout << "Expected energy: " << expectedEnergy << " Kcal/mol "<< std::endl;
+
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
+    }
+    ASSERT_EQUAL_TOL( expectedEnergy, energy/cal2joule, tolerance );
+
 }
 
 int main(int argc, char* argv[]) {
     try {
-        registerExampleCudaKernelFactories();
+        registerMBPolCudaKernelFactories();
         if (argc > 1)
             Platform::getPlatformByName("CUDA").setPropertyDefaultValue("CudaPrecision", string(argv[1]));
         testForce();
-        testChangingParameters();
     }
     catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
