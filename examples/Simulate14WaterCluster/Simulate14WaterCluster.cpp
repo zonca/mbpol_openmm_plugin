@@ -79,12 +79,7 @@ void simulate14WaterCluster() {
     MBPolElectrostaticsForce* mbpolElectrostaticsForce        = new MBPolElectrostaticsForce();;
     mbpolElectrostaticsForce->setNonbondedMethod( MBPolElectrostaticsForce::NoCutoff );
 
-    std::vector<double> zeroDipole(3);
-    std::vector<double> zeroQuadrupole(9);
     std::vector<double> thole(5);
-
-    std::fill(zeroDipole.begin(), zeroDipole.end(), 0.);
-    std::fill(zeroQuadrupole.begin(), zeroQuadrupole.end(), 0.);
 
     thole[TCC] = 0.4;
     thole[TCD] = 0.4;
@@ -234,12 +229,13 @@ void simulate14WaterCluster() {
         }
 
 
-        mbpolOneBodyForce->addOneBody(jj, jj+1, jj+2);
+        mbpolOneBodyForce->addOneBody(particleIndices);
         mbpolTwoBodyForce->addParticle( particleIndices);
         mbpolThreeBodyForce->addParticle( particleIndices);
         dispersionForce->addParticle( "O");
         dispersionForce->addParticle( "H");
         dispersionForce->addParticle( "H");
+        dispersionForce->addParticle( "M");
 
     }
 

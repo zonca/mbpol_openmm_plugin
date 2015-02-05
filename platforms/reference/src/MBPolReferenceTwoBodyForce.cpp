@@ -85,22 +85,25 @@ void imageMolecules(const RealVec& box, std::vector<RealVec>& allPositions)
     imageParticles(box, allPositions[Oa], allPositions[Ha1]);
     imageParticles(box, allPositions[Oa], allPositions[Ha2]);
 
-    // Now image the oxygen of the second molecule
-
-    imageParticles(box, allPositions[Oa], allPositions[Ob]);
-
-    // Image the hydrogen of the second molecule with respect to the oxygen of the second molecule
-    imageParticles(box, allPositions[Ob], allPositions[Hb1]);
-    imageParticles(box, allPositions[Ob], allPositions[Hb2]);
-
-    if (allPositions.size() >= Hc1) // Three molecules
+    if (allPositions.size() >= Hb1) // Two molecules
     {
-        // Now image the oxygen of the third molecule
-        imageParticles(box, allPositions[Oa], allPositions[Oc]);
+        // Now image the oxygen of the second molecule
 
-        // Image the hydrogen of the third molecule with respect to the oxygen of the third molecule
-        imageParticles(box, allPositions[Oc], allPositions[Hc1]);
-        imageParticles(box, allPositions[Oc], allPositions[Hc2]);
+        imageParticles(box, allPositions[Oa], allPositions[Ob]);
+
+        // Image the hydrogen of the second molecule with respect to the oxygen of the second molecule
+        imageParticles(box, allPositions[Ob], allPositions[Hb1]);
+        imageParticles(box, allPositions[Ob], allPositions[Hb2]);
+
+        if (allPositions.size() >= Hc1) // Three molecules
+        {
+            // Now image the oxygen of the third molecule
+            imageParticles(box, allPositions[Oa], allPositions[Oc]);
+
+            // Image the hydrogen of the third molecule with respect to the oxygen of the third molecule
+            imageParticles(box, allPositions[Oc], allPositions[Hc1]);
+            imageParticles(box, allPositions[Oc], allPositions[Hc2]);
+        }
     }
 
 }
@@ -128,7 +131,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn( int siteI, int siteJ,
         extraPoints.resize(4);
 
         if( _nonbondedMethod == CutoffPeriodic )
-            imageMolecules(_periodicBoxDimensions, allPositions);
+            imageMolecules(_periodicBoxDimensions * nm_to_A, allPositions);
 
         RealVec dOO = allPositions[Oa] - allPositions[Ob];
 

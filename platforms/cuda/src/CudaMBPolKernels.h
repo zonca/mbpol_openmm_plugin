@@ -1,5 +1,5 @@
-#ifndef OPENMM_CUDAMBPOLKERNELSOURCES_H_
-#define OPENMM_CUDAMBPOLKERNELSOURCES_H_
+#ifndef CUDA_MBPOL_KERNELS_H_
+#define CUDA_MBPOL_KERNELS_H_
 
 /* -------------------------------------------------------------------------- *
  *                                   OpenMM                                   *
@@ -32,21 +32,52 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-#include <string>
+#include "openmm/mbpolKernels.h"
+#include "openmm/cuda/CudaContext.h"
+#include "openmm/cuda/CudaArray.h"
 
 namespace MBPolPlugin {
 
 /**
- * This class is a central holding place for the source code of CUDA kernels.
- * The CMake build script inserts declarations into it based on the .cu files in the
- * kernels subfolder.
+ * This kernel is invoked by MBPolForce to calculate the forces acting on the system and the energy of the system.
  */
-
-class CudaMBPolKernelSources {
+class CudaCalcMBPolOneBodyForceKernel : public CalcMBPolOneBodyForceKernel {
 public:
-@CUDA_FILE_DECLARATIONS@
+    CudaCalcMBPolOneBodyForceKernel(std::string name, const OpenMM::Platform& platform, OpenMM::CudaContext& cu, const OpenMM::System& system) :
+            CalcMBPolOneBodyForceKernel(name, platform), hasInitializedKernel(false), cu(cu), system(system), params(NULL) {
+    }
+    ~CudaCalcMBPolOneBodyForceKernel();
+    /**
+     * Initialize the kernel.
+     * 
+     * @param system     the System this kernel will be applied to
+     * @param force      the MBPolOneBodyForce this kernel will be used for
+     */
+    void initialize(const OpenMM::System& system, const MBPolOneBodyForce& force);
+    /**
+     * Execute the kernel to calculate the forces and/or energy.
+     *
+     * @param context        the context in which to execute this kernel
+     * @param includeForces  true if forces should be calculated
+     * @param includeEnergy  true if the energy should be calculated
+     * @return the potential energy due to the force
+     */
+    double execute(OpenMM::ContextImpl& context, bool includeForces, bool includeEnergy);
+    /**
+     * Copy changed parameters over to a context.
+     *
+     * @param context    the context to copy parameters to
+     * @param force      the MBPolOneBodyForce to copy the parameters from
+     */
+    void copyParametersToContext(OpenMM::ContextImpl& context, const MBPolOneBodyForce& force);
+private:
+    int numBonds;
+    bool hasInitializedKernel;
+    OpenMM::CudaContext& cu;
+    const OpenMM::System& system;
+    OpenMM::CudaArray* params;
 };
 
 } // namespace MBPolPlugin
 
-#endif /*OPENMM_CUDAMBPOLKERNELSOURCES_H_*/
+#endif /*CUDA_MBPOL_KERNELS_H_*/

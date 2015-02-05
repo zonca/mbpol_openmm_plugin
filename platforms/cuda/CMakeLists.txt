@@ -1,20 +1,14 @@
 #---------------------------------------------------
-# OpenMM CUDA MBPol Implementation
-#
-# Creates OpenMM library, base name=OpenMMMBPolCUDA.
-# Default libraries are shared & optimized. Variants
-# are created for debug (_d).
-#
-# Windows:
-#   OpenMMMBPolCUDA[_d].dll
-#   OpenMMMBPolCUDA[_d].lib
-# Unix:
-#   libOpenMMMBPolCUDA[_d].so
+# OpenMM MBPol Plugin CUDA Platform
 #----------------------------------------------------
 
-SET(MBPOL_CUDA_LIBRARY_NAME MBPOLPluginCUDA)
+# Collect up information about the version of the OpenMM library we're building
+# and make it available to the code so it can be built into the binaries.
+
+SET(MBPOL_CUDA_LIBRARY_NAME OpenMMMBPolCUDA)
 
 SET(SHARED_TARGET ${MBPOL_CUDA_LIBRARY_NAME})
+
 
 # These are all the places to search for header files which are
 # to be part of the API.
@@ -45,7 +39,7 @@ INCLUDE_DIRECTORIES(BEFORE ${CMAKE_BINARY_DIR}/platforms/cuda/src)
 # Set variables needed for encoding kernel sources into a C++ class
 
 SET(CUDA_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/src)
-SET(CUDA_SOURCE_CLASS CudaMBPOLKernelSources)
+SET(CUDA_SOURCE_CLASS CudaMBPolKernelSources)
 SET(CUDA_KERNELS_CPP ${CMAKE_CURRENT_BINARY_DIR}/src/${CUDA_SOURCE_CLASS}.cpp)
 SET(CUDA_KERNELS_H ${CMAKE_CURRENT_BINARY_DIR}/src/${CUDA_SOURCE_CLASS}.h)
 SET(SOURCE_FILES ${SOURCE_FILES} ${CUDA_KERNELS_CPP} ${CUDA_KERNELS_H})
@@ -68,9 +62,11 @@ TARGET_LINK_LIBRARIES(${SHARED_TARGET} ${CUDA_LIBRARIES})
 TARGET_LINK_LIBRARIES(${SHARED_TARGET} OpenMM)
 TARGET_LINK_LIBRARIES(${SHARED_TARGET} OpenMMCUDA)
 TARGET_LINK_LIBRARIES(${SHARED_TARGET} ${MBPOL_LIBRARY_NAME})
-SET_TARGET_PROPERTIES(${SHARED_TARGET} PROPERTIES COMPILE_FLAGS "-DOPENMM_BUILDING_SHARED_LIBRARY")
+SET_TARGET_PROPERTIES(${SHARED_TARGET} PROPERTIES
+    COMPILE_FLAGS "-DOPENMM_BUILDING_SHARED_LIBRARY ${EXTRA_COMPILE_FLAGS}"
+    LINK_FLAGS "${EXTRA_COMPILE_FLAGS}")
 IF (APPLE)
-    SET_TARGET_PROPERTIES(${SHARED_TARGET} PROPERTIES LINK_FLAGS "-F/Library/Frameworks -framework CUDA")
+    SET_TARGET_PROPERTIES(${SHARED_TARGET} PROPERTIES LINK_FLAGS "-F/Library/Frameworks -framework CUDA ${EXTRA_COMPILE_FLAGS}")
 ENDIF (APPLE)
 
 INSTALL(TARGETS ${SHARED_TARGET} DESTINATION ${CMAKE_INSTALL_PREFIX}/lib/plugins)

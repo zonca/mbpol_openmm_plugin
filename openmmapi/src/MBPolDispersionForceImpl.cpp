@@ -95,7 +95,8 @@ double tang_toennies_long_range(const double& x)
 
 double energy_long_range_correction(double cutoff, double c6, double d6)
 {
-    double el12 = -c6/kcal_permol_Aminus6_to_kJ_permol_nmminus6 * pow(d6/10., 3) * tang_toennies_long_range(d6/10.*cutoff);
+    double el12 = -c6/kcal_permol_Aminus6_to_kJ_permol_nmminus6 * pow(d6/10., 3) * tang_toennies_long_range(d6*cutoff);
+    el12 *= cal2joule;
     return el12;
 }
 
@@ -137,6 +138,7 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
     // particles in each class.
 
     map<string, int> classCounts;
+    int totalNumParticles = 0;
     for (int i = 0; i < force.getNumParticles(); i++) {
         string atomElement;
         force.getParticleParameters(i, atomElement);
@@ -147,6 +149,7 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
             classCounts[atomElement] = 1;
         else
             entry->second++;
+        totalNumParticles++;
         }
     }
 
@@ -169,6 +172,9 @@ double MBPolDispersionForceImpl::calcDispersionCorrection(const System& system, 
             double energy_correction = energy_long_range_correction(cutoff, c6d6.first, c6d6.second);
             energy += 2 * count * M_PI * energy_correction;
         }
+    double numInteractions = (totalNumParticles*(totalNumParticles+1))/2;
+    energy /= numInteractions;
+
     return energy;
 }
 

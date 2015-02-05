@@ -1,13 +1,16 @@
+#ifndef OPENMM_CUDAMBPOLKERNELFACTORY_H_
+#define OPENMM_CUDAMBPOLKERNELFACTORY_H_
+
 /* -------------------------------------------------------------------------- *
- *                                OpenMMMBPol                                *
+ *                                   OpenMM                                   *
  * -------------------------------------------------------------------------- *
  * This is part of the OpenMM molecular simulation toolkit originating from   *
  * Simbios, the NIH National Center for Physics-Based Simulation of           *
  * Biological Structures at Stanford, funded under the NIH Roadmap for        *
  * Medical Research, grant U54 GM072970. See https://simtk.org.               *
  *                                                                            *
- * Portions copyright (c) 2008-2009 Stanford University and the Authors.      *
- * Authors:                                                                   *
+ * Portions copyright (c) 2014 Stanford University and the Authors.           *
+ * Authors: Peter Eastman                                                     *
  * Contributors:                                                              *
  *                                                                            *
  * Permission is hereby granted, free of charge, to any person obtaining a    *
@@ -29,41 +32,19 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-#include "openmm/Force.h"
-#include "openmm/OpenMMException.h"
-#include "openmm/MBPolOneBodyForce.h"
-#include "openmm/internal/MBPolOneBodyForceImpl.h"
+#include "openmm/KernelFactory.h"
 
-using namespace  OpenMM;
-using namespace MBPolPlugin;
+namespace OpenMM {
 
-MBPolOneBodyForce::MBPolOneBodyForce() {
-}
+/**
+ * This KernelFactory creates kernels for the CUDA implementation of the Mbpol plugin.
+ */
 
-int MBPolOneBodyForce::addOneBody(const std::vector<int> & particleIndices    ) {
-    stretchBends.push_back(OneBodyInfo(particleIndices));
-    return stretchBends.size()-1;
-}
+class CudaMBPolKernelFactory : public KernelFactory {
+public:
+    KernelImpl* createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const;
+};
 
-void MBPolOneBodyForce::getOneBodyParameters(int particleIndex, std::vector<int>& particleIndices ) const {
-    particleIndices     = stretchBends[particleIndex].particleIndices;
-}
-void MBPolOneBodyForce::setOneBodyParameters(int index, std::vector<int>& particleIndices  ) {
-    stretchBends[index].particleIndices =particleIndices;
-}
+} // namespace OpenMM
 
-MBPolOneBodyForce::NonbondedMethod MBPolOneBodyForce::getNonbondedMethod() const {
-    return nonbondedMethod;
-}
-
-void MBPolOneBodyForce::setNonbondedMethod(NonbondedMethod method) {
-    nonbondedMethod = method;
-}
-
-ForceImpl* MBPolOneBodyForce::createImpl() const {
-    return new MBPolOneBodyForceImpl(*this);
-}
-
-void MBPolOneBodyForce::updateParametersInContext(Context& context) {
-    dynamic_cast<MBPolOneBodyForceImpl&>(getImplInContext(context)).updateParametersInContext(getContextImpl(context));
-}
+#endif /*OPENMM_CUDAMBPOLKERNELFACTORY_H_*/

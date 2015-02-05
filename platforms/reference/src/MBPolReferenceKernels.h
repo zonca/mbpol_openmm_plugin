@@ -71,14 +71,9 @@ public:
     void copyParametersToContext(ContextImpl& context, const MBPolOneBodyForce& force);
 private:
     int numOneBodys;
-    std::vector<int>   particle1;
-    std::vector<int>   particle2;
-    std::vector<int>   particle3;
-    std::vector<RealOpenMM> lengthABParameters;
-    std::vector<RealOpenMM> lengthCBParameters;
-    std::vector<RealOpenMM> angleParameters;
-    std::vector<RealOpenMM> kParameters;
+    std::vector< std::vector<int> > allParticleIndices;
     const System& system;
+    int usePBC;
 };
 
 /**
