@@ -48,6 +48,7 @@ extern "C" OPENMM_EXPORT void registerKernelFactories() {
         Platform& platform = Platform::getPlatformByName("CUDA");
         CudaMBPolKernelFactory* factory = new CudaMBPolKernelFactory();
         platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(), factory);
+        platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(), factory);
     }
     catch (std::exception ex) {
         // Ignore
@@ -68,5 +69,7 @@ KernelImpl* CudaMBPolKernelFactory::createKernelImpl(std::string name, const Pla
     CudaContext& cu = *static_cast<CudaPlatform::PlatformData*>(context.getPlatformData())->contexts[0];
     if (name == CalcMBPolOneBodyForceKernel::Name())
         return new CudaCalcMBPolOneBodyForceKernel(name, platform, cu, context.getSystem());
+    if (name == CalcMBPolTwoBodyForceKernel::Name())
+        return new CudaCalcMBPolTwoBodyForceKernel(name, platform, cu, context.getSystem());
     throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
 }

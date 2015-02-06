@@ -78,6 +78,44 @@ private:
     OpenMM::CudaArray* params;
 };
 
+class CudaCalcMBPolTwoBodyForceKernel : public CalcMBPolTwoBodyForceKernel {
+public:
+    CudaCalcMBPolTwoBodyForceKernel(std::string name, const OpenMM::Platform& platform, OpenMM::CudaContext& cu, const OpenMM::System& system) :
+            CalcMBPolTwoBodyForceKernel(name, platform), hasInitializedKernel(false), cu(cu), system(system), params(NULL) {
+    }
+    ~CudaCalcMBPolTwoBodyForceKernel();
+    /**
+     * Initialize the kernel.
+     * 
+     * @param system     the System this kernel will be applied to
+     * @param force      the MBPolTwoBodyForce this kernel will be used for
+     */
+    void initialize(const OpenMM::System& system, const MBPolTwoBodyForce& force);
+    /**
+     * Execute the kernel to calculate the forces and/or energy.
+     *
+     * @param context        the context in which to execute this kernel
+     * @param includeForces  true if forces should be calculated
+     * @param includeEnergy  true if the energy should be calculated
+     * @return the potential energy due to the force
+     */
+    double execute(OpenMM::ContextImpl& context, bool includeForces, bool includeEnergy);
+    /**
+     * Copy changed parameters over to a context.
+     *
+     * @param context    the context to copy parameters to
+     * @param force      the MBPolTwoBodyForce to copy the parameters from
+     */
+    void copyParametersToContext(OpenMM::ContextImpl& context, const MBPolTwoBodyForce& force);
+private:
+    int numMolecules;
+    CudaArray* particleIndices;
+    bool hasInitializedKernel;
+    OpenMM::CudaContext& cu;
+    const OpenMM::System& system;
+    OpenMM::CudaArray* params;
+};
+
 } // namespace MBPolPlugin
 
 #endif /*CUDA_MBPOL_KERNELS_H_*/
