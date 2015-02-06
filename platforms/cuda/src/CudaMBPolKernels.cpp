@@ -102,3 +102,43 @@ void CudaCalcMBPolOneBodyForceKernel::copyParametersToContext(ContextImpl& conte
     
     cu.invalidateMolecules();
 }
+
+class CudaCalcMBPolTwoBodyForceKernel::ForceInfo : public CudaForceInfo {
+public:
+    ForceInfo(const MBPolTwoBodyForce& force) : force(force) {
+    }
+    bool areParticlesIdentical(int particle1, int particle2) {
+        // current implementation supports only water, every
+        // molecule is the same
+        return true;
+    }
+private:
+    const MBPolTwoBodyForce& force;
+};
+
+CudaCalcMBPolTwoBodyForceKernel::CudaCalcMBPolTwoBodyForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) :
+        CalcMBPolTwoBodyForceKernel(name, platform), cu(cu), system(system) {
+}
+
+CudaCalcMBPolTwoBodyForceKernel::~CudaCalcMBPolTwoBodyForceKernel() {
+    cu.setAsCurrent();
+}
+
+void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBPolTwoBodyForce& force) {
+    cu.setAsCurrent();
+
+    positionH1 = CudaArray::create<float3>(cu, cu.getPaddedNumAtoms(), "positionH1");
+    positionH2 = CudaArray::create<float3>(cu, cu.getPaddedNumAtoms(), "positionH2");
+    positionM  = CudaArray::create<float3>(cu, cu.getPaddedNumAtoms(), "positionM");
+
+   // posq is already on the device, format is float4 (x, y, z, charge) 
+   // so, we can just pass as parameters the indices of the particles as we do
+   // in the reference platform
+   // after we copy params to the device
+   //  replacements["PARAMS"] = cu.getBondedUtilities().addArgument(params->getDevicePointer(), "float2");
+// 
+   // then we also add another argument with the pointer to posq
+   // the cu.getPosq().getDevicePointer()
+   // so we can then access the position of all particles on the device
+   //
+}
