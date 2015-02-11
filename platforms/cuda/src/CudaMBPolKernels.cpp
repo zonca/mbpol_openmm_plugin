@@ -168,7 +168,14 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     bool useCutoff = (force.getNonbondedMethod() != MBPolTwoBodyForce::NoCutoff);
     bool usePeriodic = (force.getNonbondedMethod() == MBPolTwoBodyForce::CutoffPeriodic);
     vector< vector<int> > exclusions;
-    cu.getNonbondedUtilities().addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, cu.replaceStrings(CudaMBPolKernelSources::twobodyForce, replacements), force.getForceGroup());
+    // cu.getNonbondedUtilities().addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, cu.replaceStrings(CudaMBPolKernelSources::twobodyForce, replacements), force.getForceGroup());
+    // cu.addForce(new CudaMBPolTwoBodyForceInfo(force));
+
+    // Add an interaction to the default nonbonded kernel.  This doesn't actually do any calculations.  It's
+    // just so that CudaNonbondedUtilities will build the exclusion flags and maintain the neighbor list.
+
+    cu.getNonbondedUtilities().addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, "", force.getForceGroup());
+    cu.getNonbondedUtilities().setUsePadding(false);
     cu.addForce(new CudaMBPolTwoBodyForceInfo(force));
 
 }
