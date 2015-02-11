@@ -33,6 +33,7 @@
 #include "CudaMBPolKernelSources.h"
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/cuda/CudaBondedUtilities.h"
+#include "openmm/cuda/CudaNonbondedUtilities.h"
 #include "openmm/cuda/CudaForceInfo.h"
 
 using namespace MBPolPlugin;
@@ -103,22 +104,24 @@ void CudaCalcMBPolOneBodyForceKernel::copyParametersToContext(ContextImpl& conte
     cu.invalidateMolecules();
 }
 
-class CudaCalcMBPolTwoBodyForceKernel::ForceInfo : public CudaForceInfo {
+///////////////////////////////////////////// MBPolTwoBodyForce ////////////////////////////////////
+
+class CudaMBPolTwoBodyForceInfo : public CudaForceInfo {
 public:
-    ForceInfo(const MBPolTwoBodyForce& force) : force(force) {
+    CudaMBPolTwoBodyForceInfo(const MBPolTwoBodyForce& force) : force(force) {
     }
-    bool areParticlesIdentical(int particle1, int particle2) {
-        // current implementation supports only water, every
-        // molecule is the same
+    int getNumParticleGroups() {
+        return force.getNumMolecules();
+    }
+    void getParticlesInGroup(int index, vector<int>& particles) {
+        force.getParticleParameters(index, particles);
+    }
+    bool areGroupsIdentical(int group1, int group2) {
         return true;
     }
 private:
     const MBPolTwoBodyForce& force;
 };
-
-CudaCalcMBPolTwoBodyForceKernel::CudaCalcMBPolTwoBodyForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) :
-        CalcMBPolTwoBodyForceKernel(name, platform), cu(cu), system(system) {
-}
 
 CudaCalcMBPolTwoBodyForceKernel::~CudaCalcMBPolTwoBodyForceKernel() {
     cu.setAsCurrent();
@@ -127,10 +130,28 @@ CudaCalcMBPolTwoBodyForceKernel::~CudaCalcMBPolTwoBodyForceKernel() {
 void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBPolTwoBodyForce& force) {
     cu.setAsCurrent();
 
-    positionH1 = CudaArray::create<float3>(cu, cu.getPaddedNumAtoms(), "positionH1");
-    positionH2 = CudaArray::create<float3>(cu, cu.getPaddedNumAtoms(), "positionH2");
-    positionM  = CudaArray::create<float3>(cu, cu.getPaddedNumAtoms(), "positionM");
+    // device array
+    particleIndices = CudaArray::create<float4>(cu, cu.getPaddedNumAtoms(), "particleIndices");
 
+    // suffix Vec is used for host arrays
+    // FIXME forced to convert to float, otherwise type error in real_shfl
+    // how to use ints?
+    vector<float4> particleIndicesVec(cu.getPaddedNumAtoms());
+    for (int i=0; i <  force.getNumMolecules(); i++) {
+        std::vector<int> singleParticleIndices;
+        force.getParticleParameters(i, singleParticleIndices );
+        particleIndicesVec[i] = make_float4((float) singleParticleIndices[0], (float) singleParticleIndices[1], (float) singleParticleIndices[2], (float) singleParticleIndices[3]);
+    }
+
+    particleIndices->upload(particleIndicesVec);
+
+    // a parameter is defined per mulecule
+    // particleIndices as a parameter fails with an error on read_shfl
+    cu.getNonbondedUtilities().addParameter(CudaNonbondedUtilities::ParameterInfo("particleIndices", "float", 4, sizeof(float4), particleIndices->getDevicePointer()));
+    map<string, string> replacements;
+    // replacements["PARAMS"] = cu.getNonbondedUtilities().addArgument(particleIndices->getDevicePointer(), "int4");
+    
+    // using an argument instead
    // posq is already on the device, format is float4 (x, y, z, charge) 
    // so, we can just pass as parameters the indices of the particles as we do
    // in the reference platform
@@ -141,4 +162,24 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
    // the cu.getPosq().getDevicePointer()
    // so we can then access the position of all particles on the device
    //
+   
+    // replacements["POSQ"] = cu.getBondedUtilities().addArgument( cu.getPosq().getDevicePointer(), "float3");
+
+    bool useCutoff = (force.getNonbondedMethod() != MBPolTwoBodyForce::NoCutoff);
+    bool usePeriodic = (force.getNonbondedMethod() == MBPolTwoBodyForce::CutoffPeriodic);
+    vector< vector<int> > exclusions;
+    cu.getNonbondedUtilities().addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, cu.replaceStrings(CudaMBPolKernelSources::twobodyForce, replacements), force.getForceGroup());
+    cu.addForce(new CudaMBPolTwoBodyForceInfo(force));
+
+}
+
+double CudaCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
+    return 0.0;
+}
+
+void CudaCalcMBPolTwoBodyForceKernel::copyParametersToContext(ContextImpl& context, const MBPolTwoBodyForce& force) {
+    cu.setAsCurrent();
+    throw OpenMMException(" CudaCalcMBPolTwoBodyForceKernel::copyParametersToContext not implemented");
+    
+    cu.invalidateMolecules();
 }
