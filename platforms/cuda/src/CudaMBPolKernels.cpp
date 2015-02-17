@@ -35,6 +35,8 @@
 #include "openmm/cuda/CudaBondedUtilities.h"
 #include "openmm/cuda/CudaNonbondedUtilities.h"
 #include "openmm/cuda/CudaForceInfo.h"
+#include "CudaKernelSources.h"
+
 
 using namespace MBPolPlugin;
 using namespace OpenMM;
