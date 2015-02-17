@@ -80,9 +80,8 @@ private:
 
 class CudaCalcMBPolTwoBodyForceKernel : public CalcMBPolTwoBodyForceKernel {
 public:
-    CudaCalcMBPolTwoBodyForceKernel(std::string name, const OpenMM::Platform& platform, OpenMM::CudaContext& cu, const OpenMM::System& system) :
-            CalcMBPolTwoBodyForceKernel(name, platform), hasInitializedKernel(false), cu(cu), system(system), params(NULL) {
-    }
+    CudaCalcMBPolTwoBodyForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
+
     ~CudaCalcMBPolTwoBodyForceKernel();
     /**
      * Initialize the kernel.
@@ -114,6 +113,9 @@ private:
     OpenMM::CudaContext& cu;
     const OpenMM::System& system;
     OpenMM::CudaArray* params;
+    CudaArray* tempForces;
+    CUfunction computeTwoBodyForceKernel;
+
 };
 
 } // namespace MBPolPlugin
