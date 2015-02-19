@@ -126,14 +126,12 @@ private:
 };
 
 CudaCalcMBPolTwoBodyForceKernel::CudaCalcMBPolTwoBodyForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) :
-        CalcMBPolTwoBodyForceKernel(name, platform), cu(cu), system(system), tempForces(NULL) {
+        CalcMBPolTwoBodyForceKernel(name, platform), cu(cu), system(system) {
 }
 
 
 CudaCalcMBPolTwoBodyForceKernel::~CudaCalcMBPolTwoBodyForceKernel() {
     cu.setAsCurrent();
-    if (tempForces != NULL)
-    delete tempForces;
 }
 
 void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBPolTwoBodyForce& force) {
@@ -141,7 +139,6 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
 
     // device array
     particleIndices = CudaArray::create<float4>(cu, cu.getPaddedNumAtoms(), "particleIndices");
-    tempForces = CudaArray::create<long long>(cu, 3*cu.getPaddedNumAtoms(), "tempForces");
 
     // suffix Vec is used for host arrays
     // FIXME forced to convert to float, otherwise type error in real_shfl
@@ -183,8 +180,14 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     
     // create an explicit CUDA kernel, this is necessary because we need access to
     // position and forces of all atoms in each molecule
-    
+    //
     map<string, string> defines;
+    defines["NUM_ATOMS"] = cu.intToString(cu.getNumAtoms());
+    defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
+    defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
+    defines["TILE_SIZE"] = cu.intToString(CudaContext::TileSize);
+    defines["THREAD_BLOCK_SIZE"] = cu.intToString(cu.getNonbondedUtilities().getNumForceThreadBlocks());
+
     CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::twobodyForce, defines);
     computeTwoBodyForceKernel = cu.getKernel(module, "computeTwoBodyForce");
 
@@ -198,10 +201,14 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
 }
 
 double CudaCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
-    cu.getForce().copyTo(*tempForces);
-    void* args[] = {&cu.getForce().getDevicePointer(), &tempForces->getDevicePointer()};
+    int startTileIndex = cu.getNonbondedUtilities().getStartTileIndex();
+    int numTileIndices = cu.getNonbondedUtilities().getNumTiles();
+    unsigned int maxTiles = cu.getNonbondedUtilities().getInteractingTiles().getSize();
+
+    
+    void* args[] = {&cu.getForce().getDevicePointer(),&cu.getEnergyBuffer().getDevicePointer(), &cu.getPosq().getDevicePointer(), &startTileIndex, &numTileIndices,  &cu.getNonbondedUtilities().getInteractingTiles().getDevicePointer(), &cu.getNonbondedUtilities().getInteractionCount().getDevicePointer(),
+            cu.getPeriodicBoxSizePointer(), cu.getInvPeriodicBoxSizePointer(), &maxTiles, &cu.getNonbondedUtilities().getBlockCenters().getDevicePointer(), &cu.getNonbondedUtilities().getInteractingAtoms().getDevicePointer()};
     cu.executeKernel(computeTwoBodyForceKernel, args, cu.getNumAtoms());
-    tempForces->copyTo(cu.getForce());
     return 0.0;
 }
 

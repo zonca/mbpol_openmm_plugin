@@ -113,7 +113,6 @@ private:
     OpenMM::CudaContext& cu;
     const OpenMM::System& system;
     OpenMM::CudaArray* params;
-    CudaArray* tempForces;
     CUfunction computeTwoBodyForceKernel;
 
 };

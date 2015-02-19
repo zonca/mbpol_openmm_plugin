@@ -1,11 +1,16 @@
+typedef struct {
+    real x, y, z;
+    real q;
+    real fx, fy, fz;
+} AtomData;
 
 extern "C" __global__ void computeTwoBodyForce(
-        
+
         // const unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ tempForceBuffers) {
         unsigned long long* __restrict__ forceBuffers, real* __restrict__ energyBuffer, const real4* __restrict__ posq,
         unsigned int startTileIndex, unsigned int numTileIndices
 #ifdef USE_CUTOFF
-        , const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize, 
+        , const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize,
         unsigned int maxTiles, const real4* __restrict__ blockCenter, const real4* __restrict__ blockSize, const unsigned int* __restrict__ interactingAtoms
 #endif
         ) {
@@ -17,7 +22,7 @@ extern "C" __global__ void computeTwoBodyForce(
     // used shared memory if the device cannot shuffle
     __shared__ AtomData localData[THREAD_BLOCK_SIZE];
 
-        // Second loop: tiles without exclusions, either from the neighbor list (with cutoff) or just enumerating all
+    // Second loop: tiles without exclusions, either from the neighbor list (with cutoff) or just enumerating all
     // of them (no cutoff).
 #ifdef USE_CUTOFF
     const unsigned int numTiles = interactionCount[0];
@@ -35,22 +40,17 @@ extern "C" __global__ void computeTwoBodyForce(
     __shared__ int atomIndices[THREAD_BLOCK_SIZE];
     __shared__ volatile int skipTiles[THREAD_BLOCK_SIZE];
     skipTiles[threadIdx.x] = -1;
-    
+
     while (pos < end) {
-        const bool hasExclusions = false;
         real3 force = make_real3(0);
         bool includeTile = true;
 
         // Extract the coordinates of this tile.
         int x, y;
-        bool singlePeriodicCopy = false;
 #ifdef USE_CUTOFF
         if (numTiles <= maxTiles) {
             x = tiles[pos];
             real4 blockSizeX = blockSize[x];
-            singlePeriodicCopy = (0.5f*periodicBoxSize.x-blockSizeX.x >= CUTOFF &&
-                                  0.5f*periodicBoxSize.y-blockSizeX.y >= CUTOFF &&
-                                  0.5f*periodicBoxSize.z-blockSizeX.z >= CUTOFF);
         }
         else
 #endif
@@ -64,19 +64,19 @@ extern "C" __global__ void computeTwoBodyForce(
 
             // Skip over tiles that have exclusions, since they were already processed.
 
-            while (skipTiles[tbx+TILE_SIZE-1] < pos) {
-                if (skipBase+tgx < NUM_TILES_WITH_EXCLUSIONS) {
-                    ushort2 tile = exclusionTiles[skipBase+tgx];
-                    skipTiles[threadIdx.x] = tile.x + tile.y*NUM_BLOCKS - tile.y*(tile.y+1)/2;
-                }
-                else
-                    skipTiles[threadIdx.x] = end;
-                skipBase += TILE_SIZE;            
-                currentSkipIndex = tbx;
-            }
-            while (skipTiles[currentSkipIndex] < pos)
-                currentSkipIndex++;
-            includeTile = (skipTiles[currentSkipIndex] != pos);
+            //while (skipTiles[tbx+TILE_SIZE-1] < pos) {
+            //    if (skipBase+tgx < NUM_TILES_WITH_EXCLUSIONS) {
+            //        ushort2 tile = exclusionTiles[skipBase+tgx];
+            //        skipTiles[threadIdx.x] = tile.x + tile.y*NUM_BLOCKS - tile.y*(tile.y+1)/2;
+            //    }
+            //    else
+            //        skipTiles[threadIdx.x] = end;
+            //    skipBase += TILE_SIZE;
+            //    currentSkipIndex = tbx;
+            //}
+            //while (skipTiles[currentSkipIndex] < pos)
+            //    currentSkipIndex++;
+            //includeTile = (skipTiles[currentSkipIndex] != pos);
         }
         if (includeTile) {
             unsigned int atom1 = x*TILE_SIZE + tgx;
@@ -99,114 +99,41 @@ extern "C" __global__ void computeTwoBodyForce(
                 localData[threadIdx.x].fx = 0.0f;
                 localData[threadIdx.x].fy = 0.0f;
                 localData[threadIdx.x].fz = 0.0f;
-                LOAD_LOCAL_PARAMETERS_FROM_GLOBAL
+                // LOAD_LOCAL_PARAMETERS_FROM_GLOBAL
             }
             else {
                 localData[threadIdx.x].x = 0;
                 localData[threadIdx.x].y = 0;
                 localData[threadIdx.x].z = 0;
             }
+            // We need to apply periodic boundary conditions separately for each interaction.
+            unsigned int tj = tgx;
+            for (j = 0; j < TILE_SIZE; j++) {
+                int atom2 = tbx+tj;
+                real4 posq2 = make_real4(localData[atom2].x, localData[atom2].y, localData[atom2].z, localData[atom2].q);
+                real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
 #ifdef USE_PERIODIC
-            if (singlePeriodicCopy) {
-                // The box is small enough that we can just translate all the atoms into a single periodic
-                // box, then skip having to apply periodic boundary conditions later.
-                real4 blockCenterX = blockCenter[x];
-                posq1.x -= floor((posq1.x-blockCenterX.x)*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
-                posq1.y -= floor((posq1.y-blockCenterX.y)*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
-                posq1.z -= floor((posq1.z-blockCenterX.z)*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
-                localData[threadIdx.x].x -= floor((localData[threadIdx.x].x-blockCenterX.x)*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
-                localData[threadIdx.x].y -= floor((localData[threadIdx.x].y-blockCenterX.y)*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
-                localData[threadIdx.x].z -= floor((localData[threadIdx.x].z-blockCenterX.z)*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
-                unsigned int tj = tgx;
-                for (j = 0; j < TILE_SIZE; j++) {
-                    int atom2 = tbx+tj;
-                    real4 posq2 = make_real4(localData[atom2].x, localData[atom2].y, localData[atom2].z, localData[atom2].q);
-                    real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
-                    real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-                    real invR = RSQRT(r2);
-                    real r = r2*invR;
-                    // LOAD_ATOM2_PARAMETERS
-                    atom2 = atomIndices[tbx+tj];
-#ifdef USE_SYMMETRIC
-                    real dEdR = 0.0f;
-#else
-                    real3 dEdR1 = make_real3(0);
-                    real3 dEdR2 = make_real3(0);
+                delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
+                delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
+                delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
 #endif
-#ifdef USE_EXCLUSIONS
-                    bool isExcluded = (atom1 >= NUM_ATOMS || atom2 >= NUM_ATOMS);
-#endif
-                    real tempEnergy = 0.0f;
-                    COMPUTE_INTERACTION
-                    energy += tempEnergy;
-#ifdef USE_SYMMETRIC
-                    delta *= dEdR;
-                    force.x -= delta.x;
-                    force.y -= delta.y;
-                    force.z -= delta.z;
-                    localData[tbx+tj].fx += delta.x;
-                    localData[tbx+tj].fy += delta.y;
-                    localData[tbx+tj].fz += delta.z;
-#else // !USE_SYMMETRIC
-                    force.x -= dEdR1.x;
-                    force.y -= dEdR1.y;
-                    force.z -= dEdR1.z;
-                    localData[tbx+tj].fx += dEdR2.x;
-                    localData[tbx+tj].fy += dEdR2.y;
-                    localData[tbx+tj].fz += dEdR2.z;
-#endif // end USE_SYMMETRIC
-                    tj = (tj + 1) & (TILE_SIZE - 1);
-                }
-            }
-            else
-#endif
-            {
-                // We need to apply periodic boundary conditions separately for each interaction.
-                unsigned int tj = tgx;
-                for (j = 0; j < TILE_SIZE; j++) {
-                    int atom2 = tbx+tj;
-                    real4 posq2 = make_real4(localData[atom2].x, localData[atom2].y, localData[atom2].z, localData[atom2].q);
-                    real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
-#ifdef USE_PERIODIC
-                    delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
-                    delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
-                    delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
-#endif
-                    real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-                    real invR = RSQRT(r2);
-                    real r = r2*invR;
-                    // LOAD_ATOM2_PARAMETERS
-                    atom2 = atomIndices[tbx+tj];
-#ifdef USE_SYMMETRIC
-                    real dEdR = 0.0f;
-#else
-                    real3 dEdR1 = make_real3(0);
-                    real3 dEdR2 = make_real3(0);
-#endif
-#ifdef USE_EXCLUSIONS
-                    bool isExcluded = (atom1 >= NUM_ATOMS || atom2 >= NUM_ATOMS);
-#endif
-                    real tempEnergy = 0.0f;
-                    COMPUTE_INTERACTION
-                    energy += tempEnergy;
-#ifdef USE_SYMMETRIC
-                    delta *= dEdR;
-                    force.x -= delta.x;
-                    force.y -= delta.y;
-                    force.z -= delta.z;
-                    localData[tbx+tj].fx += delta.x;
-                    localData[tbx+tj].fy += delta.y;
-                    localData[tbx+tj].fz += delta.z;
-#else // !USE_SYMMETRIC
-                    force.x -= dEdR1.x;
-                    force.y -= dEdR1.y;
-                    force.z -= dEdR1.z;
-                    localData[tbx+tj].fx += dEdR2.x;
-                    localData[tbx+tj].fy += dEdR2.y;
-                    localData[tbx+tj].fz += dEdR2.z;
-#endif // end USE_SYMMETRIC
-                    tj = (tj + 1) & (TILE_SIZE - 1);
-                }
+                real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
+                real invR = RSQRT(r2);
+                real r = r2*invR;
+                // LOAD_ATOM2_PARAMETERS
+                atom2 = atomIndices[tbx+tj];
+                real dEdR = 0.0f;
+                real tempEnergy = 0.0f;
+                // COMPUTE_INTERACTION
+                energy += tempEnergy;
+                delta *= dEdR;
+                force.x -= delta.x;
+                force.y -= delta.y;
+                force.z -= delta.z;
+                localData[tbx+tj].fx += delta.x;
+                localData[tbx+tj].fy += delta.y;
+                localData[tbx+tj].fz += delta.z;
+                tj = (tj + 1) & (TILE_SIZE - 1);
             }
 
             // Write results.
