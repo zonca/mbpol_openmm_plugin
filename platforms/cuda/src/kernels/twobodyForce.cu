@@ -4,12 +4,6 @@ typedef struct {
     real fx, fy, fz;
 } AtomData;
 
-#define O  0
-#define H1 1
-#define H2 2
-#define X1 3
-#define X2 4
-
 #define Oa  0
 #define Ha1 1
 #define Ha2 2
@@ -15036,36 +15030,36 @@ typedef struct {
 //     return t4988+t7682;
 // }
 
-// extern "C" __device__ void computeExtraPoint(real3 * O, real3 * H1, real3 * H2, real3 * x1, real3 * x2) {
-//     // TODO save oh1 and oh2 to be used later?
-//     real3 oh1 = *H1 - *O;
-//     real3 oh2 = *H2 - *O;
-// 
-//     real3 v = cross(oh1, oh2);
-//     real3 in_plane = *O + (oh1 + oh2) * 0.5*in_plane_gamma;
-//     real3 out_of_plane = v * out_of_plane_gamma;
-// 
-//     x1[0] = in_plane + out_of_plane;
-//     x2[0] = in_plane - out_of_plane;
-// }
-// 
-// extern "C" __device__ void computeExp(real r0, real k, real3 * O1, real3 * O2, real * exp1, real3 * g) {
-//     g[0] = *O1 - *O2;
-// 
-//     real r = SQRT(dot(*g, *g));
-//     exp1[0] = EXP(k*(r0 - r));
-//     g[0] *= -k*exp1[0]/r;
-// }
-// 
-// extern "C" __device__ void computeCoul(real r0, real k, real3 * O1, real3 * O2, real * exp1, real3 * g) {
-//     g[0] = *O1 - *O2;
-// 
-//     real r = SQRT(dot(*g, *g));
-//     exp1[0] = EXP(k*(r0 - r));
-//     real rinv = 1.0/r;
-//     real val = exp1[0]*rinv;
-//     g[0] *=  - (k + rinv)*val*rinv;
-// }
+extern "C" __device__ void computeExtraPoint(real3 * O, real3 * H1, real3 * H2, real3 * x1, real3 * x2) {
+    // TODO save oh1 and oh2 to be used later?
+    real3 oh1 = *H1 - *O;
+    real3 oh2 = *H2 - *O;
+
+    real3 v = cross(oh1, oh2);
+    real3 in_plane = (*O) + (oh1 + oh2) * 0.5 * in_plane_gamma;
+    real3 out_of_plane = v * out_of_plane_gamma;
+
+    x1[0] = in_plane + out_of_plane;
+    x2[0] = in_plane - out_of_plane;
+}
+
+extern "C" __device__ void computeExp(real r0, real k, real3 * O1, real3 * O2, real * exp1, real3 * g) {
+    g[0] = *O1 - *O2;
+
+    real r = SQRT(dot(*g, *g));
+    exp1[0] = EXP(k*(r0 - r));
+    g[0] *= -k*exp1[0]/r;
+}
+
+extern "C" __device__ void computeCoul(real r0, real k, real3 * O1, real3 * O2, real * exp1, real3 * g) {
+    g[0] = *O1 - *O2;
+
+    real r = SQRT(dot(*g, *g));
+    exp1[0] = EXP(k*(r0 - r));
+    real rinv = 1.0/r;
+    real val = exp1[0]*rinv;
+    g[0] *=  - (k + rinv)*val*rinv;
+}
 
 // extern "C" __device__ void computeGrads(real * g, real * gOO, real3 * force1, real3 * force2) {
 // 
@@ -15233,47 +15227,47 @@ extern "C" __global__ void computeTwoBodyForce(
                     if ((rOO > r2f) || (rOO < 2.)) {
                         tempEnergy = 0.;
                     } else {
-                        // computeExtraPoint(positions + Oa, positions + Ha1, positions + Ha2,
-                        //        positions + Xa1, positions + Xa2);
-                        // computeExtraPoint(positions + Ob, positions + Hb1, positions + Hb2,
-                        //        positions + Xb1, positions + Xb2);
+                        computeExtraPoint(positions + Oa, positions + Ha1, positions + Ha2,
+                               positions + Xa1, positions + Xa2);
+                        computeExtraPoint(positions + Ob, positions + Hb1, positions + Hb2,
+                                positions + Xb1, positions + Xb2);
 
-                        // real exp[31];
-                        // real3 gOO[31];
-                        // int i = 0;
-                        // computeExp(d_intra, k_HH_intra, positions +Ha1, positions +Ha2, exp+i, gOO+i); i++;
-                        // computeExp(d_intra, k_HH_intra, positions +Hb1, positions +Hb2, exp+i, gOO+i); i++;
-                        // computeExp(d_intra, k_OH_intra, positions +Oa,  positions +Ha1, exp+i, gOO+i); i++;
-                        // computeExp(d_intra, k_OH_intra, positions +Oa,  positions +Ha2, exp+i, gOO+i); i++;
-                        // computeExp(d_intra, k_OH_intra, positions +Ob,  positions +Hb1, exp+i, gOO+i); i++;
-                        // computeExp(d_intra, k_OH_intra, positions +Ob,  positions +Hb2, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_HH_coul, positions +Ha1, positions +Hb1, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_HH_coul, positions +Ha1, positions +Hb2, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_HH_coul, positions +Ha2, positions +Hb1, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_HH_coul, positions +Ha2, positions +Hb2, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_OH_coul, positions +Oa,  positions +Hb1, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_OH_coul, positions +Oa,  positions +Hb2, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_OH_coul, positions +Ob,  positions +Ha1, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_OH_coul, positions +Ob,  positions +Ha2, exp+i, gOO+i); i++;
-                        // computeCoul(d_inter, k_OO_coul, positions +Oa,  positions +Ob , exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xa1, positions +Hb1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xa1, positions +Hb2, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xa2, positions +Hb1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xa2, positions +Hb2, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xb1, positions +Ha1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xb1, positions +Ha2, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xb2, positions +Ha1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XH_main,  positions +Xb2, positions +Ha2, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XO_main,  positions +Oa , positions +Xb1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XO_main,  positions +Oa , positions +Xb2, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XO_main,  positions +Ob , positions +Xa1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XO_main,  positions +Ob , positions +Xa2, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XX_main,  positions +Xa1, positions +Xb1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XX_main,  positions +Xa1, positions +Xb2, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb1, exp+i, gOO+i); i++;
-                        // computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb2, exp+i, gOO+i); i++;
+                        real exp[31];
+                        real3 gOO[31];
+                        int i = 0;
+                        computeExp(d_intra, k_HH_intra, positions +Ha1, positions +Ha2, exp+i, gOO+i); i++;
+                        computeExp(d_intra, k_HH_intra, positions +Hb1, positions +Hb2, exp+i, gOO+i); i++;
+                        computeExp(d_intra, k_OH_intra, positions +Oa,  positions +Ha1, exp+i, gOO+i); i++;
+                        computeExp(d_intra, k_OH_intra, positions +Oa,  positions +Ha2, exp+i, gOO+i); i++;
+                        computeExp(d_intra, k_OH_intra, positions +Ob,  positions +Hb1, exp+i, gOO+i); i++;
+                        computeExp(d_intra, k_OH_intra, positions +Ob,  positions +Hb2, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_HH_coul, positions +Ha1, positions +Hb1, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_HH_coul, positions +Ha1, positions +Hb2, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_HH_coul, positions +Ha2, positions +Hb1, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_HH_coul, positions +Ha2, positions +Hb2, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_OH_coul, positions +Oa,  positions +Hb1, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_OH_coul, positions +Oa,  positions +Hb2, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_OH_coul, positions +Ob,  positions +Ha1, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_OH_coul, positions +Ob,  positions +Ha2, exp+i, gOO+i); i++;
+                        computeCoul(d_inter, k_OO_coul, positions +Oa,  positions +Ob , exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xa1, positions +Hb1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xa1, positions +Hb2, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xa2, positions +Hb1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xa2, positions +Hb2, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xb1, positions +Ha1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xb1, positions +Ha2, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xb2, positions +Ha1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XH_main,  positions +Xb2, positions +Ha2, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XO_main,  positions +Oa , positions +Xb1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XO_main,  positions +Oa , positions +Xb2, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XO_main,  positions +Ob , positions +Xa1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XO_main,  positions +Ob , positions +Xa2, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XX_main,  positions +Xa1, positions +Xb1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XX_main,  positions +Xa1, positions +Xb2, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb1, exp+i, gOO+i); i++;
+                        computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb2, exp+i, gOO+i); i++;
 
-                        // real g[31];
+                        real g[31];
                         // const real E_poly = poly_2b_v6x_eval(exp, g);
 
                         // computeGrads(g[0],  gOO[0],  force + Ha1, force + Ha2);
