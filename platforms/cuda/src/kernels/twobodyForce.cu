@@ -15061,12 +15061,12 @@ extern "C" __device__ void computeCoul(real r0, real k, real3 * O1, real3 * O2, 
     g[0] *=  - (k + rinv)*val*rinv;
 }
 
-extern "C" __device__ void computeGrads(real * g, real * gOO, real3 * force1, real3 * force2) {
-
-    real d = *g * (*gOO);
-    force1[0] += d;
-    force2[0] -= d;
-}
+// extern "C" __device__ void computeGrads(real * g, real * gOO, real3 * force1, real3 * force2) {
+// 
+//     real d = *g * (*gOO);
+//     force1[0] += d;
+//     force2[0] -= d;
+// }
 
 
 extern "C" __global__ void computeTwoBodyForce(
@@ -15270,37 +15270,37 @@ extern "C" __global__ void computeTwoBodyForce(
                         real g[31];
                         const real E_poly = poly_2b_v6x_eval(exp, g);
 
-                        computeGrads(g[0],  gOO[0],  force + Ha1, force + Ha2);
-                        computeGrads(g[1],  gOO[1],  force + Hb1, force + Hb2);
-                        computeGrads(g[2],  gOO[2],  force + Oa , force + Ha1);
-                        computeGrads(g[3],  gOO[3],  force + Oa , force + Ha2);
-                        computeGrads(g[4],  gOO[4],  force + Ob , force + Hb1);
-                        computeGrads(g[5],  gOO[5],  force + Ob , force + Hb2);
-                        computeGrads(g[6],  gOO[6],  force + Ha1, force + Hb1);
-                        computeGrads(g[7],  gOO[7],  force + Ha1, force + Hb2);
-                        computeGrads(g[8],  gOO[8],  force + Ha2, force + Hb1);
-                        computeGrads(g[9],  gOO[9],  force + Ha2, force + Hb2);
-                        computeGrads(g[10], gOO[10], force + Oa , force + Hb1);
-                        computeGrads(g[11], gOO[11], force + Oa , force + Hb2);
-                        computeGrads(g[12], gOO[12], force + Ob , force + Ha1);
-                        computeGrads(g[13], gOO[13], force + Ob , force + Ha2);
-                        computeGrads(g[14], gOO[14], force + Oa , force + Ob );
-                        computeGrads(g[15], gOO[15], force + Xa1, force + Hb1);
-                        computeGrads(g[16], gOO[16], force + Xa1, force + Hb2);
-                        computeGrads(g[17], gOO[17], force + Xa2, force + Hb1);
-                        computeGrads(g[18], gOO[18], force + Xa2, force + Hb2);
-                        computeGrads(g[19], gOO[19], force + Xb1, force + Ha1);
-                        computeGrads(g[20], gOO[20], force + Xb1, force + Ha2);
-                        computeGrads(g[21], gOO[21], force + Xb2, force + Ha1);
-                        computeGrads(g[22], gOO[22], force + Xb2, force + Ha2);
-                        computeGrads(g[23], gOO[23], force + Oa , force + Xb1);
-                        computeGrads(g[24], gOO[24], force + Oa , force + Xb2);
-                        computeGrads(g[25], gOO[25], force + Ob , force + Xa1);
-                        computeGrads(g[26], gOO[26], force + Ob , force + Xa2);
-                        computeGrads(g[27], gOO[27], force + Xa1, force + Xb1);
-                        computeGrads(g[28], gOO[28], force + Xa1, force + Xb2);
-                        computeGrads(g[29], gOO[29], force + Xa2, force + Xb1);
-                        computeGrads(g[30], gOO[30], force + Xa2, force + Xb2);
+                        // computeGrads(g[0],  gOO[0],  force + Ha1, force + Ha2);
+                        // computeGrads(g[1],  gOO[1],  force + Hb1, force + Hb2);
+                        // computeGrads(g[2],  gOO[2],  force + Oa , force + Ha1);
+                        // computeGrads(g[3],  gOO[3],  force + Oa , force + Ha2);
+                        // computeGrads(g[4],  gOO[4],  force + Ob , force + Hb1);
+                        // computeGrads(g[5],  gOO[5],  force + Ob , force + Hb2);
+                        // computeGrads(g[6],  gOO[6],  force + Ha1, force + Hb1);
+                        // computeGrads(g[7],  gOO[7],  force + Ha1, force + Hb2);
+                        // computeGrads(g[8],  gOO[8],  force + Ha2, force + Hb1);
+                        // computeGrads(g[9],  gOO[9],  force + Ha2, force + Hb2);
+                        // computeGrads(g[10], gOO[10], force + Oa , force + Hb1);
+                        // computeGrads(g[11], gOO[11], force + Oa , force + Hb2);
+                        // computeGrads(g[12], gOO[12], force + Ob , force + Ha1);
+                        // computeGrads(g[13], gOO[13], force + Ob , force + Ha2);
+                        // computeGrads(g[14], gOO[14], force + Oa , force + Ob );
+                        // computeGrads(g[15], gOO[15], force + Xa1, force + Hb1);
+                        // computeGrads(g[16], gOO[16], force + Xa1, force + Hb2);
+                        // computeGrads(g[17], gOO[17], force + Xa2, force + Hb1);
+                        // computeGrads(g[18], gOO[18], force + Xa2, force + Hb2);
+                        // computeGrads(g[19], gOO[19], force + Xb1, force + Ha1);
+                        // computeGrads(g[20], gOO[20], force + Xb1, force + Ha2);
+                        // computeGrads(g[21], gOO[21], force + Xb2, force + Ha1);
+                        // computeGrads(g[22], gOO[22], force + Xb2, force + Ha2);
+                        // computeGrads(g[23], gOO[23], force + Oa , force + Xb1);
+                        // computeGrads(g[24], gOO[24], force + Oa , force + Xb2);
+                        // computeGrads(g[25], gOO[25], force + Ob , force + Xa1);
+                        // computeGrads(g[26], gOO[26], force + Ob , force + Xa2);
+                        // computeGrads(g[27], gOO[27], force + Xa1, force + Xb1);
+                        // computeGrads(g[28], gOO[28], force + Xa1, force + Xb2);
+                        // computeGrads(g[29], gOO[29], force + Xa2, force + Xb1);
+                        // computeGrads(g[30], gOO[30], force + Xa2, force + Xb2);
 
                     }
 
