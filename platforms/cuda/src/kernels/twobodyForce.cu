@@ -15150,6 +15150,18 @@ extern "C" __global__ void computeTwoBodyForce(
     while (pos < end) {
         real3 forces[10];
         // set only forces for current water to 0
+        // forces is a variable local to the thread,
+        // forces [0:3] contains the local water forces,
+        // those forces are accumulated for each interaction with
+        // other molecules
+        // forces[4:6] contains the second water molecule that is
+        // different for every interaction so we need to set it to
+        // zero in the inner loop.
+        // then those forces are added to the localData array
+        // that is in shared memory and accumulates the forces as we
+        // go through the grid of interactions.
+        // need to make sure that localData has complete water molecules
+
         for (int i=0; i<3; i++) {
            forces[i] = make_real3(0);
         }
