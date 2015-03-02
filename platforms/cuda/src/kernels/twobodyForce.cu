@@ -15062,14 +15062,14 @@ extern "C" __device__ void computeCoul(real r0, real k, real3 * O1, real3 * O2, 
     g[0] *=  - (k + rinv)*val*rinv;
 }
 
-extern "C" __device__ void computeGrads(real * g, real3 * gOO, real3 * force1, real3 * force2) {
+extern "C" __device__ void computeGrads(real * g, real3 * gOO, real3 * force1, real3 * force2, real sw) {
 
     real3 d = *g * (*gOO);
-    force1[0] += d;
-    force2[0] -= d;
+    force1[0] += sw * d;
+    force2[0] -= sw * d;
 }
 
-extern "C" __device__ void distributeXpointGrad(real3 * O, real3 * H1, real3 * H2, real3 * forceX1, real3 * forceX2, real3 * forceO, real3 * forceH1, real3 * forceH2) {
+extern "C" __device__ void distributeXpointGrad(real3 * O, real3 * H1, real3 * H2, real3 * forceX1, real3 * forceX2, real3 * forceO, real3 * forceH1, real3 * forceH2, real sw) {
 
     // TODO save oh1 and oh2 to be used later?
     real3 oh1 = *H1 - *O;
@@ -15087,9 +15087,9 @@ extern "C" __device__ void distributeXpointGrad(real3 * O, real3 * H1, real3 * H
     real3 gh1 = in_plane + t1*out_of_plane_gamma;
     real3 gh2 = in_plane - t2*out_of_plane_gamma;
 
-    *forceO += gsum - (gh1 + gh2); // O
-    *forceH1 += gh1; // H1
-    *forceH2 += gh2; // H2
+    *forceO +=  sw * (gsum - (gh1 + gh2)); // O
+    *forceH1 += sw * gh1; // H1
+    *forceH2 += sw * gh2; // H2
 
 }
 
@@ -15148,7 +15148,6 @@ extern "C" __global__ void computeTwoBodyForce(
     skipTiles[threadIdx.x] = -1;
 
     while (pos < end) {
-        real3 force = make_real3(0);
         real3 forces[10];
         // set only forces for current water to 0
         for (int i=0; i<3; i++) {
@@ -15264,10 +15263,15 @@ extern "C" __global__ void computeTwoBodyForce(
                     real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
                     real invR = RSQRT(r2);
                     real rOO = r2*invR;
+                    real sw = 1.;
+                    real gsw = 1.;
 
                     if ((rOO > r2f) || (rOO < 2.)) {
                         tempEnergy = 0.;
                     } else {
+
+                        evaluateSwitchFunc(rOO, &sw, &gsw);
+
                         computeExtraPoint(positions + Oa, positions + Ha1, positions + Ha2,
                                positions + Xa1, positions + Xa2);
                         computeExtraPoint(positions + Ob, positions + Hb1, positions + Hb2,
@@ -15309,70 +15313,69 @@ extern "C" __global__ void computeTwoBodyForce(
                         computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb2, exp+i, gOO+i); i++;
 
                         real g[31];
-                        const real E_poly = poly_2b_v6x_eval(exp, g);
+                        // tempEnergy = poly_2b_v6x_eval(exp, g);
+                        tempEnergy = 1.;
 
-                        computeGrads(g+0,  gOO+0,  forces + Ha1, forces + Ha2);
-                        computeGrads(g+1,  gOO+1,  forces + Hb1, forces + Hb2);
-                        computeGrads(g+2,  gOO+2,  forces + Oa , forces + Ha1);
-                        computeGrads(g+3,  gOO+3,  forces + Oa , forces + Ha2);
-                        computeGrads(g+4,  gOO+4,  forces + Ob , forces + Hb1);
-                        computeGrads(g+5,  gOO+5,  forces + Ob , forces + Hb2);
-                        computeGrads(g+6,  gOO+6,  forces + Ha1, forces + Hb1);
-                        computeGrads(g+7,  gOO+7,  forces + Ha1, forces + Hb2);
-                        computeGrads(g+8,  gOO+8,  forces + Ha2, forces + Hb1);
-                        computeGrads(g+9,  gOO+9,  forces + Ha2, forces + Hb2);
-                        computeGrads(g+10, gOO+10, forces + Oa , forces + Hb1);
-                        computeGrads(g+11, gOO+11, forces + Oa , forces + Hb2);
-                        computeGrads(g+12, gOO+12, forces + Ob , forces + Ha1);
-                        computeGrads(g+13, gOO+13, forces + Ob , forces + Ha2);
-                        computeGrads(g+14, gOO+14, forces + Oa , forces + Ob );
-                        computeGrads(g+15, gOO+15, forces + Xa1, forces + Hb1);
-                        computeGrads(g+16, gOO+16, forces + Xa1, forces + Hb2);
-                        computeGrads(g+17, gOO+17, forces + Xa2, forces + Hb1);
-                        computeGrads(g+18, gOO+18, forces + Xa2, forces + Hb2);
-                        computeGrads(g+19, gOO+19, forces + Xb1, forces + Ha1);
-                        computeGrads(g+20, gOO+20, forces + Xb1, forces + Ha2);
-                        computeGrads(g+21, gOO+21, forces + Xb2, forces + Ha1);
-                        computeGrads(g+22, gOO+22, forces + Xb2, forces + Ha2);
-                        computeGrads(g+23, gOO+23, forces + Oa , forces + Xb1);
-                        computeGrads(g+24, gOO+24, forces + Oa , forces + Xb2);
-                        computeGrads(g+25, gOO+25, forces + Ob , forces + Xa1);
-                        computeGrads(g+26, gOO+26, forces + Ob , forces + Xa2);
-                        computeGrads(g+27, gOO+27, forces + Xa1, forces + Xb1);
-                        computeGrads(g+28, gOO+28, forces + Xa1, forces + Xb2);
-                        computeGrads(g+29, gOO+29, forces + Xa2, forces + Xb1);
-                        computeGrads(g+30, gOO+30, forces + Xa2, forces + Xb2);
+                        computeGrads(g+0,  gOO+0,  forces + Ha1, forces + Ha2, sw);
+                        computeGrads(g+1,  gOO+1,  forces + Hb1, forces + Hb2, sw);
+                        computeGrads(g+2,  gOO+2,  forces + Oa , forces + Ha1, sw);
+                        computeGrads(g+3,  gOO+3,  forces + Oa , forces + Ha2, sw);
+                        computeGrads(g+4,  gOO+4,  forces + Ob , forces + Hb1, sw);
+                        computeGrads(g+5,  gOO+5,  forces + Ob , forces + Hb2, sw);
+                        computeGrads(g+6,  gOO+6,  forces + Ha1, forces + Hb1, sw);
+                        computeGrads(g+7,  gOO+7,  forces + Ha1, forces + Hb2, sw);
+                        computeGrads(g+8,  gOO+8,  forces + Ha2, forces + Hb1, sw);
+                        computeGrads(g+9,  gOO+9,  forces + Ha2, forces + Hb2, sw);
+                        computeGrads(g+10, gOO+10, forces + Oa , forces + Hb1, sw);
+                        computeGrads(g+11, gOO+11, forces + Oa , forces + Hb2, sw);
+                        computeGrads(g+12, gOO+12, forces + Ob , forces + Ha1, sw);
+                        computeGrads(g+13, gOO+13, forces + Ob , forces + Ha2, sw);
+                        computeGrads(g+14, gOO+14, forces + Oa , forces + Ob , sw);
+                        computeGrads(g+15, gOO+15, forces + Xa1, forces + Hb1, sw);
+                        computeGrads(g+16, gOO+16, forces + Xa1, forces + Hb2, sw);
+                        computeGrads(g+17, gOO+17, forces + Xa2, forces + Hb1, sw);
+                        computeGrads(g+18, gOO+18, forces + Xa2, forces + Hb2, sw);
+                        computeGrads(g+19, gOO+19, forces + Xb1, forces + Ha1, sw);
+                        computeGrads(g+20, gOO+20, forces + Xb1, forces + Ha2, sw);
+                        computeGrads(g+21, gOO+21, forces + Xb2, forces + Ha1, sw);
+                        computeGrads(g+22, gOO+22, forces + Xb2, forces + Ha2, sw);
+                        computeGrads(g+23, gOO+23, forces + Oa , forces + Xb1, sw);
+                        computeGrads(g+24, gOO+24, forces + Oa , forces + Xb2, sw);
+                        computeGrads(g+25, gOO+25, forces + Ob , forces + Xa1, sw);
+                        computeGrads(g+26, gOO+26, forces + Ob , forces + Xa2, sw);
+                        computeGrads(g+27, gOO+27, forces + Xa1, forces + Xb1, sw);
+                        computeGrads(g+28, gOO+28, forces + Xa1, forces + Xb2, sw);
+                        computeGrads(g+29, gOO+29, forces + Xa2, forces + Xb1, sw);
+                        computeGrads(g+30, gOO+30, forces + Xa2, forces + Xb2, sw);
 
                     }
 
                     distributeXpointGrad(positions + Oa, positions + Ha1, positions + Ha2,
                             forces + Xa1, forces + Xa2,
-                            forces + Oa, forces + Ha1, forces + Ha2);
+                            forces + Oa, forces + Ha1, forces + Ha2, sw);
 
                     distributeXpointGrad(positions + Ob, positions + Hb1, positions + Hb2,
                             forces + Xb1, forces + Xb2,
-                            forces + Ob, forces + Hb1, forces + Hb2);
+                            forces + Ob, forces + Hb1, forces + Hb2, sw);
 
 
-                    real sw, gsw;
-                    evaluateSwitchFunc(rOO, &sw, &gsw);
+                    energy += sw * tempEnergy * CAL2JOULE;
 
-                    energy += tempEnergy;
-                    delta *= dEdR;
-                    force.x -= delta.x;
-                    force.y -= delta.y;
-                    force.z -= delta.z;
-                    localData[tbx+tj].fx += delta.x;
-                    localData[tbx+tj].fy += delta.y;
-                    localData[tbx+tj].fz += delta.z;
+                    for (int i=0; i<3; i++) {
+                        localData[tbx+tj+i].fx += forces[Ob + i].x;
+                        localData[tbx+tj+i].fy += forces[Ob + i].y;
+                        localData[tbx+tj+i].fz += forces[Ob + i].z;
+                    }
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
 
             // Write results.
-            atomicAdd(&forceBuffers[atom1], static_cast<unsigned long long>((long long) (force.x*0x100000000)));
-            atomicAdd(&forceBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (force.y*0x100000000)));
-            atomicAdd(&forceBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (force.z*0x100000000)));
+            for (int i=0; i<3; i++) {
+                atomicAdd(&forceBuffers[atom1 + i], static_cast<unsigned long long>((long long) (forces[i].x*0x100000000)));
+                atomicAdd(&forceBuffers[atom1 + i+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].y*0x100000000)));
+                atomicAdd(&forceBuffers[atom1 + i+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].z*0x100000000)));
+            }
 #ifdef USE_CUTOFF
             unsigned int atom2 = atomIndices[threadIdx.x];
 #else
