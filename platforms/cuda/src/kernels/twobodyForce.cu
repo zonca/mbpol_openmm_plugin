@@ -15092,6 +15092,22 @@ extern "C" __device__ void distributeXpointGrad(real3 * O, real3 * H1, real3 * H
 
 }
 
+extern "C" __device__ void evaluateSwitchFunc(real r, real * sw, real * gsw) {
+
+    if (r > r2f) {
+        *gsw = 0.0;
+        *sw  = 0.0;
+    } else if (r > r2i) {
+        real t1 = M_PI/(r2f - r2i);
+        real x = (r - r2i)*t1;
+        *gsw = - SIN(x)*t1/2.0;
+        *sw  = (1.0 + COS(x))/2.0;
+    } else {
+        *gsw = 0.0;
+        *sw = 1.0;
+    }
+}
+
 extern "C" __global__ void computeTwoBodyForce(
 
         // const unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ tempForceBuffers) {
@@ -15335,6 +15351,10 @@ extern "C" __global__ void computeTwoBodyForce(
                     distributeXpointGrad(positions + Ob, positions + Hb1, positions + Hb2,
                             forces + Xb1, forces + Xb2,
                             forces + Ob, forces + Hb1, forces + Hb2);
+
+
+                    real sw, gsw;
+                    evaluateSwitchFunc(rOO, &sw, &gsw);
 
                     energy += tempEnergy;
                     delta *= dEdR;
