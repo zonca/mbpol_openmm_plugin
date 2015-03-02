@@ -14,8 +14,9 @@ typedef struct {
 #define Xa2 7
 #define Xb1 8
 #define Xb2 9
-#define NM_TO_A 10
 
+#define NM_TO_A 10
+#define CAL2JOULE 4.184
 
 #define k_HH_intra -6.480884773303821e-01 // A^(-1)
 #define k_OH_intra  1.674518993682975e+00 // A^(-1)
