@@ -15325,8 +15325,7 @@ extern "C" __global__ void computeTwoBodyForce(
                         computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb2, exp+i, gOO+i); i++;
 
                         real g[31];
-                        // tempEnergy = poly_2b_v6x_eval(exp, g);
-                        tempEnergy = 1.;
+                        tempEnergy = poly_2b_v6x_eval(exp, g);
 
                         computeGrads(g+0,  gOO+0,  forces + Ha1, forces + Ha2, sw);
                         computeGrads(g+1,  gOO+1,  forces + Hb1, forces + Hb2, sw);
@@ -15372,6 +15371,14 @@ extern "C" __global__ void computeTwoBodyForce(
 
 
                     energy += sw * tempEnergy * CAL2JOULE;
+
+                    // gradient of the switch
+                    gsw *= tempEnergy/rOO;
+                    real3 d = gsw * delta;
+                    forces[Oa] += d;
+                    forces[Ob] -= d;
+
+                    // write forces of second molecule to shared memory
 
                     for (int i=0; i<3; i++) {
                         localData[tbx+tj+i].fx += forces[Ob + i].x;
