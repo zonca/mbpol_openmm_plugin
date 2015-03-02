@@ -15068,6 +15068,29 @@ extern "C" __device__ void computeGrads(real * g, real3 * gOO, real3 * force1, r
     force2[0] -= d;
 }
 
+extern "C" __device__ void distributeXpointGrad(real3 * O, real3 * H1, real3 * H2, real3 * forceX1, real3 * forceX2, real3 * forceO, real3 * forceH1, real3 * forceH2) {
+
+    // TODO save oh1 and oh2 to be used later?
+    real3 oh1 = *H1 - *O;
+    real3 oh2 = *H2 - *O;
+
+    real3 gm = *forceX1-*forceX2;
+
+    real3 t1 = cross(oh2, gm);
+
+    real3 t2 = cross(oh1, gm);
+
+    real3 gsum = *forceX1 + *forceX2;
+    real3 in_plane = gsum*0.5*in_plane_gamma;
+
+    real3 gh1 = in_plane + t1*out_of_plane_gamma;
+    real3 gh2 = in_plane - t2*out_of_plane_gamma;
+
+    *forceO += gsum - (gh1 + gh2); // O
+    *forceH1 += gh1; // H1
+    *forceH2 += gh2; // H2
+
+}
 
 extern "C" __global__ void computeTwoBodyForce(
 
@@ -15304,6 +15327,14 @@ extern "C" __global__ void computeTwoBodyForce(
                         computeGrads(g+30, gOO+30, forces + Xa2, forces + Xb2);
 
                     }
+
+                    distributeXpointGrad(positions + Oa, positions + Ha1, positions + Ha2,
+                            forces + Xa1, forces + Xa2,
+                            forces + Oa, forces + Ha1, forces + Ha2);
+
+                    distributeXpointGrad(positions + Ob, positions + Hb1, positions + Hb2,
+                            forces + Xb1, forces + Xb2,
+                            forces + Ob, forces + Hb1, forces + Hb2);
 
                     energy += tempEnergy;
                     delta *= dEdR;
