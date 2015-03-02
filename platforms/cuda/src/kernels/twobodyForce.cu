@@ -15385,8 +15385,14 @@ extern "C" __global__ void computeTwoBodyForce(
                         localData[tbx+tj+i].fy += forces[Ob + i].y;
                         localData[tbx+tj+i].fz += forces[Ob + i].z;
                     }
+
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
+            }
+
+
+            for (int i=0; i<3; i++) {
+                forces[i] *= CAL2JOULE * -10;
             }
 
             // Write results.
@@ -15401,9 +15407,9 @@ extern "C" __global__ void computeTwoBodyForce(
             unsigned int atom2 = y*TILE_SIZE + tgx;
 #endif
             if (atom2 < PADDED_NUM_ATOMS) {
-                atomicAdd(&forceBuffers[atom2], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fx*0x100000000)));
-                atomicAdd(&forceBuffers[atom2+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fy*0x100000000)));
-                atomicAdd(&forceBuffers[atom2+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fz*0x100000000)));
+                atomicAdd(&forceBuffers[atom2], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fx)*0x100000000)));
+                atomicAdd(&forceBuffers[atom2+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fy)*0x100000000)));
+                atomicAdd(&forceBuffers[atom2+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fz)*0x100000000)));
             }
         }
         pos++;
