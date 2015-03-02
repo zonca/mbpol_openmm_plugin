@@ -15031,7 +15031,7 @@ t4746+t2341*t2944;
     return t4988+t7682;
 }
 
-extern "C" __device__ void computeExtraPoint(real3 * O, real3 * H1, real3 * H2, real3 * x1, real3 * x2) {
+extern "C" __device__ void computeExtraPoint(real3 * O, real3 * H1, real3 * H2, real3 * X1, real3 * X2) {
     // TODO save oh1 and oh2 to be used later?
     real3 oh1 = *H1 - *O;
     real3 oh2 = *H2 - *O;
@@ -15040,8 +15040,8 @@ extern "C" __device__ void computeExtraPoint(real3 * O, real3 * H1, real3 * H2, 
     real3 in_plane = (*O) + (oh1 + oh2) * 0.5 * in_plane_gamma;
     real3 out_of_plane = v * out_of_plane_gamma;
 
-    x1[0] = in_plane + out_of_plane;
-    x2[0] = in_plane - out_of_plane;
+    X1[0] = in_plane + out_of_plane;
+    X2[0] = in_plane - out_of_plane;
 }
 
 extern "C" __device__ void computeExp(real r0, real k, real3 * O1, real3 * O2, real * exp1, real3 * g) {
