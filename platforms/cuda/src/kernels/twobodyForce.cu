@@ -15040,33 +15040,33 @@ extern "C" __device__ void computeExtraPoint(real3 * O, real3 * H1, real3 * H2, 
     real3 in_plane = (*O) + (oh1 + oh2) * 0.5 * in_plane_gamma;
     real3 out_of_plane = v * out_of_plane_gamma;
 
-    X1[0] = in_plane + out_of_plane;
-    X2[0] = in_plane - out_of_plane;
+    *X1 = in_plane + out_of_plane;
+    *X2 = in_plane - out_of_plane;
 }
 
 extern "C" __device__ void computeExp(real r0, real k, real3 * O1, real3 * O2, real * exp1, real3 * g) {
-    g[0] = *O1 - *O2;
+    *g = *O1 - *O2;
 
     real r = SQRT(dot(*g, *g));
-    exp1[0] = EXP(k*(r0 - r));
-    g[0] *= -k*exp1[0]/r;
+    *exp1 = EXP(k*(r0 - r));
+    *g *= -k * (*exp1) / r;
 }
 
 extern "C" __device__ void computeCoul(real r0, real k, real3 * O1, real3 * O2, real * val, real3 * g) {
-    g[0] = *O1 - *O2;
+    *g = *O1 - *O2;
 
     real r = SQRT(dot(*g, *g));
     real exp1 = EXP(k * (r0 - r));
     real rinv = 1.0/r;
     *val = exp1*rinv;
-    g[0] *=  - (k + rinv) * (*val) * rinv;
+    *g *=  - (k + rinv) * (*val) * rinv;
 }
 
 extern "C" __device__ void computeGrads(real * g, real3 * gOO, real3 * force1, real3 * force2, real sw) {
 
     real3 d = *g * (*gOO);
-    force1[0] += sw * d;
-    force2[0] -= sw * d;
+    *force1 += sw * d;
+    *force2 -= sw * d;
 }
 
 extern "C" __device__ void distributeXpointGrad(real3 * O, real3 * H1, real3 * H2, real3 * forceX1, real3 * forceX2, real3 * forceO, real3 * forceH1, real3 * forceH2, real sw) {
