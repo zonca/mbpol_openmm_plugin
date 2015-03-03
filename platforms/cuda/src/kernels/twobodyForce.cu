@@ -15359,7 +15359,6 @@ extern "C" __global__ void computeTwoBodyForce(
                         computeGrads(g+29, gOO+29, forces + Xa2, forces + Xb1, sw);
                         computeGrads(g+30, gOO+30, forces + Xa2, forces + Xb2, sw);
 
-                    }
 
                     distributeXpointGrad(positions + Oa, positions + Ha1, positions + Ha2,
                             forces + Xa1, forces + Xa2,
@@ -15368,6 +15367,8 @@ extern "C" __global__ void computeTwoBodyForce(
                     distributeXpointGrad(positions + Ob, positions + Hb1, positions + Hb2,
                             forces + Xb1, forces + Xb2,
                             forces + Ob, forces + Hb1, forces + Hb2, sw);
+
+                    }
 
 
                     energy += sw * tempEnergy * CAL2JOULE;
