@@ -15052,14 +15052,14 @@ extern "C" __device__ void computeExp(real r0, real k, real3 * O1, real3 * O2, r
     g[0] *= -k*exp1[0]/r;
 }
 
-extern "C" __device__ void computeCoul(real r0, real k, real3 * O1, real3 * O2, real * exp1, real3 * g) {
+extern "C" __device__ void computeCoul(real r0, real k, real3 * O1, real3 * O2, real * val, real3 * g) {
     g[0] = *O1 - *O2;
 
     real r = SQRT(dot(*g, *g));
-    exp1[0] = EXP(k*(r0 - r));
+    real exp1 = EXP(k * (r0 - r));
     real rinv = 1.0/r;
-    real val = exp1[0]*rinv;
-    g[0] *=  - (k + rinv)*val*rinv;
+    *val = exp1*rinv;
+    g[0] *=  - (k + rinv) * (*val) * rinv;
 }
 
 extern "C" __device__ void computeGrads(real * g, real3 * gOO, real3 * force1, real3 * force2, real sw) {
