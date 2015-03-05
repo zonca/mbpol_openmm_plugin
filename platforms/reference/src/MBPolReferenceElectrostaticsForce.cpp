@@ -3215,7 +3215,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 											 unsigned int iIndex,
 											 unsigned int jIndex,
                                                                                          std::vector<RealVec>& forces,
-                                                                                         std::vector<RealVec>& torques ) const 
+                                                                                         std::vector<RealOpenMM>& electrostaticPotential ) const
 {
 
     ElectrostaticsParticleData particleI = particleData[iIndex];
@@ -3332,6 +3332,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     ei                  = ei - erli;
 
     energy              = (e + ei);
+
+    electrostaticPotential[iIndex] += ck * (bn0 + rr1 * (1 - scale1CC));
+    electrostaticPotential[jIndex] += ci * (bn0 + rr1 * (1 - scale1CC));
 
 #if 1
 
@@ -3767,6 +3770,10 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
         scaleFactors[kk] = 1.0;
     }   
 
+    std::vector<RealOpenMM> electrostaticPotential(particleData.size());
+    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+        electrostaticPotential[ii] = 0.;
+    }
     // loop over particle pairs for direct space interactions
 
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
@@ -3776,7 +3783,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
                 getElectrostaticsScaleFactors( ii, jj, scaleFactors);
             }
 
-            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, torques );
+            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, electrostaticPotential );
 
             if( jj <= _maxScaleIndex[ii] ){
                 for( unsigned int kk = 0; kk < LAST_SCALE_TYPE_INDEX; kk++ ){

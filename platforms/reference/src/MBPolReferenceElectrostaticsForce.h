@@ -1154,7 +1154,7 @@ protected:
       */
      RealOpenMM calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
 							unsigned int iIndex, unsigned int jIndex,
-                                                        std::vector<RealVec>& forces, std::vector<RealVec>& torques ) const;
+                                                        std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const;
 
 
 private:

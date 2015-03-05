@@ -1464,11 +1464,14 @@ class WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrosta
 
         std::vector<RealVec> forces;
         std::vector<RealVec> torque;
+        std::vector<RealOpenMM> electrostaticPotential;
+
         for (int i=0; i<numberOfParticles; i++) {
             forces.push_back(Vec3( 0.,  0., 0.  ));
             torque.push_back(Vec3( 0.,  0., 0.  ));
+            electrostaticPotential.push_back(0.);
         }
-        RealOpenMM energy = calculatePmeDirectElectrostaticPairIxn( particleData, 0, 1,forces, torque);
+        RealOpenMM energy = calculatePmeDirectElectrostaticPairIxn( particleData, 0, 1,forces, electrostaticPotential);
 
         std::vector<RealVec> expectedForces;
         expectedForces.push_back(Vec3(3.11046, 2.25319, 34.6131));
