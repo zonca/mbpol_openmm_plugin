@@ -3166,7 +3166,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxns(
 }
 
 RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
-        std::vector<RealVec>& forces ) const
+        std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
 
     RealOpenMM cii = 0.0;
@@ -3196,9 +3196,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const s
 
         const ElectrostaticsParticleData& particleI = particleData[ii];
 
-        for( unsigned int s = 0; s < 3; s++ ){
+        electrostaticPotential[ii] += particleI.charge * -(_electric*_alphaEwald/(_dielectric*SQRT_PI));
 
-            std::cout << particleI.chargeDerivatives[s][0] * particleI.charge * -(_electric*_alphaEwald/(_dielectric*SQRT_PI)) << std::endl;
+        for( unsigned int s = 0; s < 3; s++ ){
 
             for( unsigned int xyz = 0; xyz < 3; xyz++ ){
 
@@ -3833,7 +3833,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
         std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
     }
 
-    energy += calculatePmeSelfEnergy( particleData, forces );
+    energy += calculatePmeSelfEnergy( particleData, forces, electrostaticPotential );
 
     std::cout << std::endl << "PME self energy" << std::endl;
     for (int i=0; i<particleData.size(); i++) {

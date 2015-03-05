@@ -1428,7 +1428,7 @@ private:
      *
      * @param particleData            vector of parameters (charge, labFrame dipoles, quadrupoles, ...) for particles
      */
-    RealOpenMM calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData, std::vector<RealVec>& forces  ) const;
+    RealOpenMM calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData, std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const;
 
     /**
      * Compute the self torques.
