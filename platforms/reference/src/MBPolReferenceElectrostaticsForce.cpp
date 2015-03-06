@@ -1508,10 +1508,6 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std
 
     double cal2joule = 4.184;
 
-    for (int i=0; i<particlePositions.size(); i++) {
-        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-    }
-
     return energy;
 }
 
@@ -2749,7 +2745,7 @@ void MBPolReferencePmeElectrostaticsForce::computeInducedPotentialFromGrid( void
 }
 
 RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                                                 std::vector<RealVec>& forces, std::vector<RealVec>& torques ) const 
+                                                                                                 std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
     RealOpenMM multipole[10];
     const int deriv1[] = {1, 4, 7, 8, 10, 15, 17, 13, 14, 19};
@@ -2777,6 +2773,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
         multipole[9] = particleData[i].quadrupole[QYZ]*2.0;
 
         const RealOpenMM* phi = &_phi[20*i];
+
+        electrostaticPotential[i] += phi[0] /2.;
+
 #if 0
         torques[i][0] += _electric*(multipole[3]*scale[1]*phi[2] - multipole[2]*scale[2]*phi[3]
                       + 2.0*(multipole[6]-multipole[5])*scale[1]*scale[2]*phi[9]
@@ -3196,7 +3195,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const s
 
         const ElectrostaticsParticleData& particleI = particleData[ii];
 
-        electrostaticPotential[ii] += particleI.charge * -(_electric*_alphaEwald/(_dielectric*SQRT_PI));
+        electrostaticPotential[ii] += particleI.charge * -(_alphaEwald/(SQRT_PI));
 
         for( unsigned int s = 0; s < 3; s++ ){
 
@@ -3350,8 +3349,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     energy              = (e + ei);
 
-    electrostaticPotential[iIndex] += ck * (bn0 + rr1 * (1 - scale1CC));
-    electrostaticPotential[jIndex] += ci * (bn0 + rr1 * (1 - scale1CC));
+    electrostaticPotential[iIndex] += ck * (bn0 - rr1 * (1 - scale1CC)) /2.;
+    electrostaticPotential[jIndex] += ci * (bn0 - rr1 * (1 - scale1CC)) /2.;
 
 #if 1
 
@@ -3816,30 +3815,67 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
     for (int i=0; i<particleData.size(); i++) {
         std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
     }
+    double energyFromPotential = 0;
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
+    }
+    energyFromPotential *= _electric/_dielectric;
+    std::cout << "Energy: " << energy / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
+    std::cout << "Energy from potential: " << energyFromPotential / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
+
+    double previousEnergy = energy;
 
     calculatePmeSelfTorque( particleData, torques );
     energy += computeReciprocalSpaceInducedDipoleForceAndEnergy( getPolarizationType(), particleData, forces, torques );
 
-    std::cout << std::endl << "Reciprocal Space Induced" << std::endl;
+//    std::cout << std::endl << "Reciprocal Space Induced" << std::endl;
+//
+//    for (int i=0; i<particleData.size(); i++) {
+//        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+//    }
 
-    for (int i=0; i<particleData.size(); i++) {
-        std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+        electrostaticPotential[ii] = 0.;
     }
 
-    energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, torques );
+    energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, electrostaticPotential );
 
+    energyFromPotential = 0;
     std::cout << std::endl << "Reciprocal Space Fixed" << std::endl;
     for (int i=0; i<particleData.size(); i++) {
         std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
     }
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
+    }
+    energyFromPotential *= _electric/_dielectric;
+    std::cout << "Energy: " << (energy - previousEnergy) / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
+    std::cout << "Energy from potential: " << energyFromPotential / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
 
+    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+        electrostaticPotential[ii] = 0.;
+    }
+
+    previousEnergy = energy;
     energy += calculatePmeSelfEnergy( particleData, forces, electrostaticPotential );
+
+    energyFromPotential = 0;
 
     std::cout << std::endl << "PME self energy" << std::endl;
     for (int i=0; i<particleData.size(); i++) {
         std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
     }
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
+    }
+    energyFromPotential *= _electric/_dielectric;
+    std::cout << "Energy: " << (energy - previousEnergy) / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
+    std::cout << "Energy from potential: " << energyFromPotential / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
 
+    std::cout << std::endl  << std::endl;
     return energy;
 }
 

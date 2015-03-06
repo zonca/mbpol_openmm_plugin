@@ -1331,7 +1331,7 @@ private:
      * @return energy
      */
     RealOpenMM computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                   std::vector<RealVec>& forces, std::vector<RealVec>& torques ) const;
+                                                                   std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const;
 
     /**
      * Set reciprocal space fixed multipole fields.
