@@ -652,6 +652,8 @@ protected:
                            const std::vector<int>& multipoleAtomYs,
                            std::vector<ElectrostaticsParticleData>& particleData ) const;
 
+    void printPotential (std::vector<RealOpenMM> electrostaticPotential, RealOpenMM energy, std::string name, const std::vector<ElectrostaticsParticleData>& particleData );
+
     void computeWaterCharge(ElectrostaticsParticleData& particleO, ElectrostaticsParticleData& particleH1,
                    ElectrostaticsParticleData& particleH2,ElectrostaticsParticleData& particleM);
 
