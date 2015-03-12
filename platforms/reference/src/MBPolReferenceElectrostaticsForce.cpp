@@ -2774,7 +2774,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
 
         const RealOpenMM* phi = &_phi[20*i];
 
-        electrostaticPotential[i] += phi[0] /2.;
+        electrostaticPotential[i] += phi[0] ; // /2.;
 
 #if 0
         torques[i][0] += _electric*(multipole[3]*scale[1]*phi[2] - multipole[2]*scale[2]*phi[3]
@@ -3195,7 +3195,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const s
 
         const ElectrostaticsParticleData& particleI = particleData[ii];
 
-        electrostaticPotential[ii] += particleI.charge * -(_alphaEwald/(SQRT_PI));
+        electrostaticPotential[ii] += particleI.charge * -(_alphaEwald/(SQRT_PI)) * 2;
 
 //        for( unsigned int s = 0; s < 3; s++ ){
 //
@@ -3349,8 +3349,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     energy              = (e + ei);
 
-    electrostaticPotential[iIndex] += ck * (bn0 - rr1 * (1 - scale1CC)) /2.;
-    electrostaticPotential[jIndex] += ci * (bn0 - rr1 * (1 - scale1CC)) /2.;
+    electrostaticPotential[iIndex] += ck * (bn0 - rr1 * (1 - scale1CC)); // /2.;
+    electrostaticPotential[jIndex] += ci * (bn0 - rr1 * (1 - scale1CC));//  /2.;
 
 #if 1
 
