@@ -1136,12 +1136,18 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
 
 static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 
+    double cutoff             = 10.;
+    cutoff = .9;
+    int numberOfParticles     = 4*3;
+    double boxDimension                               = 1.8;
+    bool zeroPolarizability = true;
+    bool includeChargeRedistribution = true;
+
+#define COMPUTE_FINITE_DIFFERENCES_FORCES
+
     std::string testName      = "testWater3VirtualSitePMESmallBox";
     std::cout << "Test START: " << testName << std::endl;
 
-    int numberOfParticles     = 4;
-    double cutoff             = 10.;
-    cutoff = .9;
 
     std::vector<double> outputElectrostaticsMoments;
     std::vector< Vec3 > inputGrid;
@@ -1153,8 +1159,6 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 
     System system;
 
-    double boxDimension                               = 1.8;
-
     Vec3 a( boxDimension, 0.0, 0.0 );
     Vec3 b( 0.0, boxDimension, 0.0 );
     Vec3 c( 0.0, 0.0, boxDimension );
@@ -1163,8 +1167,8 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     MBPolElectrostaticsForce* mbpolElectrostaticsForce        = new MBPolElectrostaticsForce();;
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setCutoffDistance( cutoff );
-    //mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
-    mbpolElectrostaticsForce->setIncludeChargeRedistribution(true);
+    mbpolElectrostaticsForce->setIncludeChargeRedistribution(includeChargeRedistribution);
+
 
     // setting alpha of Ewald to zero triggers automatic estimation of alpha and grid sized based on error tolerance
 
@@ -1205,19 +1209,22 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     thole[TDDHH] = 0.055;
 
     for( unsigned int jj = 0; jj < numberOfParticles; jj += 4 ){
+        if (zeroPolarizability) {
+            mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+                                                thole, 0.001310, 0. );
+            mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+                                                thole, 0.000294, 0. );
+            mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+                                                thole, 0.000294, 0. );
+            std::cout << "POLARIZABILITY SET TO ZERO"<< std::endl;
+        } else {
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                            thole, 0.001310, 0. );
+                                            thole, 0.001310, 0.001310 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                            thole, 0.000294, 0. );
+                                            thole, 0.000294, 0.000294 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                            thole, 0.000294, 0. );
-        std::cout << "POLARIZABILITY SET TO ZERO"<< std::endl;
-//        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-//                                            thole, 0.001310, 0.001310 );
-//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-//                                            thole, 0.000294, 0.000294 );
-//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-//                                            thole, 0.000294, 0.000294 );
+                                            thole, 0.000294, 0.000294 );
+        }
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
                                                     thole,  0.001310,  0.);
     }
@@ -1232,17 +1239,18 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     positions[2]             = Vec3( -2.017613812e+00, -4.190350349e-01,  2.239642849e+00  );
     positions[3]             = Vec3( -1.43230412, -0.33360265,  1.64727446 );
 
+    if (numberOfParticles > 4) {
+        positions[4]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
+        positions[5]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
+        positions[6]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
+        positions[7]             = Vec3( -1.95661974, -0.48654484, -1.18917052 );
 
-//    positions[4]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
-//    positions[5]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
-//    positions[6]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
-//    positions[7]             = Vec3( -1.95661974, -0.48654484, -1.18917052 );
 
-
-//    positions[8]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
-//    positions[9]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
-//    positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
-//    positions[11]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 );
+        positions[8]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
+        positions[9]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
+        positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
+        positions[11]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 );
+    }
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
@@ -1300,20 +1308,26 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 //    expectedForces.push_back(Vec3( -3.36353, -6.13306, 0.230528 ));
 //    expectedForces.push_back(Vec3( -1.97036, -8.77306, -1.30534 ));
 //    expectedForces.push_back(Vec3( -0, -0, -0 ));
+//
+//    // finite difference forces with no polarizability and no charge redistribution
+//    expectedForces.push_back(Vec3( -2.29703, 2.44192, -7.15701 ));
+//    expectedForces.push_back(Vec3( 2.22037, -0.960757, 1.1415 ));
+//    expectedForces.push_back(Vec3( 0.0101264, -0.494861, 2.03038 ));
+//    expectedForces.push_back(Vec3( -0, -0, -0 ));
+//    expectedForces.push_back(Vec3( 1.2845, 3.00543, -2.30249 ));
+//    expectedForces.push_back(Vec3( -0.0309592, 0.126436, 5.54208 ));
+//    expectedForces.push_back(Vec3( -0.248866, -0.380292, 0.50001 ));
+//    expectedForces.push_back(Vec3( -0, -0, -0 ));
+//    expectedForces.push_back(Vec3( 2.28936, 3.71712, 1.099 ));
+//    expectedForces.push_back(Vec3( -1.9654, -3.44716, 0.0428621 ));
+//    expectedForces.push_back(Vec3( -1.2611, -4.00799, -0.895414 ));
+//    expectedForces.push_back(Vec3( -0, -0, -0 ));
 
-    // finite difference forces with no polarizability and no charge redistribution
-    expectedForces.push_back(Vec3( -2.29703, 2.44192, -7.15701 ));
-    expectedForces.push_back(Vec3( 2.22037, -0.960757, 1.1415 ));
-    expectedForces.push_back(Vec3( 0.0101264, -0.494861, 2.03038 ));
-    expectedForces.push_back(Vec3( -0, -0, -0 ));
-    expectedForces.push_back(Vec3( 1.2845, 3.00543, -2.30249 ));
-    expectedForces.push_back(Vec3( -0.0309592, 0.126436, 5.54208 ));
-    expectedForces.push_back(Vec3( -0.248866, -0.380292, 0.50001 ));
-    expectedForces.push_back(Vec3( -0, -0, -0 ));
-    expectedForces.push_back(Vec3( 2.28936, 3.71712, 1.099 ));
-    expectedForces.push_back(Vec3( -1.9654, -3.44716, 0.0428621 ));
-    expectedForces.push_back(Vec3( -1.2611, -4.00799, -0.895414 ));
-    expectedForces.push_back(Vec3( -0, -0, -0 ));
+//    // finite difference forces for 1 molecule with no polizability
+//    expectedForces.push_back(Vec3( -0.0102713, 0.0168557, -0.0252335 ));
+//    expectedForces.push_back(Vec3( -0.000491702, -0.00838144, 0.0143935 ));
+//    expectedForces.push_back(Vec3( 0.0126705, -0.00890535, 0.0102875 ));
+//    expectedForces.push_back(Vec3( -0, -0, -0 ));
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -1325,15 +1339,11 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
            }
        }
 
-    for (int i=0; i<numberOfParticles; i++) {
-           for (int j=0; j<3; j++) {
-               expectedForces[i][j] *= -1;
-           }
-       }
     std::cout  << std::endl << "Forces:" << std::endl;
 
 
     const double eps = 1.0e-4;
+#ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
 
     double x_orig;
 
@@ -1341,43 +1351,43 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     for (int i=0; i<numberOfParticles; i++) {
         finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
     }
-//    for (int i=0; i<numberOfParticles; i++) {
-//
-//    	std::cout  << "Finite differences: particle " << i << "/" << numberOfParticles << std::endl;
-//
-//        for (int xyz=0; xyz<3; xyz++) {
-//
-//            x_orig = positions[i][xyz];
-//
-//            positions[i][xyz] = x_orig + eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double Ep  = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig + 2*eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double E2p  = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig - eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double Em   = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig - 2*eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double E2m   = state.getPotentialEnergy();
-//
-//            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
-//            positions[i][xyz] = x_orig;
-//        }
-//
-//    }
+    for (int i=0; i<numberOfParticles; i++) {
+
+    	std::cout  << "Finite differences: particle " << i << "/" << numberOfParticles << std::endl;
+
+        for (int xyz=0; xyz<3; xyz++) {
+
+            x_orig = positions[i][xyz];
+
+            positions[i][xyz] = x_orig + eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double Ep  = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig + 2*eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double E2p  = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig - eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double Em   = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig - 2*eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double E2m   = state.getPotentialEnergy();
+
+            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
+            positions[i][xyz] = x_orig;
+        }
+
+    }
 
     for (int i=0; i<numberOfParticles; i++) {
            for (int j=0; j<3; j++) {
@@ -1385,11 +1395,15 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
            }
 
        }
+#endif
 
     for (int i=0; i<numberOfParticles; i++) {
-        // std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
+       // std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <no polariz precomputed finite diff>" << std::endl;
+#ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
+        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl ;
+#endif
+        std::cout << std::endl;
     }
 
     std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
