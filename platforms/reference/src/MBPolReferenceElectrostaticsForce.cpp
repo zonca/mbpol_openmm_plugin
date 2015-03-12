@@ -2863,7 +2863,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
  */
 RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( MBPolReferenceElectrostaticsForce::PolarizationType polarizationType,
                                                                                                 const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                                                std::vector<RealVec>& forces, std::vector<RealVec>& torques) const 
+                                                                                                std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const
 {
 
     RealOpenMM multipole[10];
@@ -2936,6 +2936,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
         energy += scale[0]*inducedDipole[0]*_phi[20*i+1];
         energy += scale[1]*inducedDipole[1]*_phi[20*i+2];
         energy += scale[2]*inducedDipole[2]*_phi[20*i+3];
+
+        electrostaticPotential[i] += .5* _phidp[20*i];
 
         RealVec f        = RealVec(0.0, 0.0, 0.0 );
 
@@ -3351,6 +3353,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     electrostaticPotential[iIndex] += ck * (bn0 - rr1 * (1 - scale1CC)); // /2.;
     electrostaticPotential[jIndex] += ci * (bn0 - rr1 * (1 - scale1CC));//  /2.;
+
+    electrostaticPotential[iIndex] -= sci4 * (bn1 - rr3 * (1 - scale3CD)); // /2.;
+    electrostaticPotential[jIndex] += sci3 * (bn1 - rr3 * (1 - scale3CD));//  /2.;
 
 #if 1
 
@@ -3787,6 +3792,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
     }   
 
     std::vector<RealOpenMM> electrostaticPotentialDirect(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotentialInduced(particleData.size());
     std::vector<RealOpenMM> electrostaticPotentialReciprocal(particleData.size());
     std::vector<RealOpenMM> electrostaticPotentialSelf(particleData.size());
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){

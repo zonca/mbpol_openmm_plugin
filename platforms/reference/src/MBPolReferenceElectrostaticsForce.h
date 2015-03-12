@@ -1449,7 +1449,7 @@ private:
      */
      RealOpenMM computeReciprocalSpaceInducedDipoleForceAndEnergy( MBPolReferenceElectrostaticsForce::PolarizationType polarizationType,
                                                                    const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                   std::vector<RealVec>& forces, std::vector<RealVec>& torques) const;
+                                                                   std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const;
 
     /**
      * Calculate electrostatic forces.
