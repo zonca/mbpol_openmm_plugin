@@ -3786,9 +3786,13 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
         scaleFactors[kk] = 1.0;
     }   
 
-    std::vector<RealOpenMM> electrostaticPotential(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotentialDirect(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotentialReciprocal(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotentialSelf(particleData.size());
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-        electrostaticPotential[ii] = 0.;
+        electrostaticPotentialDirect[ii] = 0.;
+        electrostaticPotentialReciprocal[ii] = 0.;
+        electrostaticPotentialSelf[ii] = 0.;
     }
     // loop over particle pairs for direct space interactions
 
@@ -3799,7 +3803,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
                 getElectrostaticsScaleFactors( ii, jj, scaleFactors);
             }
 
-            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, electrostaticPotential );
+            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, electrostaticPotentialDirect );
 
             if( jj <= _maxScaleIndex[ii] ){
                 for( unsigned int kk = 0; kk < LAST_SCALE_TYPE_INDEX; kk++ ){
@@ -3817,8 +3821,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
     }
     double energyFromPotential = 0;
     for (int i=0; i<particleData.size(); i++) {
-        std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
-        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
+        std::cout << "Potential atom " << i << ": " << electrostaticPotentialDirect[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+        energyFromPotential += electrostaticPotentialDirect[i] * particleData[i].charge;
     }
     energyFromPotential *= _electric/_dielectric;
     std::cout << "Energy: " << energy / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
@@ -3839,7 +3843,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
 //        electrostaticPotential[ii] = 0.;
 //    }
 
-    energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, electrostaticPotential );
+    energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, electrostaticPotentialReciprocal );
 
     energyFromPotential = 0;
     std::cout << std::endl << "Reciprocal Space Fixed" << std::endl;
@@ -3847,8 +3851,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
         std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
     }
     for (int i=0; i<particleData.size(); i++) {
-        std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
-        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
+        std::cout << "Potential atom " << i << ": " << electrostaticPotentialReciprocal[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+        energyFromPotential += electrostaticPotentialReciprocal[i] * particleData[i].charge;
     }
     energyFromPotential *= _electric/_dielectric;
     std::cout << "Energy: " << (energy - previousEnergy) / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
@@ -3858,8 +3862,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
 //        electrostaticPotential[ii] = 0.;
 //    }
 
-    previousEnergy = 0;
-    energy += calculatePmeSelfEnergy( particleData, forces, electrostaticPotential );
+    previousEnergy = energy;
+    energy += calculatePmeSelfEnergy( particleData, forces, electrostaticPotentialSelf );
 
     energyFromPotential = 0;
 
@@ -3868,8 +3872,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
         std::cout << "Force atom " << i << ": " << forces[i] / (cal2joule*10) << " Kcal/mol/A <openmm-mbpol>" << std::endl;
     }
     for (int i=0; i<particleData.size(); i++) {
-        std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
-        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
+        std::cout << "Potential atom " << i << ": " << electrostaticPotentialSelf[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+        energyFromPotential += electrostaticPotentialSelf[i] * particleData[i].charge;
     }
     energyFromPotential *= _electric/_dielectric;
     std::cout << "Energy: " << (energy - previousEnergy) / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
@@ -3877,11 +3881,31 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
 
     std::cout << std::endl  << std::endl;
 
+
+
+    std::cout << std::endl << "Total" << std::endl;
+
+    energyFromPotential = 0;
+    for (int i=0; i<particleData.size(); i++) {
+        electrostaticPotentialDirect[i] += electrostaticPotentialReciprocal[i];
+        electrostaticPotentialDirect[i] += electrostaticPotentialSelf[i];
+        energyFromPotential += electrostaticPotentialDirect[i] * particleData[i].charge;
+        std::cout << "Potential atom " << i << ": " << electrostaticPotentialDirect[i] / (cal2joule) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+    }
+    energyFromPotential *= _electric/_dielectric;
+    std::cout << "Energy: " << (energy) / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
+    std::cout << "Energy from potential: " << energyFromPotential / cal2joule << " Kcal/mol <openmm-mbpol>" << std::endl;
+
+    std::cout << std::endl << "Charges" << std::endl;
+    for (int i=0; i<particleData.size(); i++) {
+        std::cout << "Charge atom " << i << ": " << particleData[i].charge << " C" << std::endl;
+    }
+
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int s = 0; s < 3; s++ ){
             for( unsigned int xyz = 0; xyz < 3; xyz++ ){
 
-            forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotential[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
+            forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotentialDirect[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
 
         }}    }
 
