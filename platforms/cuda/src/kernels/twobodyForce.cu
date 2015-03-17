@@ -15302,7 +15302,7 @@ extern "C" __global__ void computeTwoBodyForce(
                 // then in this loop we filter out only the Oxygens.
                 // Better implementation would be to write our own implemenation of a O-only Neighbor
                 // list based either on NonBondedUtilities or on CustomManyParticleForce
-                if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 < atom2) && (atom2 < NUM_ATOMS)) {
+                if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
                     // COMPUTE_INTERACTION
 
                     // 2 water molecules and extra positions
