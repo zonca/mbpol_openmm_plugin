@@ -4,6 +4,10 @@ typedef struct {
     real fx, fy, fz;
 } AtomData;
 
+
+
+
+
 #define Oa  0
 #define Ha1 1
 #define Ha2 2
@@ -15256,7 +15260,6 @@ extern "C" __global__ void computeTwoBodyForce(
                 // Better implementation would be to write our own implemenation of a O-only Neighbor
                 // list based either on NonBondedUtilities or on CustomManyParticleForce
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 < atom2) && (atom2 < NUM_ATOMS)) {
-                    tempEnergy = 1.;
                     // COMPUTE_INTERACTION
 
                     // 2 water molecules and extra positions
