@@ -15226,7 +15226,6 @@ extern "C" __global__ void computeTwoBodyForce(
 #ifdef USE_CUTOFF
         if (numTiles <= maxTiles) {
             x = tiles[pos];
-            real4 blockSizeX = blockSize[x];
         }
         else
 #endif
