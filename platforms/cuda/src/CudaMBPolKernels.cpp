@@ -137,6 +137,8 @@ CudaCalcMBPolTwoBodyForceKernel::~CudaCalcMBPolTwoBodyForceKernel() {
 void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBPolTwoBodyForce& force) {
     cu.setAsCurrent();
 
+    CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
+
     // device array
     particleIndices = CudaArray::create<float4>(cu, cu.getPaddedNumAtoms(), "particleIndices");
 
@@ -154,9 +156,9 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
 
     // a parameter is defined per mulecule
     // particleIndices as a parameter fails with an error on read_shfl
-    cu.getNonbondedUtilities().addParameter(CudaNonbondedUtilities::ParameterInfo("particleIndices", "float", 4, sizeof(float4), particleIndices->getDevicePointer()));
+    nb.addParameter(CudaNonbondedUtilities::ParameterInfo("particleIndices", "float", 4, sizeof(float4), particleIndices->getDevicePointer()));
     map<string, string> replacements;
-    // replacements["PARAMS"] = cu.getNonbondedUtilities().addArgument(particleIndices->getDevicePointer(), "int4");
+    // replacements["PARAMS"] = nb.addArgument(particleIndices->getDevicePointer(), "int4");
     
     // using an argument instead
    // posq is already on the device, format is float4 (x, y, z, charge) 
@@ -175,7 +177,7 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     bool useCutoff = (force.getNonbondedMethod() != MBPolTwoBodyForce::NoCutoff);
     bool usePeriodic = (force.getNonbondedMethod() == MBPolTwoBodyForce::CutoffPeriodic);
     vector< vector<int> > exclusions;
-    // cu.getNonbondedUtilities().addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, cu.replaceStrings(CudaMBPolKernelSources::twobodyForce, replacements), force.getForceGroup());
+    // nb.addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, cu.replaceStrings(CudaMBPolKernelSources::twobodyForce, replacements), force.getForceGroup());
     // cu.addForce(new CudaMBPolTwoBodyForceInfo(force));
     
     // create an explicit CUDA kernel, this is necessary because we need access to
@@ -186,7 +188,7 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
     defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
     defines["TILE_SIZE"] = cu.intToString(CudaContext::TileSize);
-    defines["THREAD_BLOCK_SIZE"] = cu.intToString(cu.getNonbondedUtilities().getNumForceThreadBlocks());
+    defines["THREAD_BLOCK_SIZE"] = cu.intToString(nb.getNumForceThreadBlocks());
     if (useCutoff)
         defines["USE_CUTOFF"] = "1";
 
@@ -196,31 +198,36 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     // Add an interaction to the default nonbonded kernel.  This doesn't actually do any calculations.  It's
     // just so that CudaNonbondedUtilities will build the exclusion flags and maintain the neighbor list.
 
-    cu.getNonbondedUtilities().addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, "", force.getForceGroup());
-    // cu.getNonbondedUtilities().setUsePadding(false);
+    nb.addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, "", force.getForceGroup());
+    // nb.setUsePadding(false);
     cu.addForce(new CudaMBPolTwoBodyForceInfo(force));
 
 }
 
 double CudaCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
-    cu.getNonbondedUtilities().prepareInteractions();
-    cu.getNonbondedUtilities().computeInteractions();
-    int startTileIndex = cu.getNonbondedUtilities().getStartTileIndex();
-    int numTileIndices = cu.getNonbondedUtilities().getNumTiles();
-    unsigned int maxTiles = cu.getNonbondedUtilities().getInteractingTiles().getSize();
+    CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
+
+    nb.prepareInteractions();
+    nb.computeInteractions();
+    int startTileIndex = nb.getStartTileIndex();
+    int numTileIndices = nb.getNumTiles();
+    unsigned int maxTiles;
+    if (nb.getUseCutoff()) {
+        maxTiles = nb.getInteractingTiles().getSize();
+    }
 
     void* args[] = {&cu.getForce().getDevicePointer(),
         &cu.getEnergyBuffer().getDevicePointer(),
         &cu.getPosq().getDevicePointer(),
         &startTileIndex,
         &numTileIndices,
-        &cu.getNonbondedUtilities().getInteractingTiles().getDevicePointer(),
-        &cu.getNonbondedUtilities().getInteractionCount().getDevicePointer(),
+        &nb.getInteractingTiles().getDevicePointer(),
+        &nb.getInteractionCount().getDevicePointer(),
         cu.getPeriodicBoxSizePointer(),
         cu.getInvPeriodicBoxSizePointer(),
         &maxTiles,
        // &cu.getNonbondedUtilities().getBlock().getDevicePointer(),
-        &cu.getNonbondedUtilities().getInteractingAtoms().getDevicePointer()
+        &nb.getInteractingAtoms().getDevicePointer()
     };
     cu.executeKernel(computeTwoBodyForceKernel, args, cu.getPaddedNumAtoms());
     return 0.0;
