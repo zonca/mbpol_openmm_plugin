@@ -15176,6 +15176,7 @@ extern "C" __global__ void computeTwoBodyForce(
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE; // global warpIndex
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1); // index within the warp
+    const unsigned int globtx = (blockIdx.x*blockDim.x+threadIdx.x); // global index
     const unsigned int tbx = threadIdx.x - tgx;           // block warpIndex
     real energy = 0.0f;
     // used shared memory if the device cannot shuffle
