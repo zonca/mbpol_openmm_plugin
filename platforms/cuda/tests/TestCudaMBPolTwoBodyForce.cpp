@@ -65,7 +65,9 @@ void testLJ() {
     system.addParticle(1.0);
     LangevinIntegrator integrator(0.0, 0.1, 0.01);
     MBPolTwoBodyForce* forceField = new MBPolTwoBodyForce();
-    forceField->setNonbondedMethod(MBPolTwoBodyForce::NoCutoff);
+    // forceField->setNonbondedMethod(MBPolTwoBodyForce::NoCutoff);
+    forceField->setNonbondedMethod(MBPolTwoBodyForce::CutoffNonPeriodic);
+    forceField->setCutoff(1000.);
     std::vector<int> particleIndices(4);
     forceField->addParticle(particleIndices);
     forceField->addParticle(particleIndices);
