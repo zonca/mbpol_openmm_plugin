@@ -15311,148 +15311,39 @@ extern "C" __global__ void computeTwoBodyForce(
                 // then in this loop we filter out only the Oxygens.
                 // Better implementation would be to write our own implemenation of a O-only Neighbor
                 // list based either on NonBondedUtilities or on CustomManyParticleForce
-                if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
-                    // COMPUTE_INTERACTION
 
-                    // 2 water molecules and extra positions
-                    real3 positions[10];
-                    // first water
-                    for (int i = 0; i < 3; i++) {
-                        positions[Oa + i] = make_real3( posq[atom1+i].x * NM_TO_A,
-                                                        posq[atom1+i].y * NM_TO_A,
-                                                        posq[atom1+i].z * NM_TO_A);
-                        positions[Ob + i] = make_real3( posq[atom2+i].x * NM_TO_A,
-                                                        posq[atom2+i].y * NM_TO_A,
-                                                        posq[atom2+i].z * NM_TO_A);
-                    }
-
-                    real3 delta = make_real3(positions[Ob].x-positions[Oa].x, positions[Ob].y-positions[Oa].y, positions[Ob].z-positions[Oa].z);
-                    real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-                    real invR = RSQRT(r2);
-                    real rOO = r2*invR;
-                    real sw = 1.;
-                    real gsw = 1.;
-
-                    if ((rOO > r2f) || (rOO < 2.)) {
-                        tempEnergy = 0.;
-                    } else {
-
-                        evaluateSwitchFunc(rOO, &sw, &gsw);
-
-                        computeExtraPoint(positions + Oa, positions + Ha1, positions + Ha2,
-                               positions + Xa1, positions + Xa2);
-                        computeExtraPoint(positions + Ob, positions + Hb1, positions + Hb2,
-                                positions + Xb1, positions + Xb2);
-
-                        real exp[31];
-                        real3 gOO[31];
-                        int i = 0;
-                        computeExp(d_intra, k_HH_intra, positions +Ha1, positions +Ha2, exp+i, gOO+i); i++;
-                        computeExp(d_intra, k_HH_intra, positions +Hb1, positions +Hb2, exp+i, gOO+i); i++;
-                        computeExp(d_intra, k_OH_intra, positions +Oa,  positions +Ha1, exp+i, gOO+i); i++;
-                        computeExp(d_intra, k_OH_intra, positions +Oa,  positions +Ha2, exp+i, gOO+i); i++;
-                        computeExp(d_intra, k_OH_intra, positions +Ob,  positions +Hb1, exp+i, gOO+i); i++;
-                        computeExp(d_intra, k_OH_intra, positions +Ob,  positions +Hb2, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_HH_coul, positions +Ha1, positions +Hb1, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_HH_coul, positions +Ha1, positions +Hb2, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_HH_coul, positions +Ha2, positions +Hb1, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_HH_coul, positions +Ha2, positions +Hb2, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_OH_coul, positions +Oa,  positions +Hb1, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_OH_coul, positions +Oa,  positions +Hb2, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_OH_coul, positions +Ob,  positions +Ha1, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_OH_coul, positions +Ob,  positions +Ha2, exp+i, gOO+i); i++;
-                        computeCoul(d_inter, k_OO_coul, positions +Oa,  positions +Ob , exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xa1, positions +Hb1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xa1, positions +Hb2, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xa2, positions +Hb1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xa2, positions +Hb2, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xb1, positions +Ha1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xb1, positions +Ha2, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xb2, positions +Ha1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XH_main,  positions +Xb2, positions +Ha2, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XO_main,  positions +Oa , positions +Xb1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XO_main,  positions +Oa , positions +Xb2, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XO_main,  positions +Ob , positions +Xa1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XO_main,  positions +Ob , positions +Xa2, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XX_main,  positions +Xa1, positions +Xb1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XX_main,  positions +Xa1, positions +Xb2, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb1, exp+i, gOO+i); i++;
-                        computeExp(d_inter, k_XX_main,  positions +Xa2, positions +Xb2, exp+i, gOO+i); i++;
-
-                        real g[31];
-                        tempEnergy = poly_2b_v6x_eval(exp, g);
-
-                        computeGrads(g+0,  gOO+0,  forces + Ha1, forces + Ha2, sw);
-                        computeGrads(g+1,  gOO+1,  forces + Hb1, forces + Hb2, sw);
-                        computeGrads(g+2,  gOO+2,  forces + Oa , forces + Ha1, sw);
-                        computeGrads(g+3,  gOO+3,  forces + Oa , forces + Ha2, sw);
-                        computeGrads(g+4,  gOO+4,  forces + Ob , forces + Hb1, sw);
-                        computeGrads(g+5,  gOO+5,  forces + Ob , forces + Hb2, sw);
-                        computeGrads(g+6,  gOO+6,  forces + Ha1, forces + Hb1, sw);
-                        computeGrads(g+7,  gOO+7,  forces + Ha1, forces + Hb2, sw);
-                        computeGrads(g+8,  gOO+8,  forces + Ha2, forces + Hb1, sw);
-                        computeGrads(g+9,  gOO+9,  forces + Ha2, forces + Hb2, sw);
-                        computeGrads(g+10, gOO+10, forces + Oa , forces + Hb1, sw);
-                        computeGrads(g+11, gOO+11, forces + Oa , forces + Hb2, sw);
-                        computeGrads(g+12, gOO+12, forces + Ob , forces + Ha1, sw);
-                        computeGrads(g+13, gOO+13, forces + Ob , forces + Ha2, sw);
-                        computeGrads(g+14, gOO+14, forces + Oa , forces + Ob , sw);
-                        computeGrads(g+15, gOO+15, forces + Xa1, forces + Hb1, sw);
-                        computeGrads(g+16, gOO+16, forces + Xa1, forces + Hb2, sw);
-                        computeGrads(g+17, gOO+17, forces + Xa2, forces + Hb1, sw);
-                        computeGrads(g+18, gOO+18, forces + Xa2, forces + Hb2, sw);
-                        computeGrads(g+19, gOO+19, forces + Xb1, forces + Ha1, sw);
-                        computeGrads(g+20, gOO+20, forces + Xb1, forces + Ha2, sw);
-                        computeGrads(g+21, gOO+21, forces + Xb2, forces + Ha1, sw);
-                        computeGrads(g+22, gOO+22, forces + Xb2, forces + Ha2, sw);
-                        computeGrads(g+23, gOO+23, forces + Oa , forces + Xb1, sw);
-                        computeGrads(g+24, gOO+24, forces + Oa , forces + Xb2, sw);
-                        computeGrads(g+25, gOO+25, forces + Ob , forces + Xa1, sw);
-                        computeGrads(g+26, gOO+26, forces + Ob , forces + Xa2, sw);
-                        computeGrads(g+27, gOO+27, forces + Xa1, forces + Xb1, sw);
-                        computeGrads(g+28, gOO+28, forces + Xa1, forces + Xb2, sw);
-                        computeGrads(g+29, gOO+29, forces + Xa2, forces + Xb1, sw);
-                        computeGrads(g+30, gOO+30, forces + Xa2, forces + Xb2, sw);
-
-
-                    distributeXpointGrad(positions + Oa, positions + Ha1, positions + Ha2,
-                            forces + Xa1, forces + Xa2,
-                            forces + Oa, forces + Ha1, forces + Ha2, sw);
-
-                    distributeXpointGrad(positions + Ob, positions + Hb1, positions + Hb2,
-                            forces + Xb1, forces + Xb2,
-                            forces + Ob, forces + Hb1, forces + Hb2, sw);
-
-                    }
-
-
-                    energy += sw * tempEnergy * CAL2JOULE;
-
-                    // gradient of the switch
-                    gsw *= tempEnergy/rOO;
-                    real3 d = gsw * delta;
-                    forces[Oa] += d;
-                    forces[Ob] -= d;
-
-                    // write forces of second molecule to shared memory
-
-                    for (int i=0; i<3; i++) {
-                        localData[tbx+tj+i].fx += forces[Ob + i].x;
-                        localData[tbx+tj+i].fy += forces[Ob + i].y;
-                        localData[tbx+tj+i].fz += forces[Ob + i].z;
-                    }
-
+                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+                    real sigma = 1.3;
+                    real epsilon = 2.;
+                    real x = sigma/r;
+                    real eps = SQRT(2);
+                    dEdR += epsilon*eps*(12*POW(x, 12.0)-6*POW(x, 6.0)) * invR * invR;
+                    tempEnergy += 4.0*eps*(POW(x, 12.0)-POW(x, 6.0));
                 }
+                energy += 0.5f * tempEnergy;
+
+                delta *= dEdR;
+                forces[0].x -= delta.x;
+                forces[0].y -= delta.y;
+                forces[0].z -= delta.z;
+
+                localData[tbx+tj].fx += delta.x;
+                localData[tbx+tj].fy += delta.y;
+                localData[tbx+tj].fz += delta.z;
+
+                // write forces of second molecule to shared memory
+
+                // for (int i=0; i<1; i++) {
+                //     localData[tbx+tj+i].fx += forces[Ob + i].x;
+                //     localData[tbx+tj+i].fy += forces[Ob + i].y;
+                //     localData[tbx+tj+i].fz += forces[Ob + i].z;
+                // }
+
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
 
-
-            for (int i=0; i<3; i++) {
-                forces[i] *= CAL2JOULE * -10;
-            }
-
             // Write results.
-            for (int i=0; i<3; i++) {
+            for (int i=0; i<1; i++) {
                 atomicAdd(&forceBuffers[atom1 + i], static_cast<unsigned long long>((long long) (forces[i].x*0x100000000)));
                 atomicAdd(&forceBuffers[atom1 + i+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].y*0x100000000)));
                 atomicAdd(&forceBuffers[atom1 + i+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].z*0x100000000)));
@@ -15463,9 +15354,9 @@ extern "C" __global__ void computeTwoBodyForce(
             unsigned int atom2 = y*TILE_SIZE + tgx;
 #endif
             if (atom2 < PADDED_NUM_ATOMS) {
-                atomicAdd(&forceBuffers[atom2], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fx)*0x100000000)));
-                atomicAdd(&forceBuffers[atom2+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fy)*0x100000000)));
-                atomicAdd(&forceBuffers[atom2+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fz)*0x100000000)));
+                atomicAdd(&forceBuffers[atom2], static_cast<unsigned long long>((long long) ((localData[threadIdx.x].fx)*0x100000000)));
+                atomicAdd(&forceBuffers[atom2+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((localData[threadIdx.x].fy)*0x100000000)));
+                atomicAdd(&forceBuffers[atom2+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((localData[threadIdx.x].fz)*0x100000000)));
             }
         }
         pos++;

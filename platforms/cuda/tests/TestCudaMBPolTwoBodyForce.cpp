@@ -57,6 +57,34 @@ const double DegreesToRadians = 3.14159265/180.0;
 
 extern "C" OPENMM_EXPORT void registerMBPolCudaKernelFactories();
 
+const double TOL = 1e-5;
+
+void testLJ() {
+    System system;
+    system.addParticle(1.0);
+    system.addParticle(1.0);
+    LangevinIntegrator integrator(0.0, 0.1, 0.01);
+    MBPolTwoBodyForce* forceField = new MBPolTwoBodyForce();
+    forceField->setNonbondedMethod(MBPolTwoBodyForce::NoCutoff);
+    std::vector<int> particleIndices(4);
+    forceField->addParticle(particleIndices);
+    forceField->addParticle(particleIndices);
+    system.addForce(forceField);
+    Context context(system, integrator, Platform::getPlatformByName( "CUDA" ) );
+    vector<Vec3> positions(2);
+    positions[0] = Vec3(0, 0, 0);
+    positions[1] = Vec3(2, 0, 0);
+    context.setPositions(positions);
+    State state = context.getState(State::Forces | State::Energy);
+    const vector<Vec3>& forces = state.getForces();
+    double x = 1.3/2.0;
+    double eps = SQRT_TWO;
+    double force = 4.0*eps*(12*std::pow(x, 12.0)-6*std::pow(x, 6.0))/2.0;
+    ASSERT_EQUAL_TOL(4.0*eps*(std::pow(x, 12.0)-std::pow(x, 6.0)), state.                  getPotentialEnergy(), TOL);
+    ASSERT_EQUAL_VEC(Vec3(-force, 0, 0), forces[0], TOL);
+    ASSERT_EQUAL_VEC(Vec3(force, 0, 0), forces[1], TOL);
+}
+
 void testTwoBody( double boxDimension, bool addPositionOffset ) {
 
     std::string testName      = "testMBPol2BodyInteraction";
@@ -240,7 +268,8 @@ int main(int argc, char* argv[]) {
 
         double boxDimension = 0;
         std::cout << "TestReferenceMBPolTwoBodyForce Cluster" << std::endl;
-        testTwoBody( boxDimension, false );
+        testLJ();
+        // testTwoBody( boxDimension, false );
 
         //bool runTestWithAtomImaging = false;
         //testImageMolecules(runTestWithAtomImaging, false);
