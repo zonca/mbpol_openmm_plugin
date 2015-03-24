@@ -15296,6 +15296,9 @@ extern "C" __global__ void computeTwoBodyForce(
                 delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
                 delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
 #endif
+                real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
+                real invR = RSQRT(r2);
+                real r = r2*invR;
                 // LOAD_ATOM2_PARAMETERS
                 atom2 = atomIndices[tbx+tj];
                 real dEdR = 0.0f;
