@@ -15200,14 +15200,13 @@ extern "C" __global__ void computeTwoBodyForce(
             localData[threadIdx.x].x = posq1.x;
             localData[threadIdx.x].y = posq1.y;
             localData[threadIdx.x].z = posq1.z;
-            localData[threadIdx.x].q = posq1.w;
 
             // we do not need to fetch parameters from global since this is a symmetric tile
             // instead we can broadcast the values using shuffle
             for (unsigned int j = 0; j < TILE_SIZE; j++) {
                 int atom2 = tbx+j;
-                real4 posq2;
-                posq2 = make_real4(localData[atom2].x, localData[atom2].y, localData[atom2].z, localData[atom2].q);
+                real3 posq2;
+                posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
                 real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
 #ifdef USE_PERIODIC
                 delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
@@ -15242,14 +15241,13 @@ extern "C" __global__ void computeTwoBodyForce(
             localData[threadIdx.x].x = shflPosq.x;
             localData[threadIdx.x].y = shflPosq.y;
             localData[threadIdx.x].z = shflPosq.z;
-            localData[threadIdx.x].q = shflPosq.w;
             localData[threadIdx.x].fx = 0.0f;
             localData[threadIdx.x].fy = 0.0f;
             localData[threadIdx.x].fz = 0.0f;
             unsigned int tj = tgx;
             for (j = 0; j < TILE_SIZE; j++) {
                 int atom2 = tbx+tj;
-                real4 posq2 = make_real4(localData[atom2].x, localData[atom2].y, localData[atom2].z, localData[atom2].q);
+                real3 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
                 real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
 #ifdef USE_PERIODIC
                 delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
