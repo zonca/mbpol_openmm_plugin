@@ -192,13 +192,13 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     if (useCutoff)
         defines["USE_CUTOFF"] = "1";
 
-    CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::twobodyForce, defines);
-    computeTwoBodyForceKernel = cu.getKernel(module, "computeTwoBodyForce");
+    // CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::twobodyForce, defines);
+    // computeTwoBodyForceKernel = cu.getKernel(module, "computeTwoBodyForce");
 
     // Add an interaction to the default nonbonded kernel.  This doesn't actually do any calculations.  It's
     // just so that CudaNonbondedUtilities will build the exclusion flags and maintain the neighbor list.
 
-    nb.addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, "", force.getForceGroup());
+    nb.addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions,CudaMBPolKernelSources::twobodyForceInteraction, force.getForceGroup());
     // nb.setUsePadding(false);
     cu.addForce(new CudaMBPolTwoBodyForceInfo(force));
 
@@ -207,29 +207,29 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
 double CudaCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
     CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
 
-    nb.prepareInteractions();
-    nb.computeInteractions();
-    int startTileIndex = nb.getStartTileIndex();
-    int numTileIndices = nb.getNumTiles();
-    unsigned int maxTiles;
-    if (nb.getUseCutoff()) {
-        maxTiles = nb.getInteractingTiles().getSize();
-    }
+    // nb.prepareInteractions();
+    // // nb.computeInteractions();
+    // int startTileIndex = nb.getStartTileIndex();
+    // int numTileIndices = nb.getNumTiles();
+    // unsigned int maxTiles;
+    // if (nb.getUseCutoff()) {
+    //     maxTiles = nb.getInteractingTiles().getSize();
+    // }
 
-    void* args[] = {&cu.getForce().getDevicePointer(),
-        &cu.getEnergyBuffer().getDevicePointer(),
-        &cu.getPosq().getDevicePointer(),
-        &startTileIndex,
-        &numTileIndices,
-        &nb.getInteractingTiles().getDevicePointer(),
-        &nb.getInteractionCount().getDevicePointer(),
-        cu.getPeriodicBoxSizePointer(),
-        cu.getInvPeriodicBoxSizePointer(),
-        &maxTiles,
-       // &cu.getNonbondedUtilities().getBlock().getDevicePointer(),
-        &nb.getInteractingAtoms().getDevicePointer()
-    };
-    cu.executeKernel(computeTwoBodyForceKernel, args, cu.getPaddedNumAtoms());
+    // void* args[] = {&cu.getForce().getDevicePointer(),
+    //     &cu.getEnergyBuffer().getDevicePointer(),
+    //     &cu.getPosq().getDevicePointer(),
+    //     &startTileIndex,
+    //     &numTileIndices,
+    //     &nb.getInteractingTiles().getDevicePointer(),
+    //     &nb.getInteractionCount().getDevicePointer(),
+    //     cu.getPeriodicBoxSizePointer(),
+    //     cu.getInvPeriodicBoxSizePointer(),
+    //     &maxTiles,
+    //    // &cu.getNonbondedUtilities().getBlock().getDevicePointer(),
+    //     &nb.getInteractingAtoms().getDevicePointer()
+    // };
+    // // cu.executeKernel(computeTwoBodyForceKernel, args, cu.getPaddedNumAtoms());
     return 0.0;
 }
 
