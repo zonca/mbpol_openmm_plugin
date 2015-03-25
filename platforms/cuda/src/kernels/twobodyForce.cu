@@ -15161,6 +15161,7 @@ extern "C" __global__ void computeTwoBodyForce(
         unsigned long long* __restrict__ forceBuffers,
         real* __restrict__ energyBuffer,
         const real4* __restrict__ posq,
+        const ushort2* __restrict__ exclusionTiles,
         unsigned int startTileIndex,
         unsigned int numTileIndices
 #ifdef USE_CUTOFF
