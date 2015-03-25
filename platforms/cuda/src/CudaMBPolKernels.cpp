@@ -189,6 +189,18 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
     defines["TILE_SIZE"] = cu.intToString(CudaContext::TileSize);
     defines["THREAD_BLOCK_SIZE"] = cu.intToString(nb.getNumForceThreadBlocks());
+
+    // tiles with exclusions setup
+    
+    int numContexts = cu.getPlatformData().contexts.size();
+    int numExclusionTiles = nb.getExclusionTiles().getSize();
+    defines["NUM_TILES_WITH_EXCLUSIONS"] = cu.intToString(numExclusionTiles);
+    int startExclusionIndex = cu.getContextIndex()*numExclusionTiles/numContexts;
+    int endExclusionIndex = (cu.getContextIndex()+1)*numExclusionTiles/numContexts;
+        defines["FIRST_EXCLUSION_TILE"] = cu.intToString(startExclusionIndex);
+    defines["LAST_EXCLUSION_TILE"] = cu.intToString(endExclusionIndex);
+    // end of tiles with exclusions setup
+    
     if (useCutoff)
         defines["USE_CUTOFF"] = "1";
 
