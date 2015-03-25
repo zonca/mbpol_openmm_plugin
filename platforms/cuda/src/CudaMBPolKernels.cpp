@@ -193,7 +193,10 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     // tiles with exclusions setup
     
     int numContexts = cu.getPlatformData().contexts.size();
-    int numExclusionTiles = nb.getExclusionTiles().getSize();
+    // nb.initialize(system);
+    // int numExclusionTiles = nb.getExclusionTiles().getSize();
+    int numExclusionTiles = 1;
+
     defines["NUM_TILES_WITH_EXCLUSIONS"] = cu.intToString(numExclusionTiles);
     int startExclusionIndex = cu.getContextIndex()*numExclusionTiles/numContexts;
     int endExclusionIndex = (cu.getContextIndex()+1)*numExclusionTiles/numContexts;
