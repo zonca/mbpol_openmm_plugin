@@ -15183,6 +15183,118 @@ extern "C" __global__ void computeTwoBodyForce(
     // localData contains positions and forces for all atoms, also H
     __shared__ AtomData localData[THREAD_BLOCK_SIZE];
 
+    // First loop: process tiles that contain exclusions.
+    const unsigned int firstExclusionTile = FIRST_EXCLUSION_TILE+warp*(LAST_EXCLUSION_TILE-FIRST_EXCLUSION_TILE)/totalWarps;
+    const unsigned int lastExclusionTile = FIRST_EXCLUSION_TILE+(warp+1)*(LAST_EXCLUSION_TILE-FIRST_EXCLUSION_TILE)/totalWarps;
+    for (int pos = firstExclusionTile; pos < lastExclusionTile; pos++) {
+        const ushort2 tileIndices = exclusionTiles[pos];
+        const unsigned int x = tileIndices.x;
+        const unsigned int y = tileIndices.y;
+        real3 force = make_real3(0);
+        unsigned int atom1 = x*TILE_SIZE + tgx;
+        real4 posq1 = posq[atom1];
+        const bool hasExclusions = true;
+        if (x == y) {
+            // This tile is on the diagonal.
+            localData[threadIdx.x].x = posq1.x;
+            localData[threadIdx.x].y = posq1.y;
+            localData[threadIdx.x].z = posq1.z;
+            localData[threadIdx.x].q = posq1.w;
+
+            // we do not need to fetch parameters from global since this is a symmetric tile
+            // instead we can broadcast the values using shuffle
+            for (unsigned int j = 0; j < TILE_SIZE; j++) {
+                int atom2 = tbx+j;
+                real4 posq2;
+                posq2 = make_real4(localData[atom2].x, localData[atom2].y, localData[atom2].z, localData[atom2].q);
+                real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
+#ifdef USE_PERIODIC
+                delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
+                delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
+                delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
+#endif
+                real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
+                real invR = RSQRT(r2);
+                real r = r2*invR;
+                atom2 = y*TILE_SIZE+j;
+                real dEdR = 0.0f;
+                real tempEnergy = 0.0f;
+                // COMPUTE_INTERACTION
+                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+                    real sigma = 1.3;
+                    real epsilon = 2.;
+                    real x = sigma/r;
+                    real eps = SQRT(2);
+                    dEdR += epsilon*eps*(12*POW(x, 12.0)-6*POW(x, 6.0)) * invR * invR;
+                    tempEnergy += 4.0*eps*(POW(x, 12.0)-POW(x, 6.0));
+                }
+                energy += 0.5f*tempEnergy;
+                force.x -= delta.x*dEdR;
+                force.y -= delta.y*dEdR;
+                force.z -= delta.z*dEdR;
+            }
+        }
+        else {
+            // This is an off-diagonal tile.
+            unsigned int j = y*TILE_SIZE + tgx;
+            real4 shflPosq = posq[j];
+            localData[threadIdx.x].x = shflPosq.x;
+            localData[threadIdx.x].y = shflPosq.y;
+            localData[threadIdx.x].z = shflPosq.z;
+            localData[threadIdx.x].q = shflPosq.w;
+            localData[threadIdx.x].fx = 0.0f;
+            localData[threadIdx.x].fy = 0.0f;
+            localData[threadIdx.x].fz = 0.0f;
+            unsigned int tj = tgx;
+            for (j = 0; j < TILE_SIZE; j++) {
+                int atom2 = tbx+tj;
+                real4 posq2 = make_real4(localData[atom2].x, localData[atom2].y, localData[atom2].z, localData[atom2].q);
+                real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
+#ifdef USE_PERIODIC
+                delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
+                delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
+                delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
+#endif
+                real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
+                real invR = RSQRT(r2);
+                real r = r2*invR;
+                atom2 = y*TILE_SIZE+tj;
+                real dEdR = 0.0f;
+                real tempEnergy = 0.0f;
+                // COMPUTE_INTERACTION
+                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+                    real sigma = 1.3;
+                    real epsilon = 2.;
+                    real x = sigma/r;
+                    real eps = SQRT(2);
+                    dEdR += epsilon*eps*(12*POW(x, 12.0)-6*POW(x, 6.0)) * invR * invR;
+                    tempEnergy += 4.0*eps*(POW(x, 12.0)-POW(x, 6.0));
+                }
+                energy += tempEnergy;
+                delta *= dEdR;
+                force.x -= delta.x;
+                force.y -= delta.y;
+                force.z -= delta.z;
+                localData[tbx+tj].fx += delta.x;
+                localData[tbx+tj].fy += delta.y;
+                localData[tbx+tj].fz += delta.z;
+                // cycles the indices
+                // 0 1 2 3 4 5 6 7 -> 1 2 3 4 5 6 7 0
+                tj = (tj + 1) & (TILE_SIZE - 1);
+            }
+            const unsigned int offset = y*TILE_SIZE + tgx;
+            // write results for off diagonal tiles
+            atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fx*0x100000000)));
+            atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fy*0x100000000)));
+            atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fz*0x100000000)));
+        }
+        // Write results for on and off diagonal tiles
+        const unsigned int offset = x*TILE_SIZE + tgx;
+        atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (force.x*0x100000000)));
+        atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (force.y*0x100000000)));
+        atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (force.z*0x100000000)));
+    }
+
     // Second loop: tiles without exclusions, either from the neighbor list (with cutoff) or just enumerating all
     // of them (no cutoff).
 #ifdef USE_CUTOFF
