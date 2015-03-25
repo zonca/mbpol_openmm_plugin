@@ -15187,6 +15187,7 @@ extern "C" __global__ void computeTwoBodyForce(
     // of them (no cutoff).
 #ifdef USE_CUTOFF
     const unsigned int numTiles = interactionCount[0];
+    // const unsigned int numTiles = 2;
     int pos = (int) (numTiles > maxTiles ? startTileIndex+warp*(long long)numTileIndices/totalWarps : warp*(long long)numTiles/totalWarps);
     int end = (int) (numTiles > maxTiles ? startTileIndex+(warp+1)*(long long)numTileIndices/totalWarps : (warp+1)*(long long)numTiles/totalWarps);
 #else
