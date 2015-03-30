@@ -1,5 +1,8 @@
-
+#ifdef USE_CUTOFF
+if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2 && r2 < CUTOFF_SQUARED) {
+#else
 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+#endif
     real sigma = 1.3;
     real epsilon = 2.;
     real x = sigma/r;
