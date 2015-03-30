@@ -15352,19 +15352,19 @@ extern "C" __global__ void computeTwoBodyForce(
 
             // Skip over tiles that have exclusions, since they were already processed.
 
-            //while (skipTiles[tbx+TILE_SIZE-1] < pos) {
-            //    if (skipBase+tgx < NUM_TILES_WITH_EXCLUSIONS) {
-            //        ushort2 tile = exclusionTiles[skipBase+tgx];
-            //        skipTiles[threadIdx.x] = tile.x + tile.y*NUM_BLOCKS - tile.y*(tile.y+1)/2;
-            //    }
-            //    else
-            //        skipTiles[threadIdx.x] = end;
-            //    skipBase += TILE_SIZE;
-            //    currentSkipIndex = tbx;
-            //}
-            //while (skipTiles[currentSkipIndex] < pos)
-            //    currentSkipIndex++;
-            //includeTile = (skipTiles[currentSkipIndex] != pos);
+            while (skipTiles[tbx+TILE_SIZE-1] < pos) {
+                if (skipBase+tgx < NUM_TILES_WITH_EXCLUSIONS) {
+                    ushort2 tile = exclusionTiles[skipBase+tgx];
+                    skipTiles[threadIdx.x] = tile.x + tile.y*NUM_BLOCKS - tile.y*(tile.y+1)/2;
+                }
+                else
+                    skipTiles[threadIdx.x] = end;
+                skipBase += TILE_SIZE;
+                currentSkipIndex = tbx;
+            }
+            while (skipTiles[currentSkipIndex] < pos)
+                currentSkipIndex++;
+            includeTile = (skipTiles[currentSkipIndex] != pos);
         }
         if (includeTile) {
             unsigned int atom1 = x*TILE_SIZE + tgx;
