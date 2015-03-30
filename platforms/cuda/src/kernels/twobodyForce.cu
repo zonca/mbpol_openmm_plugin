@@ -15220,7 +15220,11 @@ extern "C" __global__ void computeTwoBodyForce(
                 real dEdR = 0.0f;
                 real tempEnergy = 0.0f;
                 // COMPUTE_INTERACTION
+#ifdef USE_CUTOFF
+                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2 && r2 < CUTOFF_SQUARED) {
+#else
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+#endif
                     real sigma = 1.3;
                     real epsilon = 2.;
                     real x = sigma/r;
@@ -15261,7 +15265,11 @@ extern "C" __global__ void computeTwoBodyForce(
                 real dEdR = 0.0f;
                 real tempEnergy = 0.0f;
                 // COMPUTE_INTERACTION
+#ifdef USE_CUTOFF
+                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2 && r2 < CUTOFF_SQUARED) {
+#else
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+#endif
                     real sigma = 1.3;
                     real epsilon = 2.;
                     real x = sigma/r;
@@ -15424,7 +15432,12 @@ extern "C" __global__ void computeTwoBodyForce(
                 // Better implementation would be to write our own implemenation of a O-only Neighbor
                 // list based either on NonBondedUtilities or on CustomManyParticleForce
 
+                // COMPUTE_INTERACTION
+#ifdef USE_CUTOFF
+                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2 && r2 < CUTOFF_SQUARED) {
+#else
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+#endif
                     real sigma = 1.3;
                     real epsilon = 2.;
                     real x = sigma/r;

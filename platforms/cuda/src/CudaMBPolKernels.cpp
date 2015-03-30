@@ -206,6 +206,8 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     
     if (useCutoff)
         defines["USE_CUTOFF"] = "1";
+    double cutoff = force.getCutoff();
+    defines["CUTOFF_SQUARED"] = cu.doubleToString(cutoff*cutoff);
 
     CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::twobodyForce, defines);
     computeTwoBodyForceKernel = cu.getKernel(module, "computeTwoBodyForce");
