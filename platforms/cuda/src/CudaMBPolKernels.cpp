@@ -220,11 +220,15 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
 }
 
 double CudaCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
-    cu.getNonbondedUtilities().prepareInteractions();
-    cu.getNonbondedUtilities().computeInteractions();
-    int startTileIndex = cu.getNonbondedUtilities().getStartTileIndex();
-    int numTileIndices = cu.getNonbondedUtilities().getNumTiles();
-    unsigned int maxTiles = cu.getNonbondedUtilities().getInteractingTiles().getSize();
+
+    CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
+
+    int startTileIndex = nb.getStartTileIndex();
+    int numTileIndices = nb.getNumTiles();
+    unsigned int maxTiles;
+    if (nb.getUseCutoff()) {
+        maxTiles = nb.getInteractingTiles().getSize();
+    }
 
     void* args[] = {&cu.getForce().getDevicePointer(),
         &cu.getEnergyBuffer().getDevicePointer(),
