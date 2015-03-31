@@ -233,6 +233,7 @@ double CudaCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool inclu
     void* args[] = {&cu.getForce().getDevicePointer(),
         &cu.getEnergyBuffer().getDevicePointer(),
         &cu.getPosq().getDevicePointer(),
+        &nb.getExclusionTiles().getDevicePointer(),
         &startTileIndex,
         &numTileIndices,
         &cu.getNonbondedUtilities().getInteractingTiles().getDevicePointer(),
