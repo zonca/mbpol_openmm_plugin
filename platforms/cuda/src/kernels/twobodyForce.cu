@@ -15432,7 +15432,7 @@ extern "C" __global__ void computeTwoBodyForce(
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (NUM_ATOMS > atom2) && (atom1 < NUM_ATOMS) && (atom1 != atom2)) {
                     // this computes both atom0-atom3 and atom3-atom0
                     // COMPUTE_INTERACTION exclusions diagonal tile
-                    energy computeInteraction(atom1, atom2, posq, forces);
+                    energy += computeInteraction(atom1, atom2, posq, forces);
                 }
             }
         }
