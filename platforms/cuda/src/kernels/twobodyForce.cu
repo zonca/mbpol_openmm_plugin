@@ -18,7 +18,7 @@ typedef struct {
 #define Xb1 8
 #define Xb2 9
 
-#define DEBUG
+// #define DEBUG
 
 #define NM_TO_A 10
 #define CAL2JOULE 4.184
@@ -15497,172 +15497,172 @@ extern "C" __global__ void computeTwoBodyForce(
             atomicAdd(&forceBuffers[offset + i+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].z*0x100000000)));
         }
     }
-     // Second loop: tiles without exclusions, either from the neighbor list (with cutoff) or just enumerating all
-     // of them (no cutoff).
- #ifdef USE_CUTOFF
-     const unsigned int numTiles = interactionCount[0];
-     int pos = (int) (numTiles > maxTiles ? startTileIndex+warp*(long long)numTileIndices/totalWarps : warp*(long long)numTiles/totalWarps);
-     int end = (int) (numTiles > maxTiles ? startTileIndex+(warp+1)*(long long)numTileIndices/totalWarps : (warp+1)*(long long)numTiles/totalWarps);
- #else
-     const unsigned int numTiles = numTileIndices;
-     int pos = (int) (startTileIndex+warp*(long long)numTiles/totalWarps);
-     int end = (int) (startTileIndex+(warp+1)*(long long)numTiles/totalWarps);
- #endif
-     int skipBase = 0;
-     int currentSkipIndex = tbx;
-     // atomIndices can probably be shuffled as well
-     // but it probably wouldn't make things any faster
-     __shared__ int atomIndices[THREAD_BLOCK_SIZE];
-     __shared__ volatile int skipTiles[THREAD_BLOCK_SIZE];
-     skipTiles[threadIdx.x] = -1;
- 
-     while (pos < end) {
-         real3 forces[10];
-         // set only forces for current water to 0
-         // forces is a variable local to the thread,
-         // forces [0:3] contains the local water forces,
-         // those forces are accumulated for each interaction with
-         // other molecules
-         // forces[4:6] contains the second water molecule that is
-         // different for every interaction so we need to set it to
-         // zero in the inner loop.
-         // then those forces are added to the localData array
-         // that is in shared memory and accumulates the forces as we
-         // go through the grid of interactions.
-         // need to make sure that localData has complete water molecules
- 
-         for (int i=0; i<3; i++) {
-            forces[i] = make_real3(0);
-         }
-         bool includeTile = true;
- 
-         // Extract the coordinates of this tile.
-         int x, y;
- #ifdef USE_CUTOFF
-         if (numTiles <= maxTiles) {
-             x = tiles[pos];
-         }
-         else
- #endif
-         {
-             y = (int) floor(NUM_BLOCKS+0.5f-SQRT((NUM_BLOCKS+0.5f)*(NUM_BLOCKS+0.5f)-2*pos));
-             x = (pos-y*NUM_BLOCKS+y*(y+1)/2);
-             if (x < y || x >= NUM_BLOCKS) { // Occasionally happens due to roundoff error.
-                 y += (x < y ? -1 : 1);
-                 x = (pos-y*NUM_BLOCKS+y*(y+1)/2);
-             }
- 
-             // Skip over tiles that have exclusions, since they were already processed.
- 
-             while (skipTiles[tbx+TILE_SIZE-1] < pos) {
-                 if (skipBase+tgx < NUM_TILES_WITH_EXCLUSIONS) {
-                     ushort2 tile = exclusionTiles[skipBase+tgx];
-                     skipTiles[threadIdx.x] = tile.x + tile.y*NUM_BLOCKS - tile.y*(tile.y+1)/2;
-                 }
-                 else
-                     skipTiles[threadIdx.x] = end;
-                 skipBase += TILE_SIZE;
-                 currentSkipIndex = tbx;
-             }
-             while (skipTiles[currentSkipIndex] < pos)
-                 currentSkipIndex++;
-             includeTile = (skipTiles[currentSkipIndex] != pos);
-         }
-         if (includeTile) {
-             unsigned int atom1 = x*TILE_SIZE + tgx;
-             // Load atom data for this tile.
-             real4 posq1 = posq[atom1];
-             // LOAD_ATOM1_PARAMETERS
-             //const unsigned int localAtomIndex = threadIdx.x;
- #ifdef USE_CUTOFF
-             unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
- #else
-             unsigned int j = y*TILE_SIZE + tgx;
- #endif
-             atomIndices[threadIdx.x] = j;
-             if (j < PADDED_NUM_ATOMS) {
-                 // Load position of atom j from from global memory
-                 localData[threadIdx.x].x = posq[j].x;
-                 localData[threadIdx.x].y = posq[j].y;
-                 localData[threadIdx.x].z = posq[j].z;
-                 localData[threadIdx.x].fx = 0.0f;
-                 localData[threadIdx.x].fy = 0.0f;
-                 localData[threadIdx.x].fz = 0.0f;
-                 // LOAD_LOCAL_PARAMETERS_FROM_GLOBAL
-             }
-             else {
-                 localData[threadIdx.x].x = 0;
-                 localData[threadIdx.x].y = 0;
-                 localData[threadIdx.x].z = 0;
-             }
-             // We need to apply periodic boundary conditions separately for each interaction.
-             unsigned int tj = tgx;
-             for (j = 0; j < TILE_SIZE; j++) {
-                 // second atom is always changing so need to zero out
-                 for (int i=3; i<10; i++) {
-                    forces[i] = make_real3(0);
-                 }
-                 unsigned int atom2 = tbx+tj;
-                 real3 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
-                 real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
- #ifdef USE_PERIODIC
-                 delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
-                 delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
-                 delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
- #endif
-                 // LOAD_ATOM2_PARAMETERS
-                 atom2 = atomIndices[tbx+tj];
-                 real dEdR = 0.0f;
-                 real tempEnergy = 0.0f;
-                 //if ((atom1 < NUM_ATOMS) && (atom2 < NUM_ATOMS))
-                 //tempEnergy = 1.;
-                 // FIXME temporary implementation of filtering O atoms.
-                 // here we are using the Neighbor list implementation available in NonBondedUtilities.
-                 // Therefore we have a Neighbor list of all atoms,
-                 // then in this loop we filter out only the Oxygens.
-                 // Better implementation would be to write our own implemenation of a O-only Neighbor
-                 // list based either on NonBondedUtilities or on CustomManyParticleForce
-                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
-                     // COMPUTE_INTERACTION no exclusions
-                     // this computes only atom3-atom0
-                     energy += computeInteraction(atom1, atom2, posq, forces);
- 
-                     // write forces of second molecule to shared memory
- 
-                     for (int i=0; i<3; i++) {
-                         localData[tbx+tj+i].fx += forces[Ob + i].x;
-                         localData[tbx+tj+i].fy += forces[Ob + i].y;
-                         localData[tbx+tj+i].fz += forces[Ob + i].z;
-                     }
- 
-                 }
-                 tj = (tj + 1) & (TILE_SIZE - 1);
-             }
- 
- 
-             for (int i=0; i<3; i++) {
-                 forces[i] *= CAL2JOULE * -10;
-             }
- 
-             // Write results.
-             for (int i=0; i<3; i++) {
-                 atomicAdd(&forceBuffers[atom1 + i], static_cast<unsigned long long>((long long) (forces[i].x*0x100000000)));
-                 atomicAdd(&forceBuffers[atom1 + i+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].y*0x100000000)));
-                 atomicAdd(&forceBuffers[atom1 + i+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].z*0x100000000)));
-             }
- #ifdef USE_CUTOFF
-             unsigned int atom2 = atomIndices[threadIdx.x];
- #else
-             unsigned int atom2 = y*TILE_SIZE + tgx;
- #endif
-             if (atom2 < PADDED_NUM_ATOMS) {
-                 atomicAdd(&forceBuffers[atom2], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fx)*0x100000000)));
-                 atomicAdd(&forceBuffers[atom2+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fy)*0x100000000)));
-                 atomicAdd(&forceBuffers[atom2+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fz)*0x100000000)));
-             }
-         }
-         pos++;
-     }
+    // Second loop: tiles without exclusions, either from the neighbor list (with cutoff) or just enumerating all
+    // of them (no cutoff).
+#ifdef USE_CUTOFF
+    const unsigned int numTiles = interactionCount[0];
+    int pos = (int) (numTiles > maxTiles ? startTileIndex+warp*(long long)numTileIndices/totalWarps : warp*(long long)numTiles/totalWarps);
+    int end = (int) (numTiles > maxTiles ? startTileIndex+(warp+1)*(long long)numTileIndices/totalWarps : (warp+1)*(long long)numTiles/totalWarps);
+#else
+    const unsigned int numTiles = numTileIndices;
+    int pos = (int) (startTileIndex+warp*(long long)numTiles/totalWarps);
+    int end = (int) (startTileIndex+(warp+1)*(long long)numTiles/totalWarps);
+#endif
+    int skipBase = 0;
+    int currentSkipIndex = tbx;
+    // atomIndices can probably be shuffled as well
+    // but it probably wouldn't make things any faster
+    __shared__ int atomIndices[THREAD_BLOCK_SIZE];
+    __shared__ volatile int skipTiles[THREAD_BLOCK_SIZE];
+    skipTiles[threadIdx.x] = -1;
+
+    while (pos < end) {
+        real3 forces[10];
+        // set only forces for current water to 0
+        // forces is a variable local to the thread,
+        // forces [0:3] contains the local water forces,
+        // those forces are accumulated for each interaction with
+        // other molecules
+        // forces[4:6] contains the second water molecule that is
+        // different for every interaction so we need to set it to
+        // zero in the inner loop.
+        // then those forces are added to the localData array
+        // that is in shared memory and accumulates the forces as we
+        // go through the grid of interactions.
+        // need to make sure that localData has complete water molecules
+
+        for (int i=0; i<3; i++) {
+           forces[i] = make_real3(0);
+        }
+        bool includeTile = true;
+
+        // Extract the coordinates of this tile.
+        int x, y;
+#ifdef USE_CUTOFF
+        if (numTiles <= maxTiles) {
+            x = tiles[pos];
+        }
+        else
+#endif
+        {
+            y = (int) floor(NUM_BLOCKS+0.5f-SQRT((NUM_BLOCKS+0.5f)*(NUM_BLOCKS+0.5f)-2*pos));
+            x = (pos-y*NUM_BLOCKS+y*(y+1)/2);
+            if (x < y || x >= NUM_BLOCKS) { // Occasionally happens due to roundoff error.
+                y += (x < y ? -1 : 1);
+                x = (pos-y*NUM_BLOCKS+y*(y+1)/2);
+            }
+
+            // Skip over tiles that have exclusions, since they were already processed.
+
+            while (skipTiles[tbx+TILE_SIZE-1] < pos) {
+                if (skipBase+tgx < NUM_TILES_WITH_EXCLUSIONS) {
+                    ushort2 tile = exclusionTiles[skipBase+tgx];
+                    skipTiles[threadIdx.x] = tile.x + tile.y*NUM_BLOCKS - tile.y*(tile.y+1)/2;
+                }
+                else
+                    skipTiles[threadIdx.x] = end;
+                skipBase += TILE_SIZE;
+                currentSkipIndex = tbx;
+            }
+            while (skipTiles[currentSkipIndex] < pos)
+                currentSkipIndex++;
+            includeTile = (skipTiles[currentSkipIndex] != pos);
+        }
+        if (includeTile) {
+            unsigned int atom1 = x*TILE_SIZE + tgx;
+            // Load atom data for this tile.
+            real4 posq1 = posq[atom1];
+            // LOAD_ATOM1_PARAMETERS
+            //const unsigned int localAtomIndex = threadIdx.x;
+#ifdef USE_CUTOFF
+            unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
+#else
+            unsigned int j = y*TILE_SIZE + tgx;
+#endif
+            atomIndices[threadIdx.x] = j;
+            if (j < PADDED_NUM_ATOMS) {
+                // Load position of atom j from from global memory
+                localData[threadIdx.x].x = posq[j].x;
+                localData[threadIdx.x].y = posq[j].y;
+                localData[threadIdx.x].z = posq[j].z;
+                localData[threadIdx.x].fx = 0.0f;
+                localData[threadIdx.x].fy = 0.0f;
+                localData[threadIdx.x].fz = 0.0f;
+                // LOAD_LOCAL_PARAMETERS_FROM_GLOBAL
+            }
+            else {
+                localData[threadIdx.x].x = 0;
+                localData[threadIdx.x].y = 0;
+                localData[threadIdx.x].z = 0;
+            }
+            // We need to apply periodic boundary conditions separately for each interaction.
+            unsigned int tj = tgx;
+            for (j = 0; j < TILE_SIZE; j++) {
+                // second atom is always changing so need to zero out
+                for (int i=3; i<10; i++) {
+                   forces[i] = make_real3(0);
+                }
+                unsigned int atom2 = tbx+tj;
+                real3 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
+                real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
+#ifdef USE_PERIODIC
+                delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
+                delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
+                delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
+#endif
+                // LOAD_ATOM2_PARAMETERS
+                atom2 = atomIndices[tbx+tj];
+                real dEdR = 0.0f;
+                real tempEnergy = 0.0f;
+                //if ((atom1 < NUM_ATOMS) && (atom2 < NUM_ATOMS))
+                //tempEnergy = 1.;
+                // FIXME temporary implementation of filtering O atoms.
+                // here we are using the Neighbor list implementation available in NonBondedUtilities.
+                // Therefore we have a Neighbor list of all atoms,
+                // then in this loop we filter out only the Oxygens.
+                // Better implementation would be to write our own implemenation of a O-only Neighbor
+                // list based either on NonBondedUtilities or on CustomManyParticleForce
+                if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
+                    // COMPUTE_INTERACTION no exclusions
+                    // this computes only atom3-atom0
+                    energy += computeInteraction(atom1, atom2, posq, forces);
+
+                    // write forces of second molecule to shared memory
+
+                    for (int i=0; i<3; i++) {
+                        localData[tbx+tj+i].fx += forces[Ob + i].x;
+                        localData[tbx+tj+i].fy += forces[Ob + i].y;
+                        localData[tbx+tj+i].fz += forces[Ob + i].z;
+                    }
+
+                }
+                tj = (tj + 1) & (TILE_SIZE - 1);
+            }
+
+
+            for (int i=0; i<3; i++) {
+                forces[i] *= CAL2JOULE * -10;
+            }
+
+            // Write results.
+            for (int i=0; i<3; i++) {
+                atomicAdd(&forceBuffers[atom1 + i], static_cast<unsigned long long>((long long) (forces[i].x*0x100000000)));
+                atomicAdd(&forceBuffers[atom1 + i+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].y*0x100000000)));
+                atomicAdd(&forceBuffers[atom1 + i+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[i].z*0x100000000)));
+            }
+#ifdef USE_CUTOFF
+            unsigned int atom2 = atomIndices[threadIdx.x];
+#else
+            unsigned int atom2 = y*TILE_SIZE + tgx;
+#endif
+            if (atom2 < PADDED_NUM_ATOMS) {
+                atomicAdd(&forceBuffers[atom2], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fx)*0x100000000)));
+                atomicAdd(&forceBuffers[atom2+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fy)*0x100000000)));
+                atomicAdd(&forceBuffers[atom2+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fz)*0x100000000)));
+            }
+        }
+        pos++;
+    }
     energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
 
 }
