@@ -15281,6 +15281,79 @@ extern "C" __device__ real computeInteraction(
                     return sw * tempEnergy * CAL2JOULE;
 }
 
+/**
+ * Compute nonbonded interactions. The kernel is separated into two parts,
+ * tiles with exclusions and tiles without exclusions. It relies heavily on 
+ * implicit warp-level synchronization. A tile is defined by two atom blocks 
+ * each of warpsize. Each warp computes a range of tiles.
+ * 
+ * Tiles with exclusions compute the entire set of interactions across
+ * atom blocks, equal to warpsize*warpsize. In order to avoid access conflicts 
+ * the forces are computed and accumulated diagonally in the manner shown below
+ * where, suppose
+ *
+ * [a-h] comprise atom block 1, [i-p] comprise atom block 2
+ *
+ * 1 denotes the first set of calculations within the warp
+ * 2 denotes the second set of calculations within the warp
+ * ... etc.
+ * 
+ *        threads
+ *     0 1 2 3 4 5 6 7
+ *         atom1 
+ * L    a b c d e f g h 
+ * o  i 1 2 3 4 5 6 7 8
+ * c  j 8 1 2 3 4 5 6 7
+ * a  k 7 8 1 2 3 4 5 6
+ * l  l 6 7 8 1 2 3 4 5
+ * D  m 5 6 7 8 1 2 3 4 
+ * a  n 4 5 6 7 8 1 2 3
+ * t  o 3 4 5 6 7 8 1 2
+ * a  p 2 3 4 5 6 7 8 1
+ *
+ * AZ: so thread 0 is responsible for atom a, and accumulates the force in the `force` local
+ * variable, only at the end this is written to the force buffer.
+ * then at each step it has exclusive access to one of the index in localData in the order
+ * detailed above.
+ * For MBPol, the difference is that we work with a full molecule at a time, so now the local\
+ * force variable is instead an array of 10 vectors, 3 for each molecule and 2 extras.
+ * The first 3 components act exactly like `force`, the rest is used temporarily and then
+ * copied to localData at each step.
+ *
+ *
+ * Tiles without exclusions read off directly from the neighbourlist interactingAtoms
+ * and follows the same force accumulation method. If more there are more interactingTiles
+ * than the size of the neighbourlist initially allocated, the neighbourlist is rebuilt
+ * and the full tileset is computed. This should happen on the first step, and very rarely 
+ * afterwards.
+ *
+ * On CUDA devices that support the shuffle intrinsic, on diagonal exclusion tiles use
+ * __shfl to broadcast. For all other types of tiles __shfl is used to pass around the 
+ * forces, positions, and parameters when computing the forces. 
+ *
+ * [out]forceBuffers    - forces on each atom to eventually be accumulated
+ * [out]energyBuffer    - energyBuffer to eventually be accumulated
+ * [in]posq             - x,y,z,charge 
+ * [in]exclusions       - 1024-bit flags denoting atom-atom exclusions for each tile
+ * [in]exclusionTiles   - x,y denotes the indices of tiles that have an exclusion
+ * [in]startTileIndex   - index into first tile to be processed
+ * [in]numTileIndices   - number of tiles this context is responsible for processing
+ * [in]int tiles        - the atom block for each tile
+ * [in]interactionCount - total number of tiles that have an interaction
+ * [in]maxTiles         - stores the size of the neighbourlist in case it needs 
+ *                      - to be expanded
+ * [in]periodicBoxSize  - size of the Periodic Box, last dimension (w) not used
+ * [in]invPeriodicBox   - inverse of the periodicBoxSize, pre-computed for speed
+ * [in]blockCenter      - the center of each block in euclidean coordinates
+ * [in]blockSize        - size of the each block, radiating from the center
+ *                      - x is half the distance of total length
+ *                      - y is half the distance of total width
+ *                      - z is half the distance of total height
+ *                      - w is not used
+ * [in]interactingAtoms - a list of interactions within a given tile     
+ *
+ */
+
 extern "C" __global__ void computeTwoBodyForce(
 
         // const unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ tempForceBuffers) {
