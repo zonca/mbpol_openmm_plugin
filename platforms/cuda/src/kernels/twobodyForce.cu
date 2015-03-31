@@ -15399,6 +15399,12 @@ extern "C" __global__ void computeTwoBodyForce(
         const bool hasExclusions = true;
         if (x == y) {
             // This tile is on the diagonal.
+            // Diagonal tile means that a block is interacting with itself.
+            // For simplicity here OpenMM just repeats twice the calculation
+            // of the interaction, i.e. atom0 with atom3 and atom3 with atom0
+            // TODO improve this by only computing interactions once,
+            // this would require to write results to localData and to
+            // use the same scanning technique used in other tiles.
             localData[threadIdx.x].x = posq1.x;
             localData[threadIdx.x].y = posq1.y;
             localData[threadIdx.x].z = posq1.z;
