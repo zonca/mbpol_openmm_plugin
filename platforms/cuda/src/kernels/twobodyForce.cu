@@ -15624,6 +15624,7 @@ extern "C" __global__ void computeTwoBodyForce(
                  // list based either on NonBondedUtilities or on CustomManyParticleForce
                  if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
                      // COMPUTE_INTERACTION no exclusions
+                     // this computes only atom3-atom0
                      energy += computeInteraction(atom1, atom2, posq, forces);
  
                      // write forces of second molecule to shared memory
