@@ -15478,23 +15478,14 @@ extern "C" __global__ void computeTwoBodyForce(
             }
             const unsigned int offset = y*TILE_SIZE + tgx;
             // write results for off diagonal tiles
-            // atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fx*0x100000000)));
-            // atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fy*0x100000000)));
-            // atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fz*0x100000000)));
-            if (globtx == 0) {
-                energy = localData[threadIdx.x].fx;
-            }
-            // if (offset < PADDED_NUM_ATOMS) {
+            if (offset < PADDED_NUM_ATOMS) {
                 atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fx)*0x100000000)));
                 atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fy)*0x100000000)));
                 atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) ((CAL2JOULE * -10 * localData[threadIdx.x].fz)*0x100000000)));
-            // }
+            }
         }
         // Write results for on and off diagonal tiles
         const unsigned int offset = x*TILE_SIZE + tgx;
-        // atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (force.x*0x100000000)));
-        // atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (force.y*0x100000000)));
-        // atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (force.z*0x100000000)));
         for (int i=0; i<3; i++) {
             forces[i] *= CAL2JOULE * -10;
         }
