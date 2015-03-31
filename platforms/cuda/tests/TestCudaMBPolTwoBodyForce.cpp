@@ -129,7 +129,7 @@ void testTwoBody( double boxDimension, bool addPositionOffset ) {
 
     system.addForce(mbpolTwoBodyForce);
     std::string platformName;
-    #define AngstromToNm 0.1    
+    #define AngstromToNm 0.1
     #define CalToJoule   4.184
 
     platformName = "CUDA";
