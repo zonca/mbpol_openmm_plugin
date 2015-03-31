@@ -149,9 +149,9 @@ void testTwoBody( double boxDimension, bool addPositionOffset ) {
 
     double energy = state.getPotentialEnergy() / CalToJoule;
 
-    std::cout << "Energy: " << energy / CalToJoule << " Kcal/mol "<< std::endl;
+    std::cout << "Energy: " << energy << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy << " Kcal/mol "<< std::endl;
-    std::cout << "Ratio: " << energy / CalToJoule / expectedEnergy * 100 << " % "<< std::endl;
+    std::cout << "Ratio: " << energy / expectedEnergy * 100 << " % "<< std::endl;
 
     std::cout  << std::endl << "Forces:" << std::endl;
 
