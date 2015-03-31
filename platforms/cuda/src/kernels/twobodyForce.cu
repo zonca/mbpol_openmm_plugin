@@ -15410,6 +15410,10 @@ extern "C" __global__ void computeTwoBodyForce(
             localData[threadIdx.x].z = posq1.z;
 
             for (unsigned int j = 0; j < TILE_SIZE; j++) {
+                // second atom is always changing so need to zero out
+                for (int i=3; i<10; i++) {
+                   forces[i] = make_real3(0);
+                }
                 int atom2 = tbx+j;
                 real3 posq2;
                 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
@@ -15425,10 +15429,10 @@ extern "C" __global__ void computeTwoBodyForce(
                 atom2 = y*TILE_SIZE+j;
                 real dEdR = 0.0f;
                 real tempEnergy = 0.0f;
-                if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
+                if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (NUM_ATOMS > atom2) && (atom1 < NUM_ATOMS) && (atom1 != atom2)) {
+                    // this computes both atom0-atom3 and atom3-atom0
                     // COMPUTE_INTERACTION exclusions diagonal tile
-                    // energy += 
-                    computeInteraction(atom1, atom2, posq, forces);
+                    energy computeInteraction(atom1, atom2, posq, forces);
                 }
             }
         }
@@ -15460,7 +15464,8 @@ extern "C" __global__ void computeTwoBodyForce(
                 real tempEnergy = 0.0f;
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
                     // COMPUTE_INTERACTION exclusions off diagonal tile
-                    // energy += computeInteraction(atom1, atom2, posq, forces);
+                    // this computes only atom3-atom0
+                    energy += computeInteraction(atom1, atom2, posq, forces);
                 }
                 for (int i=0; i<3; i++) {
                     localData[tbx+tj+i].fx += forces[Ob + i].x;
