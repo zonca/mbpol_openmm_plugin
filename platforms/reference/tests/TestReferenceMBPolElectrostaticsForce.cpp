@@ -917,7 +917,7 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
     std::vector<double> outputElectrostaticsMoments;
     std::vector< Vec3 > inputGrid;
     std::vector< double > outputGridPotential;
-
+    double mutualInducedDipoleTargetEpsilon = 1e-4;
 
     // beginning of Electrostatics setup
     MBPolElectrostaticsForce::NonbondedMethod nonbondedMethod = MBPolElectrostaticsForce::PME;
@@ -934,6 +934,7 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setCutoffDistance( cutoff );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(true);
+    mbpolElectrostaticsForce->setMutualInducedTargetEpsilon(mutualInducedDipoleTargetEpsilon);
     //mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
 
     // disable Ewald by setting alpha to very low value
