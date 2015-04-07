@@ -3394,91 +3394,40 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     // get the permanent force with screening
 
-    RealOpenMM ftm21 = gf1*xr;
-    RealOpenMM ftm22 = gf1*yr;
-    RealOpenMM ftm23 = gf1*zr;
+    RealVec ftm2 = deltaR*gf1;
 
     // get the permanent force without screening
 
-    RealOpenMM ftm2r1 = gfr1*xr;
-    RealOpenMM ftm2r2 = gfr1*yr;
-    RealOpenMM ftm2r3 = gfr1*zr;
+    RealVec ftm2r = deltaR*gfr1;
 
     // get the induced force with screening
 
-    RealOpenMM ftm2i1 = gfi1*xr;
+    RealVec ftm2i = deltaR*gfi1;
     // charge_i * inddip_j
-    ftm2i1 += 0.5*( gfi2* (       _inducedDipole[iIndex][0]
-			  +       _inducedDipolePolar[iIndex][0])
-	          + gfi3* (       _inducedDipole[jIndex][0]
-			  +       _inducedDipolePolar[jIndex][0])
+    ftm2i += ( (       _inducedDipole[iIndex]
+			  +       _inducedDipolePolar[iIndex]) * gfi2
+	          + (       _inducedDipole[jIndex]
+			  +       _inducedDipolePolar[jIndex]) * gfi3
     // inddipP_i* inddip_j
-                  + bn2 * ( sci4 *_inducedDipolePolar[iIndex][0]
-			  + scip4*_inducedDipole[iIndex][0]     ) 
-	          + bn2 * ( sci3 *_inducedDipolePolar[jIndex][0]
-			  + scip3*_inducedDipole[jIndex][0]     ));
-
-    RealOpenMM ftm2i2 = gfi1*yr;
-    // charge_i * inddip_j
-    ftm2i2 += 0.5*( gfi2* (       _inducedDipole[iIndex][1]
-			  +       _inducedDipolePolar[iIndex][1])
-	          + gfi3* (       _inducedDipole[jIndex][1]
-			  +       _inducedDipolePolar[jIndex][1])
-    // inddipP_i* inddip_j
-                  + bn2 * ( sci4 *_inducedDipolePolar[iIndex][1]
-			  + scip4*_inducedDipole[iIndex][1]     ) 
-	          + bn2 * ( sci3 *_inducedDipolePolar[jIndex][1]
-			  + scip3*_inducedDipole[jIndex][1]     ));
-
-    RealOpenMM ftm2i3 = gfi1*zr;
-    // charge_i * inddip_j
-    ftm2i3 += 0.5*( gfi2* (       _inducedDipole[iIndex][2]
-			  +       _inducedDipolePolar[iIndex][2])
-	          + gfi3* (       _inducedDipole[jIndex][2]
-			  +       _inducedDipolePolar[jIndex][2])
-    // inddipP_i* inddip_j
-                  + bn2 * ( sci4 *_inducedDipolePolar[iIndex][2]
-			  + scip4*_inducedDipole[iIndex][2]     ) 
-	          + bn2 * ( sci3 *_inducedDipolePolar[jIndex][2]
-			  + scip3*_inducedDipole[jIndex][2]     ));
+                  + ( _inducedDipolePolar[iIndex] * sci4
+			  + _inducedDipole[iIndex] * scip4   ) * bn2
+	          +  ( _inducedDipolePolar[jIndex] * sci3
+			  + _inducedDipole[jIndex]  * scip3   ) * bn2) * 0.5;
 
     // get the induced force without screening
 
-    RealOpenMM ftm2ri1 = gfri1*xr;
-    ftm2ri1 += 0.5*rr5*(1 - scale5DD)*( sci4 * _inducedDipolePolar[iIndex][0]
-				      + scip4* _inducedDipole[iIndex][0] 
-			              + sci3 * _inducedDipolePolar[jIndex][0]
-				      + scip3* _inducedDipole[jIndex][0]);
+    RealVec ftm2ri = deltaR * gfri1;
+    ftm2ri += ( _inducedDipolePolar[iIndex] * sci4
+				      + _inducedDipole[iIndex] * scip4
+			              +  _inducedDipolePolar[jIndex] * sci3
+				      + _inducedDipole[jIndex] * scip3)*0.5*rr5*(1 - scale5DD);
 
     // Same water atoms have no induced-dipole/charge interaction
 
-    ftm2ri1 += 0.5*rr3*(1 - scale3CD)*( - ck *(_inducedDipole[iIndex][0]
-		                              +_inducedDipolePolar[iIndex][0])
-				        + ci *(_inducedDipole[jIndex][0]
-				              +_inducedDipolePolar[jIndex][0]));
-
-    RealOpenMM ftm2ri2 = gfri1*yr;
-    ftm2ri2 += 0.5*rr5*(1 - scale5DD)*( sci4 * _inducedDipolePolar[iIndex][1]
-				      + scip4* _inducedDipole[iIndex][1] 
-			              + sci3 * _inducedDipolePolar[jIndex][1]
-				      + scip3* _inducedDipole[jIndex][1]);
-
-    ftm2ri2 += 0.5*rr3*(1 - scale3CD)*( - ck *(_inducedDipole[iIndex][1]
-		                              +_inducedDipolePolar[iIndex][1])
-				        + ci *(_inducedDipole[jIndex][1]
-				              +_inducedDipolePolar[jIndex][1]));
-
-
-    RealOpenMM ftm2ri3 = gfri1*zr;
-    ftm2ri3 += 0.5*rr5*(1 - scale5DD)*( sci4 * _inducedDipolePolar[iIndex][2]
-				      + scip4* _inducedDipole[iIndex][2] 
-			              + sci3 * _inducedDipolePolar[jIndex][2]
-				      + scip3* _inducedDipole[jIndex][2]);
-
-    ftm2ri3 += 0.5*rr3*(1 - scale3CD)*( - ck *(_inducedDipole[iIndex][2]
-		                              +_inducedDipolePolar[iIndex][2])
-				        + ci *(_inducedDipole[jIndex][2]
-				              +_inducedDipolePolar[jIndex][2]));
+    ftm2ri += ( - (_inducedDipole[iIndex]
+		                              +_inducedDipolePolar[iIndex])*ck
+				        + (_inducedDipole[jIndex]
+				              +_inducedDipolePolar[jIndex])*ci)*0.5*rr3*(1 - scale3CD);
 
 #endif
 
@@ -3637,26 +3586,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
 #if 1
     // it was (1.0 - -scalingFactors[M_SCALE]) in each term
-    ftm21  = (ftm21-(1.0)*ftm2r1);
-    ftm2i1 = (ftm2i1-ftm2ri1);
-//    ttm21  = (ttm21-(1.0)*ttm2r1);
-//    ttm2i1 = (ttm2i1-ttm2ri1);
-//    ttm31  = (ttm31-(1.0)*ttm3r1);
-//    ttm3i1 = (ttm3i1-ttm3ri1);
-
-    ftm22  = (ftm22-(1.0)*ftm2r2);
-    ftm2i2 = (ftm2i2-ftm2ri2);
-//    ttm22  = (ttm22-(1.0)*ttm2r2);
-//    ttm2i2 = (ttm2i2-ttm2ri2);
-//    ttm32  = (ttm32-(1.0)*ttm3r2);
-//    ttm3i2 = (ttm3i2-ttm3ri2);
-
-    ftm23  = (ftm23-(1.0)*ftm2r3);
-    ftm2i3 = (ftm2i3-ftm2ri3);
-//    ttm23  = (ttm23-(1.0)*ttm2r3);
-//    ttm2i3 = (ttm2i3-ttm2ri3);
-//    ttm33  = (ttm33-(1.0)*ttm3r3);
-//    ttm3i3 = (ttm3i3-ttm3ri3);
+    ftm2  -= ftm2r;
+    ftm2i -= ftm2ri;
 
     // increment gradient due to force and torque on first site;
 #endif
@@ -3756,13 +3687,9 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 #endif
 
 #if 1
-    forces[iIndex][0]      -= (ftm21 + ftm2i1)*conversionFactor;
-    forces[iIndex][1]      -= (ftm22 + ftm2i2)*conversionFactor;
-    forces[iIndex][2]      -= (ftm23 + ftm2i3)*conversionFactor;
+    forces[iIndex]      -= (ftm2 + ftm2i)*conversionFactor;
 
-    forces[jIndex][0]      += (ftm21 + ftm2i1)*conversionFactor;
-    forces[jIndex][1]      += (ftm22 + ftm2i2)*conversionFactor;
-    forces[jIndex][2]      += (ftm23 + ftm2i3)*conversionFactor;
+    forces[jIndex]      += (ftm2 + ftm2i)*conversionFactor;
 #endif
 
 //    if ((iIndex==0)) {
