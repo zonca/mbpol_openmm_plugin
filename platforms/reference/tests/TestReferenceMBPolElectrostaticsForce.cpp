@@ -1140,11 +1140,11 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     double cutoff             = 10.;
     cutoff = .9;
     int numberOfParticles     = 4*3;
-    double boxDimension                               = 1.8;
-    bool zeroPolarizability = true;
-    bool includeChargeRedistribution = true;
+    double boxDimension                               = 50; //1.8;
+    bool zeroPolarizability = false;
+    bool includeChargeRedistribution = false;
 
-#define COMPUTE_FINITE_DIFFERENCES_FORCES
+// #define COMPUTE_FINITE_DIFFERENCES_FORCES
 
     std::string testName      = "testWater3VirtualSitePMESmallBox";
     std::cout << "Test START: " << testName << std::endl;
@@ -1330,6 +1330,21 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 //    expectedForces.push_back(Vec3( 0.0126705, -0.00890535, 0.0102875 ));
 //    expectedForces.push_back(Vec3( -0, -0, -0 ));
 
+    // forces with polarizability and charge redistribution HUGE BOX
+    expectedForces.push_back(Vec3(-2.79154, 2.38403, -9.48745 ));
+    expectedForces.push_back(Vec3(2.66988, -0.970286, 1.37622 ));
+    expectedForces.push_back(Vec3(-0.0273603, -0.454075, 2.39462 ));
+    expectedForces.push_back(Vec3(0, 0, 0 ));
+    expectedForces.push_back(Vec3(1.72996, 3.83253, -2.83729 ));
+    expectedForces.push_back(Vec3(0.106845, 0.561475, 7.84569 ));
+    expectedForces.push_back(Vec3(-0.272013, -0.384251, 0.645139 ));
+    expectedForces.push_back(Vec3(0, 0, 0 ));
+    expectedForces.push_back(Vec3(2.8275, 4.2067, 1.50836 ));
+    expectedForces.push_back(Vec3(-2.54637, -4.21511, -0.253532 ));
+    expectedForces.push_back(Vec3(-1.69689, -4.96102, -1.19175 ));
+    expectedForces.push_back(Vec3(0, 0, 0 ));
+
+
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
            for (int j=0; j<3; j++) {
@@ -1400,7 +1415,7 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 
     for (int i=0; i<numberOfParticles; i++) {
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-       // std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <no polariz precomputed finite diff>" << std::endl;
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <forces before refactoring>" << std::endl;
 #ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
         std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl ;
 #endif
