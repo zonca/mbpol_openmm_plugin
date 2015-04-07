@@ -3287,26 +3287,13 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     // calculate the scalar products for induced components
 
-    RealOpenMM sci3  = _inducedDipole[iIndex][0]*xr 
-	             + _inducedDipole[iIndex][1]*yr 
-		     + _inducedDipole[iIndex][2]*zr;
-    RealOpenMM sci4  = _inducedDipole[jIndex][0]*xr 
-	             + _inducedDipole[jIndex][1]*yr 
-		     + _inducedDipole[jIndex][2]*zr;
+    RealOpenMM sci3  = _inducedDipole[iIndex].dot(deltaR);
+    RealOpenMM sci4  = _inducedDipole[jIndex].dot(deltaR);
+    RealOpenMM scip2 = _inducedDipole[iIndex].dot(_inducedDipolePolar[jIndex])
+		     + _inducedDipolePolar[iIndex].dot(_inducedDipole[jIndex]);
 
-    RealOpenMM scip2 = _inducedDipole[iIndex][0]*_inducedDipolePolar[jIndex][0]
-	             + _inducedDipole[iIndex][1]*_inducedDipolePolar[jIndex][1]
-                     + _inducedDipole[iIndex][2]*_inducedDipolePolar[jIndex][2]
-		     + _inducedDipolePolar[iIndex][0]*_inducedDipole[jIndex][0]
-                     + _inducedDipolePolar[iIndex][1]*_inducedDipole[jIndex][1]
-		     + _inducedDipolePolar[iIndex][2]*_inducedDipole[jIndex][2];
-
-    RealOpenMM scip3 = _inducedDipolePolar[iIndex][0]*xr 
-	             + _inducedDipolePolar[iIndex][1]*yr 
-		     + _inducedDipolePolar[iIndex][2]*zr;
-    RealOpenMM scip4 = _inducedDipolePolar[jIndex][0]*xr 
-	             + _inducedDipolePolar[jIndex][1]*yr 
-		     + _inducedDipolePolar[jIndex][2]*zr;
+    RealOpenMM scip3 = _inducedDipolePolar[iIndex].dot(deltaR);
+    RealOpenMM scip4 = _inducedDipolePolar[jIndex].dot(deltaR);
 
     // calculate the gl functions for permanent components
 
