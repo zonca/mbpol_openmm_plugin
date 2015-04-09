@@ -210,7 +210,7 @@ void CudaCalcMBPolTwoBodyForceKernel::initialize(const System& system, const MBP
     if (usePeriodic)
         defines["USE_PERIODIC"] = "1";
 
-    CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::twobodyForce, defines);
+    CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multibodyLibrary + CudaMBPolKernelSources::twobodyForcePolynomial + CudaMBPolKernelSources::twobodyForce, defines);
     computeTwoBodyForceKernel = cu.getKernel(module, "computeTwoBodyForce");
 
     // Add an interaction to the default nonbonded kernel.  This doesn't actually do any calculations.  It's
