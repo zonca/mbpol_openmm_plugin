@@ -239,21 +239,16 @@ int main(int argc, char* argv[]) {
         std::cout << "TestReferenceMBPolTwoBodyForce running test..." << std::endl;
 
         double boxDimension = 0;
-        // std::cout << "TestReferenceMBPolTwoBodyForce Cluster" << std::endl;
-        // testTwoBody( boxDimension, false );
+        std::cout << "TestReferenceMBPolTwoBodyForce Cluster" << std::endl;
+        testTwoBody( boxDimension, false );
 
-        //bool runTestWithAtomImaging = false;
-        //testImageMolecules(runTestWithAtomImaging, false);
-        //// shift molecule of 1 boxDimension
-        //testImageMolecules(runTestWithAtomImaging, true);
-
-        //std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions" << std::endl;
-        //boxDimension = 50;
-        //testTwoBody( boxDimension, false);
+        std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions" << std::endl;
+        boxDimension = 50;
+        testTwoBody( boxDimension, false);
 
         std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
         boxDimension = 50;
-        testTwoBody( boxDimension, false);
+        testTwoBody( boxDimension, true);
 
     }
     catch(const std::exception& e) {
