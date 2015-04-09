@@ -15452,15 +15452,6 @@ extern "C" __global__ void computeTwoBodyForce(
                 int atom2 = tbx+j;
                 real3 posq2;
                 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
-                real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
-#ifdef USE_PERIODIC
-                delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
-                delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
-                delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
-#endif
-                real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-                real invR = RSQRT(r2);
-                real r = r2*invR;
                 atom2 = y*TILE_SIZE+j;
                 real dEdR = 0.0f;
                 real tempEnergy = 0.0f;
@@ -15485,15 +15476,6 @@ extern "C" __global__ void computeTwoBodyForce(
             for (j = 0; j < TILE_SIZE; j++) {
                 int atom2 = tbx+tj;
                 real3 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
-                real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
-#ifdef USE_PERIODIC
-                delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
-                delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
-                delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
-#endif
-                real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
-                real invR = RSQRT(r2);
-                real r = r2*invR;
                 atom2 = y*TILE_SIZE+tj;
                 real dEdR = 0.0f;
                 real tempEnergy = 0.0f;
@@ -15639,12 +15621,6 @@ extern "C" __global__ void computeTwoBodyForce(
                 }
                 unsigned int atom2 = tbx+tj;
                 real3 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
-                real3 delta = make_real3(posq2.x-posq1.x, posq2.y-posq1.y, posq2.z-posq1.z);
-#ifdef USE_PERIODIC
-                delta.x -= floor(delta.x*invPeriodicBoxSize.x+0.5f)*periodicBoxSize.x;
-                delta.y -= floor(delta.y*invPeriodicBoxSize.y+0.5f)*periodicBoxSize.y;
-                delta.z -= floor(delta.z*invPeriodicBoxSize.z+0.5f)*periodicBoxSize.z;
-#endif
                 // LOAD_ATOM2_PARAMETERS
                 atom2 = atomIndices[tbx+tj];
                 real dEdR = 0.0f;
