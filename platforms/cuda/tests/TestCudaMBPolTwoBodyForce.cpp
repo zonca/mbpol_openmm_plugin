@@ -113,8 +113,8 @@ void testTwoBody( double boxDimension, bool addPositionOffset ) {
 
     if (addPositionOffset) {
         // move second molecule 1 box dimension in Y direction
-        positions[3][1] += boxDimension;
-        positions[4][1] += boxDimension;
+        // positions[3][1] += boxDimension;
+        // positions[4][1] += boxDimension;
         positions[5][1] += boxDimension;
     }
 
@@ -239,8 +239,8 @@ int main(int argc, char* argv[]) {
         std::cout << "TestReferenceMBPolTwoBodyForce running test..." << std::endl;
 
         double boxDimension = 0;
-        std::cout << "TestReferenceMBPolTwoBodyForce Cluster" << std::endl;
-        testTwoBody( boxDimension, false );
+        // std::cout << "TestReferenceMBPolTwoBodyForce Cluster" << std::endl;
+        // testTwoBody( boxDimension, false );
 
         //bool runTestWithAtomImaging = false;
         //testImageMolecules(runTestWithAtomImaging, false);
@@ -251,9 +251,9 @@ int main(int argc, char* argv[]) {
         //boxDimension = 50;
         //testTwoBody( boxDimension, false);
 
-        //std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
-        //boxDimension = 50;
-        //testTwoBody( boxDimension, true);
+        std::cout << "TestReferenceMBPolTwoBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
+        boxDimension = 50;
+        testTwoBody( boxDimension, false);
 
     }
     catch(const std::exception& e) {
