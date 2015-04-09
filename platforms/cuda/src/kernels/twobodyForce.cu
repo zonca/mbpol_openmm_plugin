@@ -15190,10 +15190,45 @@ extern "C" __device__ void evaluateSwitchFunc(real r, real * sw, real * gsw) {
     }
 }
 
+extern "C" __device__ void imageParticles(const real4 * box, const real3 * referenceParticle, real3 * particleToImage)
+{
+    // Periodic boundary conditions imaging of particleToImage with respect to referenceParticle
+
+    real3 delta = *referenceParticle - *particleToImage;
+
+    real3 offset;
+    offset.x = floor(delta.x / (*box).x + 0.5f) * (*box).x;
+    offset.y = floor(delta.y / (*box).y + 0.5f) * (*box).y;
+    offset.z = floor(delta.z / (*box).z + 0.5f) * (*box).z;
+
+    *particleToImage += offset;
+}
+
+extern "C" __device__ void imageMolecules(const real4 * box, real3 * allPositions)
+{
+
+    // Take first oxygen as central atom
+
+    // image its two hydrogens with respect of the first oxygen
+
+    imageParticles(box, &allPositions[Oa], &allPositions[Ha1]);
+    imageParticles(box, &allPositions[Oa], &allPositions[Ha2]);
+
+    // Now image the oxygen of the second &molecule
+
+    imageParticles(box, &allPositions[Oa], &allPositions[Ob]);
+
+    // Image the hydrogen of the second mo&lecule with respect to the oxygen of the second molecule
+    imageParticles(box, &allPositions[Ob], &allPositions[Hb1]);
+    imageParticles(box, &allPositions[Ob], &allPositions[Hb2]);
+
+}
+
 extern "C" __device__ real computeInteraction(
         const unsigned int atom1,
         const unsigned int atom2,
         const real4* __restrict__ posq,
+        const real4* periodicBoxSize,
         real3 * forces) {
                     real tempEnergy = 0.0f;
                     // 2 water molecules and extra positions
@@ -15207,6 +15242,11 @@ extern "C" __device__ real computeInteraction(
                                                         posq[atom2+i].y * NM_TO_A,
                                                         posq[atom2+i].z * NM_TO_A);
                     }
+
+#if USE_PERIODIC
+                    imageMolecules(periodicBoxSize, positions);
+#endif
+
 
                     real3 delta = make_real3(positions[Ob].x-positions[Oa].x, positions[Ob].y-positions[Oa].y, positions[Ob].z-positions[Oa].z);
                     real r2 = delta.x*delta.x + delta.y*delta.y + delta.z*delta.z;
@@ -15458,7 +15498,7 @@ extern "C" __global__ void computeTwoBodyForce(
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (NUM_ATOMS > atom2) && (atom1 < NUM_ATOMS) && (atom1 != atom2)) {
                     // this computes both atom0-atom3 and atom3-atom0
                     // COMPUTE_INTERACTION exclusions diagonal tile
-                    energy += computeInteraction(atom1, atom2, posq, forces)/2.;
+                    energy += computeInteraction(atom1, atom2, posq, &periodicBoxSize, forces)/2.;
                 }
             }
         }
@@ -15482,7 +15522,7 @@ extern "C" __global__ void computeTwoBodyForce(
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
                     // COMPUTE_INTERACTION exclusions off diagonal tile
                     // this computes only atom3-atom0
-                    energy += computeInteraction(atom1, atom2, posq, forces);
+                    energy += computeInteraction(atom1, atom2, posq, &periodicBoxSize, forces);
                 }
                 for (int i=0; i<3; i++) {
                     localData[tbx+tj+i].fx += forces[Ob + i].x;
@@ -15636,7 +15676,7 @@ extern "C" __global__ void computeTwoBodyForce(
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
                     // COMPUTE_INTERACTION no exclusions
                     // this computes only atom3-atom0
-                    energy += computeInteraction(atom1, atom2, posq, forces);
+                    energy += computeInteraction(atom1, atom2, posq, &periodicBoxSize, forces);
 
                     // write forces of second molecule to shared memory
 
