@@ -257,3 +257,59 @@ void CudaCalcMBPolTwoBodyForceKernel::copyParametersToContext(ContextImpl& conte
     
     cu.invalidateMolecules();
 }
+
+///////////////////////////////////////////// MBPolDispersionForce //////////////////////////////////
+
+class CudaMBPolDispersionForceInfo : public CudaForceInfo {
+public:
+    CudaMBPolDispersionForceInfo(const MBPolDispersionForce& force) : force(force) {
+    }
+    int getNumParticleGroups() {
+        // return force.getNumMolecules();
+        return 0;
+    }
+    void getParticlesInGroup(int index, vector<int>& particles) {
+        // force.getParticleParameters(index, particles);
+    }
+    bool areGroupsIdentical(int group1, int group2) {
+        return true;
+    }
+private:
+    const MBPolDispersionForce& force;
+};
+
+CudaCalcMBPolDispersionForceKernel::CudaCalcMBPolDispersionForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) :
+        CalcMBPolDispersionForceKernel(name, platform), cu(cu), system(system) {
+}
+
+
+CudaCalcMBPolDispersionForceKernel::~CudaCalcMBPolDispersionForceKernel() {
+    cu.setAsCurrent();
+}
+
+void CudaCalcMBPolDispersionForceKernel::initialize(const System& system, const MBPolDispersionForce& force) {
+    cu.setAsCurrent();
+    CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
+    vector< vector<int> > exclusions;
+
+    bool useCutoff = (force.getNonbondedMethod() != MBPolDispersionForce::NoCutoff);
+    bool usePeriodic = (force.getNonbondedMethod() == MBPolDispersionForce::CutoffPeriodic);
+
+    nb.addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions,CudaMBPolKernelSources::dispersionForce, force.getForceGroup());
+    // nb.setUsePadding(false);
+    cu.addForce(new CudaMBPolDispersionForceInfo(force));
+
+
+}
+
+double CudaCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
+    return 0.0;
+}
+
+void CudaCalcMBPolDispersionForceKernel::copyParametersToContext(ContextImpl& context, const MBPolDispersionForce& force) {
+    cu.setAsCurrent();
+    throw OpenMMException(" CudaCalcMBPolDispersionForceKernel::copyParametersToContext not implemented");
+    // Mark that the current reordering may be invalid.
+    
+    cu.invalidateMolecules();
+}
