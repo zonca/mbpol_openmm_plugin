@@ -37,7 +37,7 @@ if (!isExcluded && atom1 != atom2) {
                 break;
         }
 
-        tt6 = sum*std::exp(-d6r);
+        tt6 = sum*EXP(-d6r);
     }
     // end of tang_toennies function
 
