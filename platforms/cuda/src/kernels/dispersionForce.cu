@@ -3,9 +3,9 @@ const real kcal_permol_Aminus6_to_kJ_permol_nmminus6 = 4.184e6;
 const real cal2joule = 4.184;
 
 #ifdef USE_CUTOFF
-if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2 && r2 < CUTOFF_SQUARED) {
+if (!isExcluded && atom1 != atom2 && r2 < CUTOFF_SQUARED) {
 #else
-if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS && atom1 != atom2) {
+if (!isExcluded && atom1 != atom2) {
 #endif
 
     real c6 = 3.;

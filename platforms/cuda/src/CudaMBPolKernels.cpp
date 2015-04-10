@@ -290,12 +290,43 @@ CudaCalcMBPolDispersionForceKernel::~CudaCalcMBPolDispersionForceKernel() {
 void CudaCalcMBPolDispersionForceKernel::initialize(const System& system, const MBPolDispersionForce& force) {
     cu.setAsCurrent();
     CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
-    vector< vector<int> > exclusions;
+
+    unsigned int numParticles = force.getNumMolecules();
+    
+    // FIXME improve exclusion of virtual sites and same-molecule interactions
+    vector< vector<int> > exclusions(numParticles);
+
+    vector<int> excludeAll(numParticles);
+    for(unsigned int i = 0; i < numParticles; i++ )
+        excludeAll[i] = i;
+
+    // loop through molecules
+    for(unsigned int i_O = 0; i_O < numParticles; i_O+=3 ){
+
+        unsigned int i_H1 = i_O + 1;
+        unsigned int i_H2 = i_O + 2;
+        // unsigned int i_M =  i_O + 3;
+
+        exclusions[i_O].push_back(i_H1);
+        exclusions[i_O].push_back(i_H2);
+        // exclusions[i_O].push_back(i_M);
+
+        exclusions[i_H1].push_back(i_O);
+        exclusions[i_H1].push_back(i_H2);
+        // exclusions[i_H1].push_back(i_M);
+
+        exclusions[i_H2].push_back(i_O);
+        exclusions[i_H2].push_back(i_H1);
+        // exclusions[i_H2].push_back(i_M);
+
+        // exclusions[i_M] = excludeAll;
+
+    }
 
     bool useCutoff = (force.getNonbondedMethod() != MBPolDispersionForce::NoCutoff);
     bool usePeriodic = (force.getNonbondedMethod() == MBPolDispersionForce::CutoffPeriodic);
 
-    nb.addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions,CudaMBPolKernelSources::dispersionForce, force.getForceGroup());
+    nb.addInteraction(useCutoff, usePeriodic, true, force.getCutoff(), exclusions,CudaMBPolKernelSources::dispersionForce, force.getForceGroup());
     // nb.setUsePadding(false);
     cu.addForce(new CudaMBPolDispersionForceInfo(force));
 
