@@ -35,6 +35,13 @@
 #include "openmm/mbpolKernels.h"
 #include "openmm/cuda/CudaContext.h"
 #include "openmm/cuda/CudaArray.h"
+#include "openmm/cuda/CudaSort.h"
+
+#include <cuda.h>
+#include <builtin_types.h>
+#include <vector_functions.h>
+#include <vector_types.h>
+#include <cufft.h>
 
 namespace MBPolPlugin {
 
@@ -115,6 +122,134 @@ private:
     OpenMM::CudaArray* params;
     CUfunction computeTwoBodyForceKernel;
 
+};
+
+/**
+ * This kernel is invoked by MBPolElectrostaticsForce to calculate the forces acting on the system and the energy of the system.
+ */
+class CudaCalcMBPolElectrostaticsForceKernel : public CalcMBPolElectrostaticsForceKernel {
+public:
+    CudaCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
+    ~CudaCalcMBPolElectrostaticsForceKernel();
+    /**
+     * Initialize the kernel.
+     * 
+     * @param system     the System this kernel will be applied to
+     * @param force      the MBPolElectrostaticsForce this kernel will be used for
+     */
+    void initialize(const System& system, const MBPolElectrostaticsForce& force);
+    /**
+     * Execute the kernel to calculate the forces and/or energy.
+     *
+     * @param context        the context in which to execute this kernel
+     * @param includeForces  true if forces should be calculated
+     * @param includeEnergy  true if the energy should be calculated
+     * @return the potential energy due to the force
+     */
+    double execute(ContextImpl& context, bool includeForces, bool includeEnergy);
+    /**
+     * Get the induced dipole moments of all particles.
+     * 
+     * @param context    the Context for which to get the induced dipoles
+     * @param dipoles    the induced dipole moment of particle i is stored into the i'th element
+     */
+    void getInducedDipoles(ContextImpl& context, std::vector<Vec3>& dipoles);
+    /**
+     * Execute the kernel to calculate the electrostatic potential
+     *
+     * @param context        the context in which to execute this kernel
+     * @param inputGrid      input grid coordinates
+     * @param outputElectrostaticPotential output potential 
+     */
+    void getElectrostaticPotential(ContextImpl& context, const std::vector< Vec3 >& inputGrid,
+                                   std::vector< double >& outputElectrostaticPotential );
+
+   /** 
+     * Get the system multipole moments
+     *
+     * @param context      context
+     * @param outputMultipoleMoments (charge,
+     *                                dipole_x, dipole_y, dipole_z,
+     *                                quadrupole_xx, quadrupole_xy, quadrupole_xz,
+     *                                quadrupole_yx, quadrupole_yy, quadrupole_yz,
+     *                                quadrupole_zx, quadrupole_zy, quadrupole_zz )
+     */
+    void getSystemMultipoleMoments(ContextImpl& context, std::vector<double>& outputMultipoleMoments);
+    /**
+     * Copy changed parameters over to a context.
+     *
+     * @param context    the context to copy parameters to
+     * @param force      the MBPolElectrostaticsForce to copy the parameters from
+     */
+    void copyParametersToContext(ContextImpl& context, const MBPolElectrostaticsForce& force);
+private:
+    class ForceInfo;
+    class SortTrait : public CudaSort::SortTrait {
+        int getDataSize() const {return 8;}
+        int getKeySize() const {return 4;}
+        const char* getDataType() const {return "int2";}
+        const char* getKeyType() const {return "int";}
+        const char* getMinKey() const {return "INT_MIN";}
+        const char* getMaxKey() const {return "INT_MAX";}
+        const char* getMaxValue() const {return "make_int2(INT_MAX, INT_MAX)";}
+        const char* getSortKey() const {return "value.y";}
+    };
+    void initializeScaleFactors();
+    bool iterateDipolesByDIIS(int iteration);
+    void ensureMultipolesValid(ContextImpl& context);
+    template <class T, class T4, class M4> void computeSystemMultipoleMoments(ContextImpl& context, std::vector<double>& outputMultipoleMoments);
+    int numMultipoles, maxInducedIterations;
+    int fixedFieldThreads, inducedFieldThreads, electrostaticsThreads;
+    double inducedEpsilon;
+    bool hasQuadrupoles, hasInitializedScaleFactors, hasInitializedFFT, multipolesAreValid;
+    CudaContext& cu;
+    const System& system;
+    std::vector<int3> covalentFlagValues;
+    std::vector<int2> polarizationFlagValues;
+    CudaArray* multipoleParticles;
+    CudaArray* molecularDipoles;
+    CudaArray* molecularQuadrupoles;
+    CudaArray* labFrameDipoles;
+    CudaArray* labFrameQuadrupoles;
+    CudaArray* field;
+    CudaArray* fieldPolar;
+    CudaArray* inducedField;
+    CudaArray* inducedFieldPolar;
+    CudaArray* torque;
+    CudaArray* dampingAndThole;
+    CudaArray* inducedDipole;
+    CudaArray* inducedDipolePolar;
+    CudaArray* inducedDipoleErrors;
+    CudaArray* prevDipoles;
+    CudaArray* prevDipolesPolar;
+    CudaArray* prevDipolesGk;
+    CudaArray* prevDipolesGkPolar;
+    CudaArray* prevErrors;
+    CudaArray* diisMatrix;
+    CudaArray* diisCoefficients;
+    CudaArray* polarizability;
+    CudaArray* covalentFlags;
+    CudaArray* polarizationGroupFlags;
+    CudaArray* pmeGrid;
+    CudaArray* pmeBsplineModuliX;
+    CudaArray* pmeBsplineModuliY;
+    CudaArray* pmeBsplineModuliZ;
+    CudaArray* pmeIgrid;
+    CudaArray* pmePhi;
+    CudaArray* pmePhid;
+    CudaArray* pmePhip;
+    CudaArray* pmePhidp;
+    CudaArray* pmeAtomRange;
+    CudaArray* pmeAtomGridIndex;
+    CudaArray* lastPositions;
+    CudaSort* sort;
+    cufftHandle fft;
+    CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;
+    CUfunction pmeGridIndexKernel, pmeSpreadFixedMultipolesKernel, pmeSpreadInducedDipolesKernel, pmeFinishSpreadChargeKernel, pmeConvolutionKernel;
+    CUfunction pmeFixedPotentialKernel, pmeInducedPotentialKernel, pmeFixedForceKernel, pmeInducedForceKernel, pmeRecordInducedFieldDipolesKernel, computePotentialKernel;
+    CUfunction recordDIISDipolesKernel, buildMatrixKernel;
+    static const int PmeOrder = 5;
+    static const int MaxPrevDIISDipoles = 20;
 };
 
 } // namespace MBPolPlugin

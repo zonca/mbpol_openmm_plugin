@@ -1,13 +1,13 @@
 /* -------------------------------------------------------------------------- *
- *                              OpenMMMBPol                                   *
+ *                                   OpenMMMBPolAmoeba                             *
  * -------------------------------------------------------------------------- *
  * This is part of the OpenMM molecular simulation toolkit originating from   *
  * Simbios, the NIH National Center for Physics-Based Simulation of           *
  * Biological Structures at Stanford, funded under the NIH Roadmap for        *
  * Medical Research, grant U54 GM072970. See https://simtk.org.               *
  *                                                                            *
- * Portions copyright (c) 2014 Stanford University and the Authors.           *
- * Authors: Peter Eastman                                                     *
+ * Portions copyright (c) 2008-2012 Stanford University and the Authors.      *
+ * Authors: Mark Friedrichs                                                   *
  * Contributors:                                                              *
  *                                                                            *
  * Permission is hereby granted, free of charge, to any person obtaining a    *
@@ -29,53 +29,45 @@
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
 
-#include <exception>
+/**
+ * This tests the CUDA implementation of MBPolElectrostaticsForce.
+ */
 
-#include "CudaMBPolKernelFactory.h"
-#include "CudaMBPolKernels.h"
-#include "openmm/internal/windowsExport.h"
-#include "openmm/internal/ContextImpl.h"
-#include "openmm/OpenMMException.h"
+#include "openmm/internal/AssertionUtilities.h"
+#include "openmm/Context.h"
+#include "OpenMMMBPol.h"
+#include "openmm/System.h"
+#include "openmm/MBPolElectrostaticsForce.h"
+#include "openmm/LangevinIntegrator.h"
+#include <iostream>
+#include <vector>
+#include <stdlib.h>
+#include <stdio.h>
 
-using namespace MBPolPlugin;
+#define ASSERT_EQUAL_TOL_MOD(expected, found, tol, testname) {double _scale_ = std::abs(expected) > 1.0 ? std::abs(expected) : 1.0; if (!(std::abs((expected)-(found))/_scale_ <= (tol))) {std::stringstream details; details << testname << " Expected "<<(expected)<<", found "<<(found); throwException(__FILE__, __LINE__, details.str());}};
+
+#define ASSERT_EQUAL_VEC_MOD(expected, found, tol, testname) {double _norm_ = std::sqrt(expected.dot(expected)); double _scale_ = _norm_ > 1.0 ? _norm_ : 1.0; if ((std::abs((expected[0])-(found[0]))/_scale_ > (tol)) || (std::abs((expected[1])-(found[1]))/_scale_ > (tol)) || (std::abs((expected[2])-(found[2]))/_scale_ > (tol))) {std::stringstream details; details << testname << " Expected "<<(expected)<<", found "<<(found); throwException(__FILE__, __LINE__, details.str());}};
+
+
 using namespace OpenMM;
+using namespace std;
 
-extern "C" OPENMM_EXPORT void registerPlatforms() {
-}
+const double TOL = 1e-4;
 
-extern "C" OPENMM_EXPORT void registerKernelFactories() {
+extern "C" void registerMBPolCudaKernelFactories();
+
+int main(int argc, char* argv[]) {
     try {
-        Platform& platform = Platform::getPlatformByName("CUDA");
-        CudaMBPolKernelFactory* factory = new CudaMBPolKernelFactory();
-        platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(), factory);
-        platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(), factory);
-        platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(), factory);
+        std::cout << "TestCudaMBPolElectrostaticsForce running test..." << std::endl;
+        registerMBPolCudaKernelFactories();
+        if (argc > 1)
+            Platform::getPlatformByName("CUDA").setPropertyDefaultValue("CudaPrecision", std::string(argv[1]));
+
+    } catch(const std::exception& e) {
+        std::cout << "exception: " << e.what() << std::endl;
+        std::cout << "FAIL - ERROR.  Test failed." << std::endl;
+        return 1;
     }
-    catch (std::exception ex) {
-        // Ignore
-    }
+    std::cout << "Done" << std::endl;
+    return 0;
 }
-
-extern "C" OPENMM_EXPORT void registerMBPolCudaKernelFactories() {
-    try {
-        Platform::getPlatformByName("CUDA");
-    }
-    catch (...) {
-        Platform::registerPlatform(new CudaPlatform());
-    }
-    registerKernelFactories();
-}
-
-KernelImpl* CudaMBPolKernelFactory::createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const {
-    CudaContext& cu = *static_cast<CudaPlatform::PlatformData*>(context.getPlatformData())->contexts[0];
-    if (name == CalcMBPolOneBodyForceKernel::Name())
-        return new CudaCalcMBPolOneBodyForceKernel(name, platform, cu, context.getSystem());
-    if (name == CalcMBPolTwoBodyForceKernel::Name())
-        return new CudaCalcMBPolTwoBodyForceKernel(name, platform, cu, context.getSystem());
-    if (name == CalcMBPolElectrostaticsForceKernel::Name())
-        return new CudaCalcMBPolElectrostaticsForceKernel(name, platform, cu, context.getSystem());
-
-    throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
-}
-
-
