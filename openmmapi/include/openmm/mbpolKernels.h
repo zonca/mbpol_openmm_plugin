@@ -118,7 +118,6 @@ public:
     virtual void getElectrostaticPotential( ContextImpl& context, const std::vector< Vec3 >& inputGrid,
                                             std::vector< double >& outputElectrostaticPotential ) = 0;
 
-    virtual void getSystemElectrostaticsMoments( ContextImpl& context, std::vector< double >& outputElectrostaticsMonents ) = 0;
     /**
      * Copy changed parameters over to a context.
      *

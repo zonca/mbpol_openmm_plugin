@@ -248,10 +248,6 @@ void MBPolElectrostaticsForce::getElectrostaticPotential( const std::vector< Vec
     dynamic_cast<MBPolElectrostaticsForceImpl&>(getImplInContext(context)).getElectrostaticPotential(getContextImpl(context), inputGrid, outputElectrostaticPotential);
 }
 
-void MBPolElectrostaticsForce::getSystemElectrostaticsMoments(Context& context, std::vector< double >& outputElectrostaticsMonents ){
-    dynamic_cast<MBPolElectrostaticsForceImpl&>(getImplInContext(context)).getSystemElectrostaticsMoments(getContextImpl(context), outputElectrostaticsMonents);
-}
-
 ForceImpl* MBPolElectrostaticsForce::createImpl()  const {
     return new MBPolElectrostaticsForceImpl(*this);
 }

@@ -118,18 +118,6 @@ public:
                                    std::vector< double >& outputElectrostaticPotential );
 
     /**
-     * Get the system multipole moments.
-     *
-     * @param context                context 
-     * @param outputElectrostaticsMonents vector of multipole moments:
-                                     (charge,
-                                      dipole_x, dipole_y, dipole_z,
-                                      quadrupole_xx, quadrupole_xy, quadrupole_xz,
-                                      quadrupole_yx, quadrupole_yy, quadrupole_yz,
-                                      quadrupole_zx, quadrupole_zy, quadrupole_zz )
-     */
-    void getSystemElectrostaticsMoments(ContextImpl& context, std::vector< double >& outputElectrostaticsMoments);
-    /**
      * Copy changed parameters over to a context.
      *
      * @param context    the context to copy parameters to

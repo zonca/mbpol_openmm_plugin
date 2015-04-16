@@ -192,10 +192,6 @@ void MBPolElectrostaticsForceImpl::getElectrostaticPotential( ContextImpl& conte
     kernel.getAs<CalcMBPolElectrostaticsForceKernel>().getElectrostaticPotential(context, inputGrid, outputElectrostaticPotential);
 }
 
-void MBPolElectrostaticsForceImpl::getSystemElectrostaticsMoments( ContextImpl& context, std::vector< double >& outputElectrostaticsMonents ){
-    kernel.getAs<CalcMBPolElectrostaticsForceKernel>().getSystemElectrostaticsMoments(context, outputElectrostaticsMonents);
-}
-
 void MBPolElectrostaticsForceImpl::updateParametersInContext(ContextImpl& context) {
     kernel.getAs<CalcMBPolElectrostaticsForceKernel>().copyParametersToContext(context, owner);
 }

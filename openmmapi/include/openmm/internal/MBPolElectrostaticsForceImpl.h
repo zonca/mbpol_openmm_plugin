@@ -85,7 +85,6 @@ public:
     void getElectrostaticPotential( ContextImpl& context, const std::vector< Vec3 >& inputGrid,
                                     std::vector< double >& outputElectrostaticPotential );
 
-    void getSystemElectrostaticsMoments( ContextImpl& context, std::vector< double >& outputElectrostaticsMonents );
     void updateParametersInContext(ContextImpl& context);
  
 

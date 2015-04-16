@@ -325,28 +325,6 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(Cont
     return;
 }
 
-void ReferenceCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments(ContextImpl& context, std::vector< double >& outputElectrostaticsMoments){
-
-    // retrieve masses
-
-    const OpenMM::System& system             = context.getSystem();
-    vector<RealOpenMM> masses;
-    for (int i = 0; i <  system.getNumParticles(); ++i) {
-        masses.push_back( static_cast<RealOpenMM>(system.getParticleMass(i)) );
-    }    
-
-    MBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = setupMBPolReferenceElectrostaticsForce( context );
-    vector<RealVec>& posData                                     = extractPositions(context);
-    mbpolReferenceElectrostaticsForce->calculateMBPolSystemElectrostaticsMoments( masses, posData, charges, dipoles, quadrupoles, tholes,
-                                                                          dampingFactors, polarity, axisTypes, 
-                                                                          multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
-                                                                          multipoleAtomCovalentInfo, outputElectrostaticsMoments );
-
-    delete mbpolReferenceElectrostaticsForce;
-
-    return;
-}
-
 void ReferenceCalcMBPolElectrostaticsForceKernel::copyParametersToContext(ContextImpl& context, const MBPolElectrostaticsForce& force) {
     if (numElectrostatics != force.getNumElectrostatics())
         throw OpenMMException("updateParametersInContext: The number of multipoles has changed");
