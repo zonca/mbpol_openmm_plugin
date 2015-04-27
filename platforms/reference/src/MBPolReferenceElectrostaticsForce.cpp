@@ -3350,7 +3350,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     RealOpenMM scale7DD =getAndScaleInverseRs(particleI,particleJ,r,true,7,TDD);
 
     if( isSameWater ) {
-    	scale3CC = scale5CD = scale5DD = scale7DD = 0.;
+    	scale3CC = scale5CD = 0.;
     }
 
     // intermediate variables for permanent force terms
