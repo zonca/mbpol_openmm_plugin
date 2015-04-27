@@ -750,7 +750,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 //                     + GRDQ(2, 1, k)*phi[4*n + 2]  // phi(h2)
 //                     + GRDQ(2, 2, k)*phi[4*n + 3]; // phi(M)
 
-    if (getIncludeChargeRedistribution() and (not (isSameWater))){
+    if (getIncludeChargeRedistribution() and (not (isSameWater)) and (particleI.otherSiteIndex[0] >= 0) and (particleK.otherSiteIndex[0] >= 0)){
 
         double distanceK, distanceI,
            scale1I, scale1K, scale3I, scale3K,
