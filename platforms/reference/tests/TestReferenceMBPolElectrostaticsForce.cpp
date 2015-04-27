@@ -1114,20 +1114,13 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
         std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
     }
 
-//    for (int i=0; i<numberOfParticles; i++) {
-//        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
-//    }
-//
     std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
 
     ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
 
-    // FIXME re-enable the test on forces
-//    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-//        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
-//    }
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
+    }
 
     std::cout << "Test Successful: " << testName << std::endl << std::endl;
 
@@ -1140,11 +1133,11 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     double cutoff             = 10.;
     cutoff = .9;
     int numberOfParticles     = 4*3;
-    double boxDimension                               = 50; //1.8;
+    double boxDimension                               = 1.8;
     bool zeroPolarizability = false;
-    bool includeChargeRedistribution = false;
+    bool includeChargeRedistribution = true;
 
-// #define COMPUTE_FINITE_DIFFERENCES_FORCES
+    // #define COMPUTE_FINITE_DIFFERENCES_FORCES
 
     std::string testName      = "testWater3VirtualSitePMESmallBox";
     std::cout << "Test START: " << testName << std::endl;
@@ -1267,7 +1260,7 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     context.setPositions(positions);
     context.applyConstraints(1e-4); // update position of virtual site
 
-    double tolerance          = 1.0e-04;
+    double tolerance          = 1.0e-02;
 
 //    // test energy and forces
 //
@@ -1277,7 +1270,7 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     double energy              = state.getPotentialEnergy();
     double cal2joule = 4.184;
 
-    double expectedEnergy = -15.818784*cal2joule;
+    double expectedEnergy = -66.7426;
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
@@ -1297,18 +1290,18 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 //    expectedForces.push_back(Vec3( -1.14349, -6.60323, -0.617352 ));
 //    expectedForces.push_back(Vec3( -0, -0, -0 ));
 //// finite differences for normal case
-//    expectedForces.push_back(Vec3( -2.32662, -0.0215643, -8.9463 ));
-//    expectedForces.push_back(Vec3( 4.17346, 0.664051, -3.33561 ));
-//    expectedForces.push_back(Vec3( -2.21919, 2.20524, -1.9436 ));
-//    expectedForces.push_back(Vec3( -0, -0, -0 ));
-//    expectedForces.push_back(Vec3( -3.57208, 2.2761, -3.66722 ));
-//    expectedForces.push_back(Vec3( 4.54289, 4.54649, 17.4865 ));
-//    expectedForces.push_back(Vec3( 3.2676, 1.92351, -1.05576 ));
-//    expectedForces.push_back(Vec3( -0, -0, -0 ));
-//    expectedForces.push_back(Vec3( 1.47085, 3.31187, 2.5387 ));
-//    expectedForces.push_back(Vec3( -3.36353, -6.13306, 0.230528 ));
-//    expectedForces.push_back(Vec3( -1.97036, -8.77306, -1.30534 ));
-//    expectedForces.push_back(Vec3( -0, -0, -0 ));
+    expectedForces.push_back(Vec3( -2.32662, -0.0215643, -8.9463 ));
+    expectedForces.push_back(Vec3( 4.17346, 0.664051, -3.33561 ));
+    expectedForces.push_back(Vec3( -2.21919, 2.20524, -1.9436 ));
+    expectedForces.push_back(Vec3( -0, -0, -0 ));
+    expectedForces.push_back(Vec3( -3.57208, 2.2761, -3.66722 ));
+    expectedForces.push_back(Vec3( 4.54289, 4.54649, 17.4865 ));
+    expectedForces.push_back(Vec3( 3.2676, 1.92351, -1.05576 ));
+    expectedForces.push_back(Vec3( -0, -0, -0 ));
+    expectedForces.push_back(Vec3( 1.47085, 3.31187, 2.5387 ));
+    expectedForces.push_back(Vec3( -3.36353, -6.13306, 0.230528 ));
+    expectedForces.push_back(Vec3( -1.97036, -8.77306, -1.30534 ));
+    expectedForces.push_back(Vec3( -0, -0, -0 ));
 //
 //    // finite difference forces with no polarizability and no charge redistribution
 //    expectedForces.push_back(Vec3( -2.29703, 2.44192, -7.15701 ));
@@ -1345,19 +1338,19 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 //    expectedForces.push_back(Vec3(0, 0, 0 ));
 
     // finite difference forces with polarizability and charge redistribution HUGE BOX
-
-    expectedForces.push_back(Vec3(-2.97971, 2.53886, -9.69661 ));
-    expectedForces.push_back(Vec3(2.9417, -1.0957, 1.46631 ));
-    expectedForces.push_back(Vec3(-0.112144, -0.484293, 2.50821 ));
-    expectedForces.push_back(Vec3(-0, -0, -0 ));
-    expectedForces.push_back(Vec3(1.75998, 3.90645, -3.30798 ));
-    expectedForces.push_back(Vec3(0.0199501, 0.442349, 8.29842 ));
-    expectedForces.push_back(Vec3(-0.214005, -0.338206, 0.668481 ));
-    expectedForces.push_back(Vec3(-0, -0, -0 ));
-    expectedForces.push_back(Vec3(3.03821, 4.46561, 1.70258 ));
-    expectedForces.push_back(Vec3(-2.59869, -4.27455, -0.206005 ));
-    expectedForces.push_back(Vec3(-1.8553, -5.16052, -1.43341 ));
-    expectedForces.push_back(Vec3(-0, -0, -0 ));
+//
+//    expectedForces.push_back(Vec3(-2.97971, 2.53886, -9.69661 ));
+//    expectedForces.push_back(Vec3(2.9417, -1.0957, 1.46631 ));
+//    expectedForces.push_back(Vec3(-0.112144, -0.484293, 2.50821 ));
+//    expectedForces.push_back(Vec3(-0, -0, -0 ));
+//    expectedForces.push_back(Vec3(1.75998, 3.90645, -3.30798 ));
+//    expectedForces.push_back(Vec3(0.0199501, 0.442349, 8.29842 ));
+//    expectedForces.push_back(Vec3(-0.214005, -0.338206, 0.668481 ));
+//    expectedForces.push_back(Vec3(-0, -0, -0 ));
+//    expectedForces.push_back(Vec3(3.03821, 4.46561, 1.70258 ));
+//    expectedForces.push_back(Vec3(-2.59869, -4.27455, -0.206005 ));
+//    expectedForces.push_back(Vec3(-1.8553, -5.16052, -1.43341 ));
+//    expectedForces.push_back(Vec3(-0, -0, -0 ));
 
 
     // gradient -> forces
@@ -1430,7 +1423,9 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
 
     for (int i=0; i<numberOfParticles; i++) {
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <finite difference forces with polarizability and charge redistribution HUGE BOX>" << std::endl;
+#ifndef COMPUTE_FINITE_DIFFERENCES_FORCES
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <finite difference forces with polarizability and charge redistribution SMALL BOX>" << std::endl;
+#endif
 #ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
         std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl ;
 #endif
@@ -1438,12 +1433,12 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     }
 
     std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
-//
-//    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
-//
-//    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-//        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
-//    }
+
+    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
+
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
+    }
 
     std::cout << "Test Successful: " << testName << std::endl << std::endl;
 
