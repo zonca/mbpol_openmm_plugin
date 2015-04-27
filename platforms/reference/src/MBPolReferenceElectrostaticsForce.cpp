@@ -845,8 +845,8 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
 
     if (getIncludeChargeRedistribution())
     {
-        for( unsigned int ii = 0; ii < _numParticles; ii=ii+4 ){ // FIXME this assumes only waters
-            computeWaterCharge(particleData[ii], particleData[ii+1], particleData[ii+2], particleData[ii+3]);
+        for( unsigned int ii = 3; ii < _numParticles; ii=ii+4 ){ // FIXME this assumes only waters
+            computeWaterCharge(particleData[ii-3], particleData[ii-2], particleData[ii-1], particleData[ii]);
         }
     }
 
