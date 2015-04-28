@@ -750,7 +750,10 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 //                     + GRDQ(2, 1, k)*phi[4*n + 2]  // phi(h2)
 //                     + GRDQ(2, 2, k)*phi[4*n + 3]; // phi(M)
 
-    if (getIncludeChargeRedistribution() and (not (isSameWater)) and (particleI.otherSiteIndex[0] >= 0) and (particleK.otherSiteIndex[0] >= 0)){
+    // check whether one of the particles is a Ion
+    bool isIon = (particleK.otherSiteIndex[0] == particleK.otherSiteIndex[1]) or (particleI.otherSiteIndex[0] == particleI.otherSiteIndex[1]);
+
+    if (getIncludeChargeRedistribution() and (not (isSameWater)) and (not isIon)){
 
         double distanceK, distanceI,
            scale1I, scale1K, scale3I, scale3K,
