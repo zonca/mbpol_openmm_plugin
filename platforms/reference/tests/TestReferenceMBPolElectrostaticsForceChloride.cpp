@@ -46,6 +46,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <fenv.h>
+
+
 #define ASSERT_EQUAL_TOL_MOD(expected, found, tol, testname) {double _scale_ = std::abs(expected) > 1.0 ? std::abs(expected) : 1.0; if (!(std::abs((expected)-(found))/_scale_ <= (tol))) {std::stringstream details; details << testname << " Expected "<<(expected)<<", found "<<(found); throwException(__FILE__, __LINE__, details.str());}};
 
 #define ASSERT_EQUAL_VEC_MOD(expected, found, tol,testname) {ASSERT_EQUAL_TOL_MOD((expected)[0], (found)[0], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[1], (found)[1], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[2], (found)[2], (tol),(testname));};
@@ -102,7 +105,7 @@ static void testWater3VirtualSite( ) {
                                                            virtualSiteWeightO, virtualSiteWeightH,virtualSiteWeightH));
 
     }
-    system.addParticle( 35. );
+    system.addParticle( 35.5 );
 
     std::vector<double> thole(5);
 
@@ -122,8 +125,8 @@ static void testWater3VirtualSite( ) {
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
                                                     thole,  0.001310,  0.);
     }
-    mbpolElectrostaticsForce->addElectrostatics(  1., -1, -1, -1,
-                                                thole,  0.001310, 0.001310);
+    mbpolElectrostaticsForce->addElectrostatics(  -1., 0,0,0,
+                                                thole,  0.0053602, 0.0053602);
 
     system.addForce(mbpolElectrostaticsForce);
 
@@ -171,20 +174,23 @@ static void testWater3VirtualSite( ) {
     double energy              = state.getPotentialEnergy();
     double cal2joule = 4.184;
 
-    double expectedEnergy = -15.818784*cal2joule;
+	double expectedEnergyElec = -4.880922637e+00;
+	double expectedEnergyInd = -3.623251767e+01;
+    double expectedEnergy = (expectedEnergyElec+expectedEnergyInd)*cal2joule;
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
     std::vector<Vec3> expectedForces(numberOfParticles);
-    expectedForces[0]         = Vec3(  2.38799956, 0.126835228,   8.86189407  );
-    expectedForces[1]         = Vec3( -4.21263312, -0.72316292,   3.37076777  );
-    expectedForces[2]         = Vec3(  2.19240288, -2.24806806,   1.96210789  );
-    expectedForces[4]         = Vec3(  3.59486021, -2.16710895,   3.57138432  );
-    expectedForces[5]         = Vec3( -4.54547068, -4.58639226,  -17.4258666  );
-    expectedForces[6]         = Vec3( -3.27239433, -1.96722979,    1.1170853  );
-    expectedForces[8]         = Vec3( -1.44387205, -3.22471108,  -2.61329967  );
-    expectedForces[9]         = Vec3(  3.35011312,  6.07136704, -0.197008793  );
-    expectedForces[10]         = Vec3(  1.94899441,   8.7184708,   1.35293571  );
+    expectedForces[0]         = Vec3(  2.613683596e+01,  5.408275264e+00, -1.629517609e+01  );
+    expectedForces[1]         = Vec3( -2.216918164e+01, -2.590793612e+01,  6.296385402e+01  );
+    expectedForces[2]         = Vec3(  1.517701844e+00, -3.046093356e+00,  3.837297571e+00  );
+    expectedForces[4]         = Vec3(  1.636350854e+01, -4.336106706e+00,  1.972968278e+01  );
+    expectedForces[5]         = Vec3( -3.640857280e+01, -8.181611462e+00, -2.800077880e+01  );
+    expectedForces[6]         = Vec3( -1.656236514e+00, -1.105120684e+00,  7.059863729e-01  );
+    expectedForces[8]         = Vec3(  9.977840973e+00, -3.226637538e+01,  8.605903697e+00  );
+    expectedForces[9]         = Vec3( -1.536072074e+01,  3.348477786e+01,  8.224734193e+00  );
+    expectedForces[10]        = Vec3( -2.036848206e+00,  1.324057610e+01, -9.839995796e+00  );
+    expectedForces[12]        = Vec3(  2.363567258e+01,  2.270961449e+01, -4.993150796e+01  );
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -274,6 +280,8 @@ static void testWater3VirtualSite( ) {
 }
 
 int main( int numberOfArguments, char* argv[] ) {
+
+	feenableexcept(FE_INVALID | FE_OVERFLOW);
 
     try {
         std::cout << "TestReferenceMBPolElectrostaticsForce running test..." << std::endl;
