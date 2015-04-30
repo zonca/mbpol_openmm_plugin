@@ -1015,7 +1015,7 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
     double energy              = state.getPotentialEnergy();
     double cal2joule = 4.184;
 
-    double expectedEnergy = -15.818784*cal2joule;
+    double expectedEnergy = -13.0493*cal2joule;
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
