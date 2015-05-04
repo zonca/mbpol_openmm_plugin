@@ -63,10 +63,10 @@ public:
     int addElectrostatics(double charge, 
                       int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& thole, double dampingFactor, double polarity);
 
-    void getElectrostaticsParameters(int index, double& charge, std::vector<double>& molecularDipole, std::vector<double>& molecularQuadrupole,
+    void getElectrostaticsParameters(int index, double& charge,
                                  int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, std::vector<double>& thole, double& dampingFactor, double& polarity) const;
 
-    void setElectrostaticsParameters(int index, double charge, const std::vector<double>& molecularDipole, const std::vector<double>& molecularQuadrupole,
+    void setElectrostaticsParameters(int index, double charge,
                                  int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& thole, double dampingFactor, double polarity);
 
     // void setCovalentMap(int index, CovalentType typeId, const std::vector<int>& covalentAtoms);
