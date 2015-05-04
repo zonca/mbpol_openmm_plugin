@@ -256,16 +256,16 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM 
     switch (interactionOrder) {
 
         case 1:
-        return bn0;
+            return bn0;
 
         case 3:
-        return bn1;
+            return bn1;
 
         case 5:
-        return bn2;
+            return bn2;
 
         case 7:
-        return bn3;
+            return bn3;
 
     }
 }
@@ -2122,31 +2122,31 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
        // Need to multiply electrostatic potential by the charge derivative
 
            // Reciprocal sum, so never the same water
-if (getIncludeChargeRedistribution()){
-
-//        std::cerr << i << ' ';
-        for (size_t s = 0; s < 3; ++s) {
-
-        const int is = particleData[i].otherSiteIndex[s];
-//        std::cerr << is << ' ';
-        const RealOpenMM* phi_s = &_phi[20*is];
-
-        //if(particleData[i].otherSiteIndex[s] != i){
-
-        // vsH1f, vsH2f, vsMf
-
-        for (int k = 0; k < 3; ++k){
-//            std::cerr << "i: " << i
-//                      << ' ' << particleData[i].chargeDerivatives[s][k]
-//                      << ' ' <<  phi[k] << std::endl;
-            f[k] += particleData[i].chargeDerivatives[s][k] * phi_s[0];
-//            f[k] += particleData[i].chargeDerivatives[s][k] * phi[0];
-            }
-        //}
-
-        }
-//        std::cerr << std::endl;
-    } // charge redistribution
+// if (getIncludeChargeRedistribution()){
+//
+// //        std::cerr << i << ' ';
+//         for (size_t s = 0; s < 3; ++s) {
+//
+//         const int is = particleData[i].otherSiteIndex[s];
+// //        std::cerr << is << ' ';
+//         const RealOpenMM* phi_s = &_phi[20*is];
+//
+//        //if(particleData[i].otherSiteIndex[s] != i){
+//
+//         // vsH1f, vsH2f, vsMf
+//
+//         for (int k = 0; k < 3; ++k){
+// //            std::cerr << "i: " << i
+// //                      << ' ' << particleData[i].chargeDerivatives[s][k]
+// //                      << ' ' <<  phi[k] << std::endl;
+//             f[k] += particleData[i].chargeDerivatives[s][k] * phi_s[0];
+// //            f[k] += particleData[i].chargeDerivatives[s][k] * phi[0];
+//             }
+//         //}
+//
+//         }
+// //        std::cerr << std::endl;
+//     } // charge redistribution
 
 
         f[0]           *= scale[0];
