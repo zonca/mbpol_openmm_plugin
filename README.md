@@ -39,3 +39,8 @@ Simulation of a cluster of 14 water molecules:
 * Python Script: <https://github.com/paesanilab/mbpol_openmm_plugin/blob/master/python/water14.py>
 * C++ example:
   <https://github.com/paesanilab/mbpol_openmm_plugin/blob/master/examples/Simulate14WaterCluster/Simulate14WaterCluster.cpp>, see the documentation in the `examples/` folder.
+
+## Support
+
+* For installation issues or software bugs open an issue on Github: <https://github.com/paesanilab/mbpol_openmm_plugin/issues>
+* For other questions email the main developer Andrea Zonca (username: zonca, domain: sdsc.edu)
