@@ -24,7 +24,7 @@ available components are:
 * `MBPolReferenceDispersionForce`
 
 The parameters of each component are defined in [`python/mbpol.xml`](https://github.com/paesanilab/mbpol_openmm_plugin/blob/master/python/mbpol.xml).
-As of version `0.4.0`, only the `Reference` platform, i.e. single threaded C++ on CPU, is supported. It currently can simulate only clusters of water molecules, a Particle Mesh Ewald (PME) version is in development.
+As of version `1.0`, only the `Reference` platform, i.e. single threaded C++ on CPU, is supported. It currently can simulate clusters of water molecules and bulk water with Particle Mesh Ewald (PME).
 
 ## How to install
 
