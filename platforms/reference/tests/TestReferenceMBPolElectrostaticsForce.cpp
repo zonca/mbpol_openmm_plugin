@@ -50,6 +50,7 @@
 
 #define ASSERT_EQUAL_VEC_MOD(expected, found, tol,testname) {ASSERT_EQUAL_TOL_MOD((expected)[0], (found)[0], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[1], (found)[1], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[2], (found)[2], (tol),(testname));};
 
+// #define COMPUTE_FINITE_DIFFERENCES_FORCES
 
 using namespace  OpenMM;
 using namespace MBPolPlugin;
@@ -1025,15 +1026,16 @@ static void testWater3VirtualSitePMEHugeBox() {
 
 
     std::vector<Vec3> expectedForces(4*3);
-    expectedForces[0]         = Vec3(  2.38799956, 0.126835228,   8.86189407  );
-    expectedForces[1]         = Vec3( -4.21263312, -0.72316292,   3.37076777  );
-    expectedForces[2]         = Vec3(  2.19240288, -2.24806806,   1.96210789  );
-    expectedForces[4]         = Vec3(  3.59486021, -2.16710895,   3.57138432  );
-    expectedForces[5]         = Vec3( -4.54547068, -4.58639226,  -17.4258666  );
-    expectedForces[6]         = Vec3( -3.27239433, -1.96722979,    1.1170853  );
-    expectedForces[8]         = Vec3( -1.44387205, -3.22471108,  -2.61329967  );
-    expectedForces[9]         = Vec3(  3.35011312,  6.07136704, -0.197008793  );
-    expectedForces[10]         = Vec3(  1.94899441,   8.7184708,   1.35293571  );
+
+    expectedForces[0]         = Vec3( -1.4269, 0.448043, -5.04341   );
+    expectedForces[1]         = Vec3( 2.9682, 0.701196, -3.20899    );
+    expectedForces[2]         = Vec3( -1.63706, 1.94763, -1.8898    );
+    expectedForces[4]         = Vec3( -2.92071, 1.4094, -2.05605    );
+    expectedForces[5]         = Vec3( 3.38821, 2.85987, 11.0781     );
+    expectedForces[6]         = Vec3( 2.3639, 1.41592, -0.900715    );
+    expectedForces[8]         = Vec3( 0.537103, 2.18093, 1.70919    );
+    expectedForces[9]         = Vec3( -2.14789, -4.38903, 0.972416 );
+    expectedForces[10]         = Vec3(-1.12484, -6.57397, -0.660752  );
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -1045,13 +1047,7 @@ static void testWater3VirtualSitePMEHugeBox() {
            }
        }
 
-    for (int i=0; i<numberOfParticles; i++) {
-           for (int j=0; j<3; j++) {
-               expectedForces[i][j] *= -1;
-           }
-       }
     std::cout  << std::endl << "Forces:" << std::endl;
-
 
     const double eps = 1.0e-4;
 
@@ -1061,7 +1057,9 @@ static void testWater3VirtualSitePMEHugeBox() {
     for (int i=0; i<numberOfParticles; i++) {
         finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
     }
+
     for (int i=0; i<numberOfParticles; i++) {
+    #ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
         for (int xyz=0; xyz<3; xyz++) {
             x_orig = positions[i][xyz];
 
@@ -1093,9 +1091,13 @@ static void testWater3VirtualSitePMEHugeBox() {
         finiteDifferenceForces[i][xyz] /= -1*cal2joule*10;
             positions[i][xyz] = x_orig;
         }
+    #endif
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <isolated monomer mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <precomputerd finite differences>" << std::endl;
+#ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
+        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
+#endif
+        std::cout << std::endl;
     }
 
     std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
@@ -1121,7 +1123,6 @@ static void testWater3VirtualSitePMESmallBox() {
     bool zeroPolarizability = false;
     bool includeChargeRedistribution = true;
 
-    // #define COMPUTE_FINITE_DIFFERENCES_FORCES
 
     std::string testName      = "testWater3VirtualSitePMESmallBox";
     std::cout << "Test START: " << testName << std::endl;
