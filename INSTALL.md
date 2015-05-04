@@ -1,6 +1,6 @@
 ## Requirements
 
-* `OpenMM` version 6.1 or later, installed from the source distribution, [binary distributions won't work currently](https://github.com/SimTk/openmm/issues/622). 
+* `OpenMM` version 6.2 or later. 
 
 ## How to install
 
