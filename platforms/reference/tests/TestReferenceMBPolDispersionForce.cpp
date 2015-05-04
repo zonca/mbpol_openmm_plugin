@@ -198,7 +198,6 @@ void testDispersion( double boxDimension, bool addPositionOffset ) {
 int main( int numberOfArguments, char* argv[] ) {
 
     try {
-        FILE* log = NULL;
 
         std::cout << "TestReferenceMBPolDispersionForce" << std::endl;
         double boxDimension = 0;

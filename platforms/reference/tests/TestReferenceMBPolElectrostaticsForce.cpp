@@ -81,7 +81,7 @@ class WrappedMBPolReferenceElectrostaticsForce : public MBPolReferenceElectrosta
                 }
 };
 
-static void testGetAndScaleInverseRs( FILE* log ) {
+static void testGetAndScaleInverseRs( ) {
 
     std::string testName      = "testGetAndScaleInverseRs";
 
@@ -107,7 +107,7 @@ static void testGetAndScaleInverseRs( FILE* log ) {
 
 }
 
-static void testGetAndScaleInverseRsInterMulecolar( FILE* log ) {
+static void testGetAndScaleInverseRsInterMulecolar() {
 
     std::string testName      = "testGetAndScaleInverseRsInterMulecolar";
 
@@ -417,7 +417,7 @@ class WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge : public MBP
     }
 };
 
-static void testWater3VirtualSite( FILE* log ) {
+static void testWater3VirtualSite() {
 
     std::string testName      = "testWater3VirtualSite";
     std::cout << "Test START: " << testName << std::endl;
@@ -637,7 +637,7 @@ static void testWater3VirtualSite( FILE* log ) {
 class WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn : public MBPolReferenceElectrostaticsForce {
     public:
 
-    void testCalculateElectrostaticPairIxn ( FILE * log ) {
+    void testCalculateElectrostaticPairIxn () {
 
         setIncludeChargeRedistribution(false);
 
@@ -708,7 +708,7 @@ class WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn :
 
     }
 };
-static void testWater3( FILE* log ) {
+static void testWater3() {
 
     std::string testName      = "testWater3";
 
@@ -890,7 +890,7 @@ static void testWater3( FILE* log ) {
 }
 
 
-static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
+static void testWater3VirtualSitePMEHugeBox() {
 
     std::string testName      = "testWater3VirtualSitePMEHugeBox";
     std::cout << "Test START: " << testName << std::endl;
@@ -1112,7 +1112,7 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
     return;
 }
 
-static void testWater3VirtualSitePMESmallBox( FILE* log ) {
+static void testWater3VirtualSitePMESmallBox() {
 
     double cutoff             = 10.;
     cutoff = .9;
@@ -1512,10 +1512,8 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolElectrostaticsForce running test..." << std::endl;
 
-        FILE* log = NULL;
-
-        testGetAndScaleInverseRs( log );
-        testGetAndScaleInverseRsInterMulecolar( log );
+        testGetAndScaleInverseRs();
+        testGetAndScaleInverseRsInterMulecolar();
 
         WrappedMBPolReferenceElectrostaticsForceForIndDipole* mbpolReferenceElectrostaticsForce = new WrappedMBPolReferenceElectrostaticsForceForIndDipole();
         mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon(1e-7);
@@ -1535,14 +1533,14 @@ int main( int numberOfArguments, char* argv[] ) {
         mbpolReferenceElectrostaticsForcePme->wrapCalculateInducedDipolePairIxns();
 //
         WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn* wrapperForComputeElectrostaticPairIxn = new WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn();
-        wrapperForComputeElectrostaticPairIxn->testCalculateElectrostaticPairIxn(log);
+        wrapperForComputeElectrostaticPairIxn->testCalculateElectrostaticPairIxn();
 
         WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge* wrapperForComputeWaterCharge = new WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge();
         wrapperForComputeWaterCharge->testComputeWaterCharge();
 
-        testWater3( log );
+        testWater3();
 
-        testWater3VirtualSite( log );
+        testWater3VirtualSite();
 
         WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn* mbpolReferenceElectrostaticsForcePmePair = new WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn();
         mbpolReferenceElectrostaticsForcePmePair->setMutualInducedDipoleTargetEpsilon(1e-7);
@@ -1557,9 +1555,9 @@ int main( int numberOfArguments, char* argv[] ) {
 
         mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
 
-        testWater3VirtualSitePMEHugeBox( log );
+        testWater3VirtualSitePMEHugeBox();
 
-        testWater3VirtualSitePMESmallBox( log );
+        testWater3VirtualSitePMESmallBox();
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;

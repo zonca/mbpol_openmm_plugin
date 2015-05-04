@@ -2736,6 +2736,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
 
 
 void MBPolReferenceElectrostaticsForce::printPotential (std::vector<RealOpenMM> electrostaticPotential, RealOpenMM energy, std::string name, const std::vector<ElectrostaticsParticleData>& particleData ) {
+#ifdef DEBUG_MBPOL
     RealOpenMM energyFromPotential = 0;
     std::cout << std::endl << name << std::endl;
     for (int i=0; i<particleData.size(); i++) {
@@ -2745,6 +2746,7 @@ void MBPolReferenceElectrostaticsForce::printPotential (std::vector<RealOpenMM> 
     energyFromPotential *= _electric/_dielectric;
     std::cout << "Energy: " << energy / 4.184 << " Kcal/mol <openmm-mbpol>" << std::endl;
     std::cout << "Energy from potential: " << energyFromPotential / 4.184 / 2. << " Kcal/mol <openmm-mbpol>" << std::endl;
+#endif
 }
 
 void MBPolReferenceElectrostaticsForce::computeWaterCharge(
