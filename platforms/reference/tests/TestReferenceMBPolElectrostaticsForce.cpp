@@ -64,7 +64,7 @@ class WrappedMBPolReferenceElectrostaticsForce : public MBPolReferenceElectrosta
             RealOpenMM dampI, RealOpenMM dampJ,
             RealOpenMM tholeI, RealOpenMM tholeJ,
             RealOpenMM r, bool justScale, RealOpenMM & damp, MapIntRealOpenMM& rrI
-            )   { 
+            )   {
 
                     std::vector<ElectrostaticsParticleData> particleData;
                     particleData.resize(2);
@@ -130,47 +130,47 @@ static void testGetAndScaleInverseRsInterMulecolar( FILE* log ) {
 class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferenceElectrostaticsForce {
     public:
     int wrapCalculateInducedDipolePairIxns()   {
-    	string testName = "computeInducedDipoles";
+        string testName = "computeInducedDipoles";
         std::cout << "wrapCalculateInducedDipolePairIxns" << std::endl;
 
-    	int numberOfParticles = 2;
-    	std::vector<RealVec> positions(numberOfParticles);
-    	positions[0]             = RealVec( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
+        int numberOfParticles = 2;
+        std::vector<RealVec> positions(numberOfParticles);
+        positions[0]             = RealVec( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
         positions[1]             = RealVec( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
 
         for (int i=0; i<numberOfParticles; i++) {
              for (int j=0; j<3; j++) {
-             	positions[i][j] *= 1e-1;
+                 positions[i][j] *= 1e-1;
              }
          }
 
-    	std::vector<RealOpenMM> charges, dipoles, tholes, dampingFactors, polarity;
-    	std::vector<RealOpenMM> quadrupoles;
-    	std::vector<int> intZeros;
+        std::vector<RealOpenMM> charges, dipoles, tholes, dampingFactors, polarity;
+        std::vector<RealOpenMM> quadrupoles;
+        std::vector<int> intZeros;
 
-    	for (int i=0; i<numberOfParticles; i++){
-        	charges.push_back(-5.1966000e-01);
+        for (int i=0; i<numberOfParticles; i++){
+            charges.push_back(-5.1966000e-01);
             for (int j=0; j<5; j++){
                 tholes.push_back(0.4);
             }
-        	dampingFactors.push_back(0.001310);
-        	polarity.push_back(0.001310);
-        	for (int j=0; j<3; j++){
-        		dipoles.push_back(0.);
-        	}
-        	for (int j=0; j<6; j++){
-        		quadrupoles.push_back(0.);
-        	}
-        	intZeros.push_back(0);
-    	}
+            dampingFactors.push_back(0.001310);
+            polarity.push_back(0.001310);
+            for (int j=0; j<3; j++){
+                dipoles.push_back(0.);
+            }
+            for (int j=0; j<6; j++){
+                quadrupoles.push_back(0.);
+            }
+            intZeros.push_back(0);
+        }
 
         std::vector<ElectrostaticsParticleData> particleData;
         _numParticles = numberOfParticles;
-    	loadParticleData(positions, charges,
-    	                      tholes, dampingFactors, polarity, intZeros, intZeros, intZeros, particleData );
+        loadParticleData(positions, charges,
+                              tholes, dampingFactors, polarity, intZeros, intZeros, intZeros, particleData );
 
-    	_fixedElectrostaticsField.resize( numberOfParticles );
-    	_fixedElectrostaticsFieldPolar.resize( numberOfParticles );
+        _fixedElectrostaticsField.resize( numberOfParticles );
+        _fixedElectrostaticsFieldPolar.resize( numberOfParticles );
         _fixedElectrostaticsField[0]      = RealVec(-6.040604308e-03*1e2, -4.375756834e-03*1e2, -6.721950569e-02*1e2);
         _fixedElectrostaticsFieldPolar[0] = RealVec(0., 0., 0);
         _fixedElectrostaticsField[1]      = RealVec(6.040604308e-03*1e2, 4.375756834e-03*1e2, 6.721950569e-02*1e2);
@@ -190,21 +190,21 @@ class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferen
 
         initializeInducedDipoles( updateInducedDipoleField );
 
-//    	for( unsigned int ii = 0; ii < numberOfParticles; ii++ ){
-//    		std::cout << updateInducedDipoleField[0].inducedDipoles[0][ii] << std::endl;
-//    	}
+//        for( unsigned int ii = 0; ii < numberOfParticles; ii++ ){
+//            std::cout << updateInducedDipoleField[0].inducedDipoles[0][ii] << std::endl;
+//        }
 
 //        std::cout << "calculateInducedDipolePairIxns" << std::endl;
 
         convergeInduceDipoles( particleData, updateInducedDipoleField );
 
-//    	for( unsigned int ii = 0; ii < numberOfParticles; ii++ ){
-//    		std::cout << "******** Particle " << ii << std::endl;
-//    		//"[ protoncharge nm ]"
-//    		std::cout << "inducedDipoles:     " << updateInducedDipoleField[0].inducedDipoles[0][ii]*18.2226*10 << "[ protoncharge A sqrt(A kcal/mol) ]"<< std::endl;
-//    		std::cout << "fixedElectrostaticsField:" << updateInducedDipoleField[0].fixedElectrostaticsField[0][ii] << "[ Kj/mol/nm ]" << std::endl;
-//    		std::cout << "inducedDipoleField: " << updateInducedDipoleField[0].inducedDipoleField[ii] << "[ Kj/mol/nm ]" << std::endl;
-//    	}
+//        for( unsigned int ii = 0; ii < numberOfParticles; ii++ ){
+//            std::cout << "******** Particle " << ii << std::endl;
+//            //"[ protoncharge nm ]"
+//            std::cout << "inducedDipoles:     " << updateInducedDipoleField[0].inducedDipoles[0][ii]*18.2226*10 << "[ protoncharge A sqrt(A kcal/mol) ]"<< std::endl;
+//            std::cout << "fixedElectrostaticsField:" << updateInducedDipoleField[0].fixedElectrostaticsField[0][ii] << "[ Kj/mol/nm ]" << std::endl;
+//            std::cout << "inducedDipoleField: " << updateInducedDipoleField[0].inducedDipoleField[ii] << "[ Kj/mol/nm ]" << std::endl;
+//        }
 
 //        std::cout << "END of wrapCalculateInducedDipolePairIxns" << std::endl;
 
@@ -1090,7 +1090,7 @@ static void testWater3VirtualSitePMEHugeBox( FILE* log ) {
             const double E2m   = state.getPotentialEnergy();
 
             finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
-	    finiteDifferenceForces[i][xyz] /= -1*cal2joule*10;
+        finiteDifferenceForces[i][xyz] /= -1*cal2joule*10;
             positions[i][xyz] = x_orig;
         }
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
@@ -1361,7 +1361,7 @@ static void testWater3VirtualSitePMESmallBox( FILE* log ) {
     }
     for (int i=0; i<numberOfParticles; i++) {
 
-    	std::cout  << "Finite differences: particle " << i << "/" << numberOfParticles << std::endl;
+        std::cout  << "Finite differences: particle " << i << "/" << numberOfParticles << std::endl;
 
         for (int xyz=0; xyz<3; xyz++) {
 
@@ -1545,17 +1545,17 @@ int main( int numberOfArguments, char* argv[] ) {
         testWater3VirtualSite( log );
 
         WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn* mbpolReferenceElectrostaticsForcePmePair = new WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn();
-		mbpolReferenceElectrostaticsForcePmePair->setMutualInducedDipoleTargetEpsilon(1e-7);
-		mbpolReferenceElectrostaticsForcePmePair->setCutoffDistance( 10. );
-		mbpolReferenceElectrostaticsForcePmePair->setAlphaEwald( 1e-15 );
-		// std::vector<int> pmeGrid(3);
-		std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
-		mbpolReferenceElectrostaticsForcePmePair->setPmeGridDimensions(pmeGrid);
-		// RealVec boxSize;
-		boxSize[0] = boxSize[1] = boxSize[2] = 50;
-		mbpolReferenceElectrostaticsForcePmePair->setPeriodicBoxSize(boxSize);
+        mbpolReferenceElectrostaticsForcePmePair->setMutualInducedDipoleTargetEpsilon(1e-7);
+        mbpolReferenceElectrostaticsForcePmePair->setCutoffDistance( 10. );
+        mbpolReferenceElectrostaticsForcePmePair->setAlphaEwald( 1e-15 );
+        // std::vector<int> pmeGrid(3);
+        std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
+        mbpolReferenceElectrostaticsForcePmePair->setPmeGridDimensions(pmeGrid);
+        // RealVec boxSize;
+        boxSize[0] = boxSize[1] = boxSize[2] = 50;
+        mbpolReferenceElectrostaticsForcePmePair->setPeriodicBoxSize(boxSize);
 
-		mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
+        mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
 
         testWater3VirtualSitePMEHugeBox( log );
 
