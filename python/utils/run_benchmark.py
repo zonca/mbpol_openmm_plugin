@@ -48,7 +48,7 @@ for forcefield_configuration, platform_name in configurations:
     potential_energy = state.getPotentialEnergy()
     energy_kcal_per_mol = potential_energy.value_in_unit(unit.kilocalorie_per_mole)
 
-    simulation.reporters.append(app.StateDataReporter("simulation_{tag}_{timestep}.log".format(**locals()).replace(" ",""), 1, step=True, totalEnergy=True,
+    simulation.reporters.append(app.StateDataReporter("simulation_{tag}_{timestep}.log".format(**locals()).replace(" ",""), 100, step=True, totalEnergy=True,
     potentialEnergy=True, temperature=True, progress=True, remainingTime=True,
     speed=True, totalSteps=steps, separator=','))
 
