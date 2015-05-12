@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import print_function
 import configparser
 
@@ -6,6 +7,7 @@ import simtk.openmm as mm
 from simtk import unit
 import sys
 import mbpol
+import os
 
 try: # support for python 2
     from exceptions import KeyError
@@ -29,7 +31,7 @@ pdb = app.PDBFile(config["system"]["pdb_filename"])
 
 ## Load the mbpol force field
 
-forcefield = app.ForceField("mbpol.xml")
+forcefield = app.ForceField(mbpol.__file__.replace(".py", ".xml"))
 
 ## Set nonbonded interaction
 

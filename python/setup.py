@@ -1,5 +1,4 @@
-from distutils.core import setup
-from distutils.extension import Extension
+from setuptools import setup, Extension
 import os
 import sys
 
@@ -18,4 +17,6 @@ setup(name='mbpol',
       version='1.0',
       py_modules=['mbpol', 'mbpolplugin'],
       ext_modules=[extension],
-     )
+      scripts = ['bin/run_mbpol'],
+      data_files=[('', ['mbpol.xml'])],
+)
