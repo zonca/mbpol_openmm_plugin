@@ -130,7 +130,7 @@ static void testGetAndScaleInverseRsInterMulecolar() {
 
 class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferenceElectrostaticsForce {
     public:
-    int wrapCalculateInducedDipolePairIxns()   {
+    void wrapCalculateInducedDipolePairIxns()   {
         string testName = "computeInducedDipoles";
         std::cout << "wrapCalculateInducedDipolePairIxns" << std::endl;
 
@@ -227,7 +227,7 @@ class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferen
 
 class WrappedMBPolReferenceElectrostaticsForceForPmeDipole: public MBPolReferencePmeElectrostaticsForce {
     public:
-    int wrapCalculateInducedDipolePairIxns()   {
+    void wrapCalculateInducedDipolePairIxns()   {
         string testName = "computeInducedDipolesPme";
         std::cout << testName << std::endl;
 
@@ -327,7 +327,7 @@ class WrappedMBPolReferenceElectrostaticsForceForPmeDipole: public MBPolReferenc
 
 class WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge : public MBPolReferenceElectrostaticsForce {
     public:
-    int testComputeWaterCharge()   {
+    void testComputeWaterCharge()   {
         string testName = "testComputeWaterCharge";
 
         int numberOfParticles = 4;
