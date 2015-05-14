@@ -80,7 +80,8 @@ reporters = []
 reporters.append(app.PDBReporter(config["system"]["simulation_name"] + ".pdb", config.getint("logging", "save_positions_every", fallback=1)))
 reporters.append(app.StateDataReporter(config["system"]["simulation_name"] + ".log", config.getint("logging", "save_energy_every", fallback=1), step=True,
         potentialEnergy=True, temperature=True, progress=True, remainingTime=True,
-        speed=True, totalSteps=simulation_steps+equilibration_steps, separator='\t'))
+        speed=True, totalEnergy=True, volume=True, density=True, kineticEnergy=True,
+        totalSteps=simulation_steps+equilibration_steps, separator='\t'))
 
 if config.getboolean("system", "local_minimization"):
     print("Running geometry optimization")
