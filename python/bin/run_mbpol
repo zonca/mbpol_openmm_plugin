@@ -99,7 +99,7 @@ if config.has_section("integrator"):
     # Add a `reporter` that prints out the simulation status every 10%
     simulation.reporters.append(app.StateDataReporter(sys.stdout, max(1, int((simulation_steps+equilibration_steps)/10)), step=True,
         progress=True, remainingTime=True,
-        speed=True, totalSteps=simulation_steps+equilibration_steps, separator='\t'))
+        totalSteps=simulation_steps+equilibration_steps, separator='\t'))
 
     print("Running equilibration")
     simulation.step(equilibration_steps)
