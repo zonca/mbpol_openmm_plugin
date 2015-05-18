@@ -115,7 +115,7 @@ if config.has_section("integrator"):
         from mdtraj.reporters import HDF5Reporter
         save_velocities_every = config.getint("logging", "save_velocities_every", fallback=0)
         if save_velocities_every > 0:
-            reporters.append(HDF5Reporter(config["system"]["simulation_name"] + ".pdb", save_velocities_every))
+            reporters.append(HDF5Reporter(config["system"]["simulation_name"] + ".h5", save_velocities_every, velocities=True, atomSubset=[a.index for a in pdb.topology.atoms() if not a.name.startswith("M")]))
     except ImportError:
         print("Saving velocities to file requires the mdtraj python package")
 
