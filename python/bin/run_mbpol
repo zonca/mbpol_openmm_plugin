@@ -72,13 +72,19 @@ simulation.context.setPositions(pdb.positions)
 simulation.context.computeVirtualSites()
 
 ## Local energy minimization
-simulation_steps = config.getint("integrator", "production_steps", fallback=1)
-equilibration_steps = config.getint("integrator", "equilibration_steps", fallback=1)
+simulation_steps = config.getint("integrator", "production_steps", fallback=0)
+equilibration_steps = config.getint("integrator", "equilibration_steps", fallback=0)
 
 print("Setting up output files " + config["system"]["simulation_name"] + "[.pdb,.log]")
 reporters = []
-reporters.append(app.PDBReporter(config["system"]["simulation_name"] + ".pdb", config.getint("logging", "save_positions_every", fallback=1)))
-reporters.append(app.StateDataReporter(config["system"]["simulation_name"] + ".log", config.getint("logging", "save_energy_every", fallback=1), step=True,
+
+save_positions_every = config.getint("logging", "save_positions_every", fallback=0)
+if save_positions_every > 0:
+    reporters.append(app.PDBReporter(config["system"]["simulation_name"] + ".pdb", save_positions_every))
+
+save_energy_every = config.getint("logging", "save_energy_every", fallback=0)
+if save_energy_every > 0:
+    reporters.append(app.StateDataReporter(config["system"]["simulation_name"] + ".log", save_energy_every, step=True,
         potentialEnergy=True, temperature=True, progress=True, remainingTime=True,
         speed=True, totalEnergy=True, volume=True, density=True, kineticEnergy=True,
         totalSteps=simulation_steps+equilibration_steps, separator='\t'))
