@@ -44,7 +44,7 @@ if config["system"]["nonbonded"] == "PME":
 
 ## Create the System, define an integrator, define the Simulation
 
-system = forcefield.createSystem(pdb.topology, nonbondedMethod=app.CutoffNonPeriodic, nonBondedCutoff=0.9*unit.angstrom)
+system = forcefield.createSystem(pdb.topology, nonbondedMethod=nonbonded, nonbondedCutoff=0.9*unit.nanometer)
 
 temperature = float(config["system"]["temperature_k"])*unit.kelvin
 
