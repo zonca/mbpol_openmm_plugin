@@ -112,12 +112,12 @@ if config.has_section("integrator"):
     print("Running simulation")
 
     try:
-        from mdtraj.reporters import HDF5Reporter
+        from chemistry.openmm.reporters import NetCDFReporter
         save_velocities_every = config.getint("logging", "save_velocities_every", fallback=0)
         if save_velocities_every > 0:
-            reporters.append(HDF5Reporter(config["system"]["simulation_name"] + ".h5", save_velocities_every, velocities=True, atomSubset=[a.index for a in pdb.topology.atoms() if not a.name.startswith("M")]))
+            reporters.append(NetCDFReporter(config["system"]["simulation_name"] + ".nc", save_velocities_every, crds=True, vels=True, frcs=True))
     except ImportError:
-        print("Saving velocities to file requires the mdtraj python package")
+        print("Saving velocities to file requires the ParmEd python package")
 
     for r in reporters:
         simulation.reporters.append(r)
@@ -127,6 +127,12 @@ if config.has_section("integrator"):
 else:
     print("Computing forces and energy")
     state = simulation.context.getState(getForces=True, getEnergy=True, getPositions=True)
+
+    try:
+        from chemistry.openmm.reporters import NetCDFReporter
+        reporters.append(NetCDFReporter(config["system"]["simulation_name"] + ".nc", 1, crds=True, vels=False, frcs=True))
+    except ImportError:
+        print("Saving forces to file requires the ParmEd python package")
 
     for r in reporters:
         r.report(simulation, state)
