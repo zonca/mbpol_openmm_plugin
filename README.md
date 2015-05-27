@@ -1,6 +1,8 @@
 MB-pol plugin for OpenMM
 =======================
 
+[![Build Status](https://travis-ci.org/paesanilab/mbpol_openmm_plugin.svg?branch=master)](https://travis-ci.org/paesanilab/mbpol_openmm_plugin)
+
 `mbpol` is a plugin for the `OpenMM` toolkit for molecular simulations using the `MB-pol` potential energy surface for water.
 
 Previously, we carried out a detailed analysis of the two- and three-body water interactions evaluated at the CCSD(T) level to quantitatively assess the accuracy of several force fields, DFT models, and ab initio based interaction potentials that are commonly used in molecular simulations [1]. On the basis of this analysis, we have developed `MB-pol`, a "first principles" potential energy surface built upon a many-body expansion of the interaction energy of water molecules [2,3]. In particular, `MB-pol` explicitly treats the one-body (intramolecular distortion energy) term and the short-ranged two- and three-body terms through permutationally invariant polynomials. Long-range two-body interactions are described through electrostatic interactions and by dispersion energies. Higher-order terms in the expansion are modeled through many-body polarizable electrostatic interactions.
