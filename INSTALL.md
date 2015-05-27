@@ -18,7 +18,7 @@
 * Run `(sudo) make install` to install the `mbpol` dynamic library to the
   `openmm` folder
 * Run `make PythonInstall` to install the Python wrapper, it requires
-  Python and `swig`, the best is to use Anaconda
+  Python and `swig`, the best is to use the Anaconda Python distribution
 * Add the OpenMM lib folder to the dynamic libraries path, generally add to `.bashrc`: `export LD_LIBRARY_PATH=/usr/local/openmm/lib:/usr/local/openmm/lib/plugins:$LD_LIBRARY_PATH` and restart `bash`
 
 ## Run unit tests

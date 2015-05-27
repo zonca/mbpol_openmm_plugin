@@ -30,6 +30,24 @@ As of version `1.0`, only the `Reference` platform, i.e. single threaded C++ on 
 
 See the [`INSTALL.md`](https://github.com/paesanilab/mbpol_openmm_plugin/blob/master/INSTALL.md) file in the package.
 
+## Automated script
+
+`OpenMM` uses a framework approach, users need to create a Python script for setting up and running simulations, the easiest way is to create a script with the online configuration tool <http://builder.openmm.org>, however the builder does not support `MBPol`.
+In order to simplify running `MBPol` for new `OpenMM` users we created a script that loads a configuration file, runs `OpenMM` and writes outputs to disk.
+
+The script covers these use-cases:
+
+* Cluster simulations: energy computation, geometry optimization and constant energy simulations
+* Bulk simulations: cubic box Periodic Mesh Ewald energy computation, constant energy, constant temperature and constant pressure simulations
+
+How to use the `run_mbpol` script:
+
+* Create a new folder for the simulation
+* Copy a `pdb` format initial positions file in the folder, this plugin provides a sample `water14_cluster.pdb` and `water256_bulk.pdb` in the `python/` folder
+* Copy a sample configuration file in the folder, the plugin provides `mbpol_config.ini` and `mbpol_example_bulk.ini`
+* Modify the configuration file parameters, see the comments
+* run `run_mbpol yourconfiguration.ini`
+
 ## Example simulation
 
 Simulation of a cluster of 14 water molecules:
