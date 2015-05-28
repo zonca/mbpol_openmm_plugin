@@ -80,7 +80,7 @@ reporters = []
 
 save_positions_every = config.getint("logging", "save_positions_every", fallback=0)
 if save_positions_every > 0:
-    reporters.append(app.PDBReporter(config["system"]["simulation_name"] + ".pdb", save_positions_every))
+    reporters.append(app.PDBReporter(config["system"]["simulation_name"] + "_trajectory.pdb", save_positions_every))
 
 save_energy_every = config.getint("logging", "save_energy_every", fallback=0)
 if save_energy_every > 0:
