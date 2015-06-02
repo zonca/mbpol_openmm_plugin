@@ -1,15 +1,11 @@
 package:
-  name: openmm
-  version: 6.2
+  name: mbpol
+  version: 1.0.0
 
 source:
-  url: https://github.com/pandegroup/openmm/archive/6.2.tar.gz
-  fn: 6.2.tar.gz
+  url: https://github.com/paesanilab/mbpol_openmm_plugin/archive/v1.0.0-alpha.tar.gz
+  fn: v1.0.0-alpha.tar.gz
 
-  patches:
-    # remove this after the first release (6.2.1 or 6.3.0) in which
-    # PR #780 is part of release
-    - openmm-pr-780.patch
 build:
   number: 3
   preserve_egg_dir: yes
@@ -19,25 +15,20 @@ requirements:
     # on windows, need to install cmake manually
     - cmake  # [not win]
     - python
-    - fftw3f
-    - sphinx
-    - sphinxcontrib-bibtex
     - swig   # [not win]
 
   run:
     - python
-    - fftw3f # [not win]
 
 test:
   requires:
     - python
-  imports:
-    - simtk
-    - simtk.openmm
-  commands:
-    - python -m simtk.testInstallation  # [not win]
+  #imports:
+  #  - mbpol
+  #commands:
+  #  - python -m simtk.testInstallation  # [not win]
 
 about:
-  home: http://openmm.org
+  home: http://paesanigroup.ucsd.edu/Software.html
   license: LGPL and MIT
-  summary: A high performance toolkit for molecular simulation.
+  summary: MBPol plugin for OpenMM

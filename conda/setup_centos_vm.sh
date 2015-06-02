@@ -104,6 +104,9 @@ export PATH=$HOME/miniconda/bin:$PATH
 conda config --add channels http://conda.binstar.org/omnia
 conda install --yes fftw3f jinja2 swig sphinx conda-build cmake binstar pip
 
+echo "********** Installing conda/binstar channels and packages..."
+conda create -n py3 --yes python=3.4 anaconda fftw3f jinja2 swig sphinx conda-build cmake binstar pip
+
 # Add conda to the path.
 echo "********** Adding paths"
 cd ~
