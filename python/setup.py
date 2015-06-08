@@ -17,6 +17,6 @@ setup(name='mbpol',
       version='1.0',
       py_modules=['mbpol', 'mbpolplugin'],
       ext_modules=[extension],
-      scripts = ['bin/run_mbpol'],
+      scripts = ['bin/mbpol_builder'],
       data_files=[('', ['mbpol.xml'])],
 )
