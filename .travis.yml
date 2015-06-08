@@ -32,4 +32,5 @@ script:
   - make test
   - cd ../python
   - runipy water14.ipynb
-  - run_mbpol mbpol_config.ini && python -c "import os.path; import sys; sys.exit(not os.path.isfile('water14_cluster_trajectory.pdb'))"
+  - mbpol_builder mbpol_config.ini example_run.py
+  - python example_run.py && python -c "import os.path; import sys; sys.exit(not os.path.isfile('water14_cluster_trajectory.pdb'))"
