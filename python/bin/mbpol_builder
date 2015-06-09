@@ -85,7 +85,7 @@ reporters.append(mm.app.PDBReporter(simulation_name + "_trajectory.pdb", {}))"""
 reporters.append(mm.app.StateDataReporter(simulation_name + ".log", {}, step=True,
         potentialEnergy=True, temperature=True, progress=True, remainingTime=True,
         speed=True, totalEnergy=True, volume=True, density=True, kineticEnergy=True,
-        totalSteps=simulation_steps+equilibration_steps, separator=','))""".format(save_energy_every) if save_energy_every>0 else "",
+        totalSteps=max(simulation_steps+equilibration_steps, 1), separator=','))""".format(save_energy_every) if save_energy_every>0 else "",
     LOCAL_MINIMIZATION="""
 from simtk.openmm import LocalEnergyMinimizer
 print("Running geometry optimization")
@@ -97,7 +97,7 @@ simulation.context.setVelocitiesToTemperature(temperature)
 # Add a `reporter` that prints out the simulation status every 10%
 simulation.reporters.append(mm.app.StateDataReporter(sys.stdout, max(1, int((simulation_steps+equilibration_steps)/10)), step=True,
     progress=True, remainingTime=True,
-    totalSteps=simulation_steps+equilibration_steps, separator=','))
+    totalSteps=max(simulation_steps+equilibration_steps, 1), separator=','))
 
 print("Running equilibration")
 simulation.step(equilibration_steps)
