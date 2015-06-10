@@ -1,13 +1,13 @@
 package:
   name: mbpol
-  version: 1.0.0
+  version: 1.0.1
 
 source:
-  url: https://github.com/paesanilab/mbpol_openmm_plugin/archive/v1.0.0.tar.gz
-  fn: v1.0.0.tar.gz
+  url: https://github.com/paesanilab/mbpol_openmm_plugin/archive/v1.0.1.tar.gz
+  fn: v1.0.1.tar.gz
 
 build:
-  number: 8
+  number: 0
   preserve_egg_dir: yes
 
 requirements:
