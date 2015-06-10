@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import configparser
 import sys
 import mbpol
 
@@ -8,6 +7,11 @@ try: # support for python 2
     from exceptions import IndexError
 except:
     pass
+
+try:
+    import configparser
+except ImportError
+    import ConfigParser as configparser
 
 template = """#!/usr/bin/env python
 from __future__ import print_function
