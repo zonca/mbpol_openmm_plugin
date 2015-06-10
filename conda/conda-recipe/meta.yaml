@@ -3,11 +3,11 @@ package:
   version: 1.0.0
 
 source:
-  url: https://github.com/paesanilab/mbpol_openmm_plugin/archive/v1.0.0-alpha.tar.gz
-  fn: v1.0.0-alpha.tar.gz
+  url: https://github.com/paesanilab/mbpol_openmm_plugin/archive/v1.0.0.tar.gz
+  fn: v1.0.0.tar.gz
 
 build:
-  number: 3
+  number: 8
   preserve_egg_dir: yes
 
 requirements:
