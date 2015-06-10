@@ -4,13 +4,13 @@ import sys
 import mbpol
 
 try: # support for python 2
-    from exceptions import IndexError
+    from exceptions import IndexError, ImportError
 except:
     pass
 
 try:
     import configparser
-except ImportError
+except ImportError:
     import ConfigParser as configparser
 
 template = """#!/usr/bin/env python
