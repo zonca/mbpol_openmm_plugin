@@ -2,7 +2,15 @@
 
 * `OpenMM` version 6.2 or later. 
 
-## How to install
+## How to install the binary distribution for GNU/Linux-64bit with conda
+
+Only for GNU/Linux 64bit a binary distribution is available through `conda`.
+
+* Install the Anaconda Python distribution from <http://continuum.io/downloads>. Either Python 3 or Python 2.7 would work, Python 3 is recommended.
+* Install OpenMM with `conda`: `conda install -c https://conda.binstar.org/omnia openmm`
+* Install OpenMM-MBPol with `conda`: `conda install -c https://conda.binstar.org/paesanilab mbpol`
+
+## How to install from source
 
 * Download the last release from Github <https://github.com/paesanilab/mbpol_openmm_plugin/releases>
 * Create the `build_mbpol` folder outside of the source folder

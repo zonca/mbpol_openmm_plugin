@@ -1,0 +1,34 @@
+package:
+  name: mbpol
+  version: 1.0.0
+
+source:
+  url: https://github.com/paesanilab/mbpol_openmm_plugin/archive/v1.0.0-alpha.tar.gz
+  fn: v1.0.0-alpha.tar.gz
+
+build:
+  number: 3
+  preserve_egg_dir: yes
+
+requirements:
+  build:
+    # on windows, need to install cmake manually
+    - cmake  # [not win]
+    - python
+    - swig   # [not win]
+
+  run:
+    - python
+
+test:
+  requires:
+    - python
+  #imports:
+  #  - mbpol
+  #commands:
+  #  - python -m simtk.testInstallation  # [not win]
+
+about:
+  home: http://paesanigroup.ucsd.edu/Software.html
+  license: LGPL and MIT
+  summary: MBPol plugin for OpenMM
