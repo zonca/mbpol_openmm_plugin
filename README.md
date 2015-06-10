@@ -2,6 +2,7 @@ MB-pol plugin for OpenMM
 =======================
 
 [![Build Status](https://travis-ci.org/paesanilab/mbpol_openmm_plugin.svg?branch=master)](https://travis-ci.org/paesanilab/mbpol_openmm_plugin)
+[![Binstar Badge](https://binstar.org/paesanilab/mbpol/badges/version.svg)](https://binstar.org/paesanilab/mbpol)
 
 `mbpol` is a plugin for the `OpenMM` toolkit for molecular simulations using the `MB-pol` potential energy surface for water.
 
