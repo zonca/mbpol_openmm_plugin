@@ -150,6 +150,7 @@ static void testWater3VirtualSite( ) {
     	positions[i]             = Vec3( -1.43230412, -0.33360265,  1.64727446 ); i++;
     }
 
+    if (numberOfParticles > 5) {
 
     positions[i]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  ); i++;
     positions[i]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  ); i++;
@@ -162,6 +163,7 @@ static void testWater3VirtualSite( ) {
     positions[i]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  ); i++;
     if (particlesPerMolecule==4){
     	positions[i]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 ); i++;
+    }
     }
     positions[i]            = Vec3( 0,0,0 ); i++;
 
@@ -201,6 +203,8 @@ static void testWater3VirtualSite( ) {
     expectedForces[i]         = Vec3(  1.517701844e+00, -3.046093356e+00,  3.837297571e+00  ); i++;
     if (particlesPerMolecule > 3)
         i++;
+    if (numberOfParticles >5) {
+
     expectedForces[i]         = Vec3(  1.636350854e+01, -4.336106706e+00,  1.972968278e+01  ); i++;
     expectedForces[i]         = Vec3( -3.640857280e+01, -8.181611462e+00, -2.800077880e+01  ); i++;
     expectedForces[i]         = Vec3( -1.656236514e+00, -1.105120684e+00,  7.059863729e-01  ); i++;
@@ -211,6 +215,7 @@ static void testWater3VirtualSite( ) {
     expectedForces[i]        = Vec3( -2.036848206e+00,  1.324057610e+01, -9.839995796e+00  ); i++;
     if (particlesPerMolecule > 3)
         i++;
+    }
     expectedForces[i]        = Vec3(  2.363567258e+01,  2.270961449e+01, -4.993150796e+01  ); i++;
 
     // gradient -> forces
