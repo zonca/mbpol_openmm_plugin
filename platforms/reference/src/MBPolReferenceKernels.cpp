@@ -70,6 +70,11 @@ static RealVec& extractBoxSize(ContextImpl& context) {
     return *(RealVec*) data->periodicBoxSize;
 }
 
+static RealVec* extractBoxVectors(ContextImpl& context) {
+    ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+    return (RealVec*) data->periodicBoxVectors;
+}
+
 ReferenceCalcMBPolOneBodyForceKernel::ReferenceCalcMBPolOneBodyForceKernel(std::string name, const Platform& platform, const OpenMM::System& system) :
                    CalcMBPolOneBodyForceKernel(name, platform), system(system) {
     usePBC = 0;
@@ -411,7 +416,7 @@ double ReferenceCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool 
     RealOpenMM energy;
     TwoBodyForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
-    computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+    computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxVectors(context), usePBC, cutoff, 0.0, false);
     if( usePBC ){
         TwoBodyForce.setNonbondedMethod( MBPolReferenceTwoBodyForce::CutoffPeriodic);
         RealVec& box = extractBoxSize(context);
@@ -576,7 +581,7 @@ double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bo
     RealOpenMM energy;
     dispersionForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
-    computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+    computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxVectors(context), usePBC, cutoff, 0.0, false);
 
     dispersionForce.setDispersionParameters(c6d6Data);
     RealOpenMM dispersionCorrection = 0;
