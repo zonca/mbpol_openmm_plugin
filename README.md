@@ -20,7 +20,7 @@ References:
 3. [V. Babin, G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 10, 1599–1607 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct500079y).
 4. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 10, 2906–2910 (2014)](http://pubs.acs.org/doi/abs/10.1021/ct5004115).
 5. [G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 9, 4844–4852 (2013)](http://pubs.acs.org/doi/abs/10.1021/ct400696d).
-6. [G.R. Medders, V. Babin, and F. Paesani, J. Chem. Theory Comput. 11, 1145–1154 (2015)](http://pubs.acs.org/doi/abs/10.1021/ct501131j).
+6. [G.R. Medders, and F. Paesani, J. Chem. Theory Comput. 11, 1145–1154 (2015)](http://pubs.acs.org/doi/abs/10.1021/ct501131j).
 
 
 available components are:
