@@ -1,6 +1,3 @@
-## Requirements
-
-* `OpenMM` version 6.2 or later. 
 
 ## How to install the binary distribution for GNU/Linux-64bit with conda
 
@@ -12,9 +9,10 @@ Only for GNU/Linux 64bit a binary distribution is available through `conda`.
 
 ## How to install from source
 
-* Download the last release from Github <https://github.com/paesanilab/mbpol_openmm_plugin/releases>
-* Create the `build_mbpol` folder outside of the source folder
-* Configure the build by entering the `build_mbpol` folder and running `ccmake -i ../mbpol_openmm_plugin` (`ccmake` with 2 time `c` is a console-based GUI for `cmake`, in debian/ubuntu it is in the `cmake-curses-gui` package)
+* Install OpenMM 6.2 or later, either a binary or source release, from <https://simtk.org/project/xml/downloads.xml?group_id=161>
+* Download the last release from Github <https://github.com/paesanilab/mbpol_openmm_plugin/releases> and uncompress it
+* Create a `build_mbpol` folder outside of the just uncompressed source folder (`mbpol_openmm_pluginXXXX`)
+* Configure the build by entering the `build_mbpol` folder and running `ccmake -i ../mbpol_openmm_pluginXXXX` (`ccmake` with 2 time `c` is a console-based GUI for `cmake`, in debian/ubuntu it is in the `cmake-curses-gui` package)
 * Press `c` to start the configuration process
 * Set:
   * `OPENMM_BUILD_MBPOL_CUDA_LIB`  `OFF` (not supported yet)
@@ -28,12 +26,8 @@ Only for GNU/Linux 64bit a binary distribution is available through `conda`.
 * Run `make PythonInstall` to install the Python wrapper, it requires
   Python and `swig`, the best is to use the Anaconda Python distribution
 * Add the OpenMM lib folder to the dynamic libraries path, generally add to `.bashrc`: `export LD_LIBRARY_PATH=/usr/local/openmm/lib:/usr/local/openmm/lib/plugins:$LD_LIBRARY_PATH` and restart `bash`
+* You can run `make test` to run the unit test suite
 
-## Run unit tests
+## After install
 
-* run `make test` to run the unit test suite
-
-## Run a test simulation
-
-* Enter in the `python` sub-folder in the source folder
-* Run `python water14.py` to run a test simulation for a cluster of 14 water molecules
+Once the installation process is completed, the OpenMM and the MBPol plugins libraries are available to your Python installation, from here you can check `README.md` on how to run an example simulation or create a sample MBPol Python script with `mbpol_builder`.
