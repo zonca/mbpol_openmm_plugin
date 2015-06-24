@@ -750,9 +750,6 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 //                     + GRDQ(2, 1, k)*phi[4*n + 2]  // phi(h2)
 //                     + GRDQ(2, 2, k)*phi[4*n + 3]; // phi(M)
 
-    // check whether one of the particles is a Ion
-    bool isIon = (particleK.otherSiteIndex[0] == particleK.otherSiteIndex[1]) or (particleI.otherSiteIndex[0] == particleI.otherSiteIndex[1]);
-
     if (getIncludeChargeRedistribution() and (not (isSameWater))){
 
         double distanceK, distanceI,
@@ -782,12 +779,18 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
             for (size_t i = 0; i < 3; ++i) {
 
-                ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
-                ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
+                // Ions or any other particle with no charge derivatives has OtherSiteIndex all set to 0,
+                // so its distance is 0 because it is the distance between one atom with itself.
+                // This causes NaN, so we exclude those checking that each distance is more than 0.
 
-                if (not isIon) {
-                	ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge;// charge - charge
-                	ftm2i[i] -= scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
+                if (distanceI > 0) {
+                    ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
+                    ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
+                }
+
+                if (distanceK > 0) {
+                    ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge;// charge - charge
+                    ftm2i[i] -= scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
                 }
             }
 
