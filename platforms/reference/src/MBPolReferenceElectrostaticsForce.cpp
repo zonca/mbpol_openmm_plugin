@@ -2108,8 +2108,6 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
     RealOpenMM energy = 0.0;
     for (int i = 0; i < _numParticles; i++ ) {
 
-        // Compute the torque.
-
         multipole[0] = particleData[i].charge;
 
         const RealOpenMM* phi = &_phi[20*i];

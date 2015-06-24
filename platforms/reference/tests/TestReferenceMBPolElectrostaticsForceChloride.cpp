@@ -428,7 +428,9 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     double energy              = state.getPotentialEnergy();
     double cal2joule = 4.184;
 
-    double expectedEnergy = -15.818784*cal2joule;
+	double expectedEnergyElec = -4.880922637e+00;
+	double expectedEnergyInd = -3.623251767e+01;
+    double expectedEnergy = (expectedEnergyElec+expectedEnergyInd)*cal2joule;
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
@@ -440,25 +442,25 @@ static void testWater3VirtualSitePMEHugeBox( ) {
 
     std::vector<Vec3> expectedForces(numberOfParticles);
     unsigned int i = 0;
-    expectedForces[i]         = Vec3(  2.613683596e+01,  5.408275264e+00, -1.629517609e+01  ); i++;
-    expectedForces[i]         = Vec3( -2.216918164e+01, -2.590793612e+01,  6.296385402e+01  ); i++;
-    expectedForces[i]         = Vec3(  1.517701844e+00, -3.046093356e+00,  3.837297571e+00  ); i++;
+    expectedForces[i]         = Vec3(  -28.2619, -1.0157, 16.8999  ); i++;
+    expectedForces[i]         = Vec3( 31.2715, 24.653, -76.3298  ); i++;
+    expectedForces[i]         = Vec3(  -4.08913, 3.50938, -2.66253  ); i++;
     if (particlesPerMolecule > 3)
         i++;
     if (numberOfParticles >5) {
 
-    expectedForces[i]         = Vec3(  1.636350854e+01, -4.336106706e+00,  1.972968278e+01  ); i++;
-    expectedForces[i]         = Vec3( -3.640857280e+01, -8.181611462e+00, -2.800077880e+01  ); i++;
-    expectedForces[i]         = Vec3( -1.656236514e+00, -1.105120684e+00,  7.059863729e-01  ); i++;
+    expectedForces[i]         = Vec3(  -9.62875, 11.7902, -14.2571  ); i++;
+    expectedForces[i]         = Vec3( 32.9976, 1.47608, 28.3743  ); i++;
+    expectedForces[i]         = Vec3( 3.14996, 1.701, 0.0505038  ); i++;
     if (particlesPerMolecule > 3)
         i++;
-    expectedForces[i]         = Vec3(  9.977840973e+00, -3.226637538e+01,  8.605903697e+00  ); i++;
-    expectedForces[i]         = Vec3( -1.536072074e+01,  3.348477786e+01,  8.224734193e+00  ); i++;
-    expectedForces[i]        = Vec3( -2.036848206e+00,  1.324057610e+01, -9.839995796e+00  ); i++;
+    expectedForces[i]         = Vec3(  -2.38223, 5.85357, -10.2647 ); i++;
+    expectedForces[i]         = Vec3( 10.6006, -27.7542, -0.143319  ); i++;
+    expectedForces[i]        = Vec3( -2.24158, -7.70945, 0.700688  ); i++;
     if (particlesPerMolecule > 3)
         i++;
     }
-    expectedForces[i]        = Vec3(  2.363567258e+01,  2.270961449e+01, -4.993150796e+01  ); i++;
+    expectedForces[i]        = Vec3( -31.4161, -12.504, 57.632  ); i++;
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -478,8 +480,8 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     std::cout  << std::endl << "Forces:" << std::endl;
 
 
-    const double eps = 1.0e-4;
-
+//    const double eps = 1.0e-4;
+//
 //    double x_orig;
 //
 //    std::vector<Vec3> finiteDifferenceForces(numberOfParticles);
@@ -527,16 +529,17 @@ static void testWater3VirtualSitePMEHugeBox( ) {
 //           }
 //
 //       }
-//
-//    for (int i=0; i<numberOfParticles; i++) {
-//        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
-//    }
+
+    for (int i=0; i<numberOfParticles; i++) {
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
+        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
+        std::cout << std::endl;
+    }
 //
 //    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
 //
-////    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
+    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
 ////
 ////    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
 ////        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
@@ -556,7 +559,7 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolElectrostaticsForce running test..." << std::endl;
 
-        //testWater3VirtualSite( );
+//        testWater3VirtualSite( );
         testWater3VirtualSitePMEHugeBox();
 
     } catch(const std::exception& e) {
