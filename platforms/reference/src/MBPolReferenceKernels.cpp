@@ -46,9 +46,6 @@
 #include <windows.h>
 #endif
 
-#define OPENMM_MAJOR_VERSION 6
-#define OPENMM_MINOR_VERSION 2
-
 using namespace  OpenMM;
 using namespace MBPolPlugin;
 using namespace std;
