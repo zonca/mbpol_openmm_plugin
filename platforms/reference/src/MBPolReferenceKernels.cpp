@@ -69,8 +69,7 @@ static RealVec& extractBoxSize(ContextImpl& context) {
     ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
     return *(RealVec*) data->periodicBoxSize;
 }
-
-#if OPENMM_MAJOR_VERSION > 6 || OPENMM_MINOR_VERSION > 3
+#if !(OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2)
 static RealVec* extractBoxVectors(ContextImpl& context) {
     ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
     return (RealVec*) data->periodicBoxVectors;
