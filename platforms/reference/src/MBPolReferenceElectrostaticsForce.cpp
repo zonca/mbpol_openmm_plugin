@@ -2727,6 +2727,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
 //        std::cout << "Charge atom " << i << ": " << particleData[i].charge << " C" << std::endl;
 //    }
 
+    if (getIncludeChargeRedistribution()) {
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int s = 0; s < 3; s++ ){
             for( unsigned int xyz = 0; xyz < 3; xyz++ ){
@@ -2734,7 +2735,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
             forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotentialDirect[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
 
         }}    }
-
+    }
 
     return energy;
 }
