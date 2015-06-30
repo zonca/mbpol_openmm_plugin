@@ -190,33 +190,31 @@ static void testWater3VirtualSite( ) {
     double energy              = state.getPotentialEnergy();
     double cal2joule = 4.184;
 
-	double expectedEnergyElec = -4.880922637e+00;
-	double expectedEnergyInd = -3.623251767e+01;
-    double expectedEnergy = (expectedEnergyElec+expectedEnergyInd)*cal2joule;
+    double expectedEnergy = (-41.1134)*cal2joule;
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
     std::vector<Vec3> expectedForces(numberOfParticles);
     i = 0;
-    expectedForces[i]         = Vec3(  2.613683596e+01,  5.408275264e+00, -1.629517609e+01  ); i++;
-    expectedForces[i]         = Vec3( -2.216918164e+01, -2.590793612e+01,  6.296385402e+01  ); i++;
-    expectedForces[i]         = Vec3(  1.517701844e+00, -3.046093356e+00,  3.837297571e+00  ); i++;
+    expectedForces[i]         = Vec3( -26.1368, -5.40827, 16.2952  ); i++;
+    expectedForces[i]         = Vec3( 22.1692, 25.9079, -62.9639  ); i++;
+    expectedForces[i]         = Vec3( -1.5177, 3.04609, -3.8373  ); i++;
     if (particlesPerMolecule > 3)
         i++;
     if (numberOfParticles >5) {
 
-    expectedForces[i]         = Vec3(  1.636350854e+01, -4.336106706e+00,  1.972968278e+01  ); i++;
-    expectedForces[i]         = Vec3( -3.640857280e+01, -8.181611462e+00, -2.800077880e+01  ); i++;
-    expectedForces[i]         = Vec3( -1.656236514e+00, -1.105120684e+00,  7.059863729e-01  ); i++;
+    expectedForces[i]         = Vec3( -16.3635, 4.3361, -19.7297  ); i++;
+    expectedForces[i]         = Vec3( 36.4086, 8.18161, 28.0008  ); i++;
+    expectedForces[i]         = Vec3( 1.65623, 1.10512, -0.705989 ); i++;
     if (particlesPerMolecule > 3)
         i++;
-    expectedForces[i]         = Vec3(  9.977840973e+00, -3.226637538e+01,  8.605903697e+00  ); i++;
-    expectedForces[i]         = Vec3( -1.536072074e+01,  3.348477786e+01,  8.224734193e+00  ); i++;
-    expectedForces[i]        = Vec3( -2.036848206e+00,  1.324057610e+01, -9.839995796e+00  ); i++;
+    expectedForces[i]         = Vec3( -9.97784, 32.2664, -8.60591  ); i++;
+    expectedForces[i]         = Vec3( 15.3607, -33.4848, -8.22473  ); i++;
+    expectedForces[i]        = Vec3( 2.03685, -13.2406, 9.84  ); i++;
     if (particlesPerMolecule > 3)
         i++;
     }
-    expectedForces[i]        = Vec3(  2.363567258e+01,  2.270961449e+01, -4.993150796e+01  ); i++;
+    expectedForces[i]        = Vec3( -23.6357, -22.7096, 49.9315  ); i++;
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -225,12 +223,6 @@ static void testWater3VirtualSite( ) {
             if ((particlesPerMolecule>3) && ((i+1) % 4 == 0)) { // Set virtual site force to 0
                 forces[i][j] = 0;
             }
-           }
-       }
-
-    for (int i=0; i<numberOfParticles; i++) {
-           for (int j=0; j<3; j++) {
-               expectedForces[i][j] *= -1;
            }
        }
     std::cout  << std::endl << "Forces:" << std::endl;
@@ -244,51 +236,51 @@ static void testWater3VirtualSite( ) {
     for (int i=0; i<numberOfParticles; i++) {
         finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
     }
+//    for (int i=0; i<numberOfParticles; i++) {
+//        for (int xyz=0; xyz<3; xyz++) {
+//            x_orig = positions[i][xyz];
+//
+//            positions[i][xyz] = x_orig + eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double Ep  = state.getPotentialEnergy();
+//
+//            positions[i][xyz] = x_orig + 2*eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double E2p  = state.getPotentialEnergy();
+//
+//            positions[i][xyz] = x_orig - eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double Em   = state.getPotentialEnergy();
+//
+//            positions[i][xyz] = x_orig - 2*eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double E2m   = state.getPotentialEnergy();
+//
+//            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
+//            positions[i][xyz] = x_orig;
+//        }
+//
+//    }
+//
+//    for (int i=0; i<numberOfParticles; i++) {
+//           for (int j=0; j<3; j++) {
+//            finiteDifferenceForces[i][j] /= -1*cal2joule*10;
+//           }
+//
+//       }
+
     for (int i=0; i<numberOfParticles; i++) {
-        for (int xyz=0; xyz<3; xyz++) {
-            x_orig = positions[i][xyz];
-
-            positions[i][xyz] = x_orig + eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double Ep  = state.getPotentialEnergy();
-
-            positions[i][xyz] = x_orig + 2*eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double E2p  = state.getPotentialEnergy();
-
-            positions[i][xyz] = x_orig - eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double Em   = state.getPotentialEnergy();
-
-            positions[i][xyz] = x_orig - 2*eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double E2m   = state.getPotentialEnergy();
-
-            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
-            positions[i][xyz] = x_orig;
-        }
-
-    }
-
-    for (int i=0; i<numberOfParticles; i++) {
-           for (int j=0; j<3; j++) {
-            finiteDifferenceForces[i][j] /= -1*cal2joule*10;
-           }
-
-       }
-
-    for (int i=0; i<numberOfParticles; i++) {
-        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <openmm-mbpol precomputed finite differences>" << std::endl;
+        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl<< std::endl;
+//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl
     }
 
     std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
@@ -443,7 +435,7 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     context.setPositions(positions);
     context.applyConstraints(1e-4); // update position of virtual site
 
-    double tolerance          = 1.0e-04;
+    double tolerance          = 1.0e-02;
 
 //    // test energy and forces
 //
@@ -452,9 +444,7 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     double energy              = state.getPotentialEnergy();
     double cal2joule = 4.184;
 
-	double expectedEnergyElec = -4.880922637e+00;
-	double expectedEnergyInd = -3.623251767e+01;
-    double expectedEnergy = (expectedEnergyElec+expectedEnergyInd)*cal2joule;
+    double expectedEnergy = (-13.4724)*cal2joule;
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
@@ -464,26 +454,28 @@ static void testWater3VirtualSitePMEHugeBox( ) {
 
 
     std::vector<Vec3> expectedForces(numberOfParticles);
+
+    // forces from finite differences
     unsigned int i = 0;
-    expectedForces[i]         = Vec3(  -28.2619, -1.0157, 16.8999  ); i++;
-    expectedForces[i]         = Vec3( 31.2715, 24.653, -76.3298  ); i++;
-    expectedForces[i]         = Vec3(  -4.08913, 3.50938, -2.66253  ); i++;
+    expectedForces[i]         = Vec3(-13.5221, -2.12167, -3.5848 ); i++;
+    expectedForces[i]         = Vec3(18.7817, 3.59001, -11.592 ); i++;
+    expectedForces[i]         = Vec3( -0.079764, 3.07032, -4.39644  ); i++;
     if (particlesPerMolecule > 3)
         i++;
     if (numberOfParticles >5) {
 
-    expectedForces[i]         = Vec3(  -9.62875, 11.7902, -14.2571  ); i++;
-    expectedForces[i]         = Vec3( 32.9976, 1.47608, 28.3743  ); i++;
-    expectedForces[i]         = Vec3( 3.14996, 1.701, 0.0505038  ); i++;
+    expectedForces[i]         = Vec3( -9.9527, 2.38737, -7.39074  ); i++;
+    expectedForces[i]         = Vec3( 9.19241, 5.01003, 18.8356  ); i++;
+    expectedForces[i]         = Vec3(3.27407, 1.228, -0.103192  ); i++;
     if (particlesPerMolecule > 3)
         i++;
-    expectedForces[i]         = Vec3(  -2.38223, 5.85357, -10.2647 ); i++;
-    expectedForces[i]         = Vec3( 10.6006, -27.7542, -0.143319  ); i++;
-    expectedForces[i]        = Vec3( -2.24158, -7.70945, 0.700688  ); i++;
+    expectedForces[i]         = Vec3( -9.97872, 14.3853, 1.29869 ); i++;
+    expectedForces[i]         = Vec3( 2.50169, -9.47539, -1.8169 ); i++;
+    expectedForces[i]        = Vec3( 2.8797, -11.3631, 1.09643  ); i++;
     if (particlesPerMolecule > 3)
         i++;
     }
-    expectedForces[i]        = Vec3( -31.4161, -12.504, 57.632  ); i++;
+    expectedForces[i]        = Vec3(-3.09631, -6.71087, 7.65339 ); i++;
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -513,66 +505,66 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     for (int i=0; i<numberOfParticles; i++) {
         finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
     }
-    for (int i=0; i<numberOfParticles; i=i+1) {
-        for (int xyz=0; xyz<3; xyz++) {
-            x_orig = positions[i][xyz];
+//    for (int i=0; i<numberOfParticles; i=i+1) {
+//        for (int xyz=0; xyz<3; xyz++) {
+//            x_orig = positions[i][xyz];
+//
+//            positions[i][xyz] = x_orig + eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double Ep  = state.getPotentialEnergy();
+//
+//            positions[i][xyz] = x_orig + 2*eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double E2p  = state.getPotentialEnergy();
+//
+//            positions[i][xyz] = x_orig - eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double Em   = state.getPotentialEnergy();
+//
+//            positions[i][xyz] = x_orig - 2*eps;
+//            context.setPositions(positions);
+//            context.applyConstraints(1e-4); // update position of virtual site
+//            state                = context.getState(State::Energy);
+//            const double E2m   = state.getPotentialEnergy();
+//
+//            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
+//            positions[i][xyz] = x_orig;
+//        }
+//
+//        std::cout << "Force atom " << i << std::endl;
+//
+////        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+////        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
+//    }
+//
+//    for (int i=0; i<numberOfParticles; i++) {
+//           for (int j=0; j<3; j++) {
+//            finiteDifferenceForces[i][j] /= -1*cal2joule*10;
+//           }
+//
+//       }
 
-            positions[i][xyz] = x_orig + eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double Ep  = state.getPotentialEnergy();
-
-            positions[i][xyz] = x_orig + 2*eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double E2p  = state.getPotentialEnergy();
-
-            positions[i][xyz] = x_orig - eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double Em   = state.getPotentialEnergy();
-
-            positions[i][xyz] = x_orig - 2*eps;
-            context.setPositions(positions);
-            context.applyConstraints(1e-4); // update position of virtual site
-            state                = context.getState(State::Energy);
-            const double E2m   = state.getPotentialEnergy();
-
-            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
-            positions[i][xyz] = x_orig;
-        }
-
-        std::cout << "Force atom " << i << std::endl;
-
-//        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
-    }
 
     for (int i=0; i<numberOfParticles; i++) {
-           for (int j=0; j<3; j++) {
-            finiteDifferenceForces[i][j] /= -1*cal2joule*10;
-           }
-
-       }
-
-
-    for (int i=0; i<numberOfParticles; i++) {
-//        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <openmm-mbpol precomputed finite differences>" << std::endl;
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
+//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
         std::cout << std::endl;
     }
 
 //    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
 //
     ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
-////
-////    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-////        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
-////    }
+
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
+    }
 
     std::cout << "Test Successful: " << testName << std::endl << std::endl;
 
@@ -588,7 +580,7 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolElectrostaticsForce running test..." << std::endl;
 
-//        testWater3VirtualSite( );
+        testWater3VirtualSite( );
         testWater3VirtualSitePMEHugeBox();
 
     } catch(const std::exception& e) {
