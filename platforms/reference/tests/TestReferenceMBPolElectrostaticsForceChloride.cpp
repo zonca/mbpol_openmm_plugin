@@ -310,9 +310,9 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     std::string testName      = "testWater3VirtualSitePMEHugeBox";
     std::cout << "Test START: " << testName << std::endl;
 
-    unsigned int particlesPerMolecule = 3;
+    unsigned int particlesPerMolecule = 4;
 
-    int numberOfParticles     = particlesPerMolecule*1+1;
+    int numberOfParticles     = particlesPerMolecule*3+1;
     double cutoff             = 10;
 
     std::vector<double> outputElectrostaticsMoments;
@@ -370,37 +370,37 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     thole[TDDHH] = 0.055;
 
     for( unsigned int jj = 0; jj < numberOfParticles-1; jj += 4 ){
-//        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-//                                            thole, 0.001310, 0.001310 );
-//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-//                                            thole, 0.000294, 0.000294 );
-//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-//                                            thole, 0.000294, 0.000294 );
-//        if (particlesPerMolecule == 4)
-//        mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
-//                                                    thole,  0.001310,  0.);
-
-        if (particlesPerMolecule == 4) {
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                            thole, 0.001310, 0. );
+                                            thole, 0.001310, 0.001310 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                            thole, 0.000294, 0. );
+                                            thole, 0.000294, 0.000294 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                            thole, 0.000294, 0. );
+                                            thole, 0.000294, 0.000294 );
+        if (particlesPerMolecule == 4)
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
                                                     thole,  0.001310,  0.);
-    } else {
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+2,
-                                            thole, 0.001310, 0. );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+2,
-                                            thole, 0.000294, 0. );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+1,
-                                            thole, 0.000294, 0. );
-    }
+
+//        if (particlesPerMolecule == 4) {
+//        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+//                                            thole, 0.001310, 0. );
+//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+//                                            thole, 0.000294, 0. );
+//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+//                                            thole, 0.000294, 0. );
+//        mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
+//                                                    thole,  0.001310,  0.);
+//    } else {
+//        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+2,
+//                                            thole, 0.001310, 0. );
+//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+2,
+//                                            thole, 0.000294, 0. );
+//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+1,
+//                                            thole, 0.000294, 0. );
+//    }
     }
 //    mbpolElectrostaticsForce->addElectrostatics(  -1, -1, -1, -1,
 //                                                thole,  0.0053602, 0.0053602);
-    mbpolElectrostaticsForce->addElectrostatics(  0, -1,-1,-1,
+    mbpolElectrostaticsForce->addElectrostatics(  -1, -1,-1,-1,
                                                 thole,  0.0053602, 0.0053602);
 
     system.addForce(mbpolElectrostaticsForce);
@@ -427,7 +427,7 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
     positions[11]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 );
     }
-    positions[numberOfParticles-1]            = Vec3( 0,0,0 );
+    positions[numberOfParticles-1]            = Vec3( 2,0,0 );
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
