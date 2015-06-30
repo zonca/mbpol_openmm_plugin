@@ -25,6 +25,7 @@ Only for GNU/Linux 64bit a binary distribution is available through `conda`.
   * `MBPOL_BUILD_PYTHON_WRAPPERS`  `ON` in order to build the Python wrappers (necessary to use `mbpol_builder`)
   * `CMAKE_INSTALL_PREFIX` and `OPENMM_DIR` should contain the path to the installed `OpenMM`, by default both `/usr/local/openmm`.
   * `CMAKE_BUILD_TYPE` `Debug` (Otherwise the compiler takes a very long time to compile the large polynomials)
+  * `OPENMM_MAJOR_VERSION` and `OPENMM_MINOR_VERSION` based on the version of `OpenMM` you are compiling for. If you installed the OpenMM Python wrapper, you can print the version running: `python -c 'from simtk import openmm; print(openmm.version.short_version)'`.
 * Press `c` again to configure
 * Press `g` to generate the configuration and exit
 * Run `make` to compile the C++ library
