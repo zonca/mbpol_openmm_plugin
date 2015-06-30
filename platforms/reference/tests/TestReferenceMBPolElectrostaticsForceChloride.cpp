@@ -133,7 +133,7 @@ static void testWater3VirtualSite( ) {
                                                     thole,  0.001310,  0.);
         }
     }
-    mbpolElectrostaticsForce->addElectrostatics(  -1., 0,0,0,
+    mbpolElectrostaticsForce->addElectrostatics(  -1., -1,-1,-1,
                                                 thole,  0.0053602, 0.0053602);
 
     system.addForce(mbpolElectrostaticsForce);
@@ -310,8 +310,10 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     std::string testName      = "testWater3VirtualSitePMEHugeBox";
     std::cout << "Test START: " << testName << std::endl;
 
-    int numberOfParticles     = 4*3+1;
-    double cutoff             = 10.;
+    unsigned int particlesPerMolecule = 3;
+
+    int numberOfParticles     = particlesPerMolecule*1+1;
+    double cutoff             = 10;
 
     std::vector<double> outputElectrostaticsMoments;
     std::vector< Vec3 > inputGrid;
@@ -333,6 +335,9 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setCutoffDistance( cutoff );
 
+    if (particlesPerMolecule == 3) {
+    	mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
+    }
     // disable Ewald by setting alpha to very low value
     mbpolElectrostaticsForce->setAEwald( 1e-15 );
 
@@ -343,23 +348,20 @@ static void testWater3VirtualSitePMEHugeBox( ) {
 
     double virtualSiteWeightO = 0.573293118;
     double virtualSiteWeightH = 0.213353441;
-    for( unsigned int jj = 0; jj < numberOfParticles-1; jj += 4 ){
+    for( unsigned int jj = 0; jj < numberOfParticles-1; jj += particlesPerMolecule ){
         system.addParticle( 1.5999000e+01 );
         system.addParticle( 1.0080000e+00 );
         system.addParticle( 1.0080000e+00 );
+        if (particlesPerMolecule == 4) {
         system.addParticle( 0. ); // Virtual Site
         system.setVirtualSite(jj+3, new ThreeParticleAverageSite(jj, jj+1, jj+2,
                                                            virtualSiteWeightO, virtualSiteWeightH,virtualSiteWeightH));
-
+        }
     }
     system.addParticle( 35.5 );
+    // system.addParticle( 0. );
 
-    std::vector<double> zeroDipole(3);
-    std::vector<double> zeroQuadrupole(9);
     std::vector<double> thole(5);
-
-    std::fill(zeroDipole.begin(), zeroDipole.end(), 0.);
-    std::fill(zeroQuadrupole.begin(), zeroQuadrupole.end(), 0.);
 
     thole[TCC] = 0.4;
     thole[TCD] = 0.4;
@@ -368,16 +370,37 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     thole[TDDHH] = 0.055;
 
     for( unsigned int jj = 0; jj < numberOfParticles-1; jj += 4 ){
+//        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+//                                            thole, 0.001310, 0.001310 );
+//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+//                                            thole, 0.000294, 0.000294 );
+//        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+//                                            thole, 0.000294, 0.000294 );
+//        if (particlesPerMolecule == 4)
+//        mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
+//                                                    thole,  0.001310,  0.);
+
+        if (particlesPerMolecule == 4) {
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                            thole, 0.001310, 0.001310 );
+                                            thole, 0.001310, 0. );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            thole, 0.000294, 0. );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            thole, 0.000294, 0. );
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
                                                     thole,  0.001310,  0.);
+    } else {
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+2,
+                                            thole, 0.001310, 0. );
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+2,
+                                            thole, 0.000294, 0. );
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+1,
+                                            thole, 0.000294, 0. );
     }
-    mbpolElectrostaticsForce->addElectrostatics(  -1., 0,0,0,
+    }
+//    mbpolElectrostaticsForce->addElectrostatics(  -1, -1, -1, -1,
+//                                                thole,  0.0053602, 0.0053602);
+    mbpolElectrostaticsForce->addElectrostatics(  0, -1,-1,-1,
                                                 thole,  0.0053602, 0.0053602);
 
     system.addForce(mbpolElectrostaticsForce);
@@ -388,22 +411,23 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     positions[0]             = Vec3( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
     positions[1]             = Vec3( -6.218989773e-01, -6.009430735e-01,  1.572437625e+00  );
     positions[2]             = Vec3( -2.017613812e+00, -4.190350349e-01,  2.239642849e+00  );
+    if (particlesPerMolecule == 4)
     positions[3]             = Vec3( -1.43230412, -0.33360265,  1.64727446 );
 
-    if (numberOfParticles > 4) {
+    if (numberOfParticles > 5) {
     positions[4]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
     positions[5]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
     positions[6]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
     positions[7]             = Vec3( -1.95661974, -0.48654484, -1.18917052 );
     }
 
-    if (numberOfParticles > 8) {
+    if (numberOfParticles > 9) {
     positions[8]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
     positions[9]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
     positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
     positions[11]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 );
     }
-    positions[12]            = Vec3( 0,0,0 );
+    positions[numberOfParticles-1]            = Vec3( 0,0,0 );
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
@@ -438,7 +462,6 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     mbpolElectrostaticsForce->getPmeGridDimensions(pmeGridDimension);
     std::cout  << std::endl << "PmeGridDimensions:" << pmeGridDimension[0] << std::endl;
 
-    unsigned int particlesPerMolecule = 4;
 
     std::vector<Vec3> expectedForces(numberOfParticles);
     unsigned int i = 0;
@@ -466,77 +489,83 @@ static void testWater3VirtualSitePMEHugeBox( ) {
     for (int i=0; i<numberOfParticles; i++) {
            for (int j=0; j<3; j++) {
             forces[i][j] /= cal2joule*10;
+            if (particlesPerMolecule == 4) {
             if ((i+1) % 4 == 0) { // Set virtual site force to 0
                 forces[i][j] = 0;
-            }
+            }}
            }
        }
 
-    for (int i=0; i<numberOfParticles; i++) {
-           for (int j=0; j<3; j++) {
-               expectedForces[i][j] *= -1;
-           }
-       }
+    // ALREADY MINUS
+//    for (int i=0; i<numberOfParticles; i++) {
+//           for (int j=0; j<3; j++) {
+//               expectedForces[i][j] *= -1;
+//           }
+//       }
     std::cout  << std::endl << "Forces:" << std::endl;
 
 
-//    const double eps = 1.0e-4;
-//
-//    double x_orig;
-//
-//    std::vector<Vec3> finiteDifferenceForces(numberOfParticles);
-//    for (int i=0; i<numberOfParticles; i++) {
-//        finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
-//    }
-//    for (int i=0; i<numberOfParticles; i++) {
-//        for (int xyz=0; xyz<3; xyz++) {
-//            x_orig = positions[i][xyz];
-//
-//            positions[i][xyz] = x_orig + eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double Ep  = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig + 2*eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double E2p  = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig - eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double Em   = state.getPotentialEnergy();
-//
-//            positions[i][xyz] = x_orig - 2*eps;
-//            context.setPositions(positions);
-//            context.applyConstraints(1e-4); // update position of virtual site
-//            state                = context.getState(State::Energy);
-//            const double E2m   = state.getPotentialEnergy();
-//
-//            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
-//            positions[i][xyz] = x_orig;
-//        }
+    const double eps = 1.0e-4;
+
+    double x_orig;
+
+    std::vector<Vec3> finiteDifferenceForces(numberOfParticles);
+    for (int i=0; i<numberOfParticles; i++) {
+        finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
+    }
+    for (int i=0; i<numberOfParticles; i=i+1) {
+        for (int xyz=0; xyz<3; xyz++) {
+            x_orig = positions[i][xyz];
+
+            positions[i][xyz] = x_orig + eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double Ep  = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig + 2*eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double E2p  = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig - eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double Em   = state.getPotentialEnergy();
+
+            positions[i][xyz] = x_orig - 2*eps;
+            context.setPositions(positions);
+            context.applyConstraints(1e-4); // update position of virtual site
+            state                = context.getState(State::Energy);
+            const double E2m   = state.getPotentialEnergy();
+
+            finiteDifferenceForces[i][xyz] = (8*(Ep - Em) - (E2p - E2m))/(12*eps);
+            positions[i][xyz] = x_orig;
+        }
+
+        std::cout << "Force atom " << i << std::endl;
+
 //        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
 //        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl << std::endl;
-//    }
-//
-//    for (int i=0; i<numberOfParticles; i++) {
-//           for (int j=0; j<3; j++) {
-//            finiteDifferenceForces[i][j] /= -1*cal2joule*10;
-//           }
-//
-//       }
+    }
 
     for (int i=0; i<numberOfParticles; i++) {
-        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
+           for (int j=0; j<3; j++) {
+            finiteDifferenceForces[i][j] /= -1*cal2joule*10;
+           }
+
+       }
+
+
+    for (int i=0; i<numberOfParticles; i++) {
+//        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
+        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
         std::cout << std::endl;
     }
-//
+
 //    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
 //
     ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
