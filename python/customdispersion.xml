@@ -17,7 +17,6 @@
         </Residue>
     </Residues>
  <Script>
-import simtk.openmm as mm
 numAtomClasses = 4
 
 # Conversion from atom types to atom classes.
@@ -62,21 +61,16 @@ d6table = [
         0, # CL-CL
 ]
 
-def create_tt6_string(n):
-    if (n == 7):
-        return 1
-    return("1 + ({}) * d6 * r / {}".format(create_tt6_string(n+1), n))
+tt6sum = '1 + (1 + (1 + (1 + (1 + (1 + (1) * d6 * r / 6) * d6 * r / 5) * d6 * r / 4) * d6 * r / 3) * d6 * r / 2) * d6 * r / 1'
 
-tt6sum = create_tt6_string(1)
-
-customNonbondedForce = mm.CustomNonbondedForce('C6 * ( 6 * tt6 / r**7 - d6^7 / 720. * exp(-1*d6*r)); tt6=1.0 - tt6sum*exp(-d6*r);tt6sum={}; C6=C6table(type1, type2); d6=d6table(type1, type2)'.format(tt6sum)
-customNonbondedForce.setNonbondedMethod(min(nonbondedForce.getNonbondedMethod(), 2))
-customNonbondedForce.setCutoffDistance(nonbondedForce.getCutoffDistance())
-customNonbondedForce.addTabulatedFunction('C6table', mm.Discrete2DFunction(numAtomClasses, numAtomClasses, epsilon))
-customNonbondedForce.addTabulatedFunction('d6table', mm.Discrete2DFunction(numAtomClasses, numAtomClasses, sigma))
+customNonbondedForce = mm.CustomNonbondedForce('C6 * ( 6 * tt6 / r**7 - d6^7 / 720. * exp(-1*d6*r)); tt6=1.0 - tt6sum*exp(-d6*r);tt6sum={}; C6=C6table(type1, type2); d6=d6table(type1, type2)'.format(tt6sum))
+customNonbondedForce.setNonbondedMethod(0)
+customNonbondedForce.setCutoffDistance(nonbondedCutoff)
+customNonbondedForce.addTabulatedFunction('C6table', mm.Discrete2DFunction(numAtomClasses, numAtomClasses, C6table))
+customNonbondedForce.addTabulatedFunction('d6table', mm.Discrete2DFunction(numAtomClasses, numAtomClasses, d6table))
 customNonbondedForce.addPerParticleParameter('type')
 for atom in data.atoms:
-    customNonbondedForce.addParticle([typeToClass[data.atomType[atom]]])
+     customNonbondedForce.addParticle([typeToClass[data.atomType[atom]]])
 sys.addForce(customNonbondedForce)
 
  </Script>
