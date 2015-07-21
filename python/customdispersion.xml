@@ -29,41 +29,42 @@ typeToClass = {
 }
 
 C6table = [
-        992951990399.5001, # J/(nm**6 mol) O-O
-        349345451067.4757, # J/(nm**6 mol) O-H
+        9.92951990e-4, # kJ/(nm**6 mol) O-O
+        3.49345451e-4, # kJ/(nm**6 mol) O-H
         0, # O-M
-        4560788515802.851, # J/(nm**6 mol) O-CL
-        349345451067.4757, # J/(nm**6 mol) O-H
-        84071563831.72867, # J/(nm**6 mol) H-H
+        0, # J/(nm**6 mol) O-CL
+        3.49345451e-4, # kJ/(nm**6 mol) O-H
+        8.40715638e-5, # kJ/(nm**6 mol) H-H
         0, # H-M
-        859798320161.6786, # J/(nm**6 mol) H-CL
+        0, # J/(nm**6 mol) H-CL
         0, 0, 0, 0, # M
-        4560788515802.851, # J/(nm**6 mol) O-CL
-        859798320161.6786, # J/(nm**6 mol) H-CL
+        0, # J/(nm**6 mol) O-CL
+        0, # J/(nm**6 mol) H-CL
         0, # CL-M
         0, # CL-CL
 ]
 
 
 d6table = [
-        92.95485815062264, # (nm**-1) O-O
-        97.75202425217957, # (nm**-1) O-H
+        9.29548582e+01, # (nm**-1) O-O
+        9.77520243e+01, # (nm**-1) O-H
         0, # O-M
-        163.8868407461115, # (nm**-1) O-CL
-        97.75202425217957, # (nm**-1) O-H
-        94.06475169954112, # (nm**-1) H-H
+        0, # (nm**-1) O-CL
+        9.77520243e+01, # (nm**-1) O-H
+        9.40647517e+01, # (nm**-1) H-H
         0, # H-M
-        57.78854012725382, # (nm**-1) H-CL
+        0, # (nm**-1) H-CL
         0, 0, 0, 0, # M
-        163.8868407461115, # (nm**-1) O-CL
-        57.78854012725382, # (nm**-1) H-CL
+        0, # (nm**-1) O-CL
+        0, # (nm**-1) H-CL
         0, # CL-M
         0, # CL-CL
 ]
 
 tt6sum = '1 + (1 + (1 + (1 + (1 + (1 + (1) * d6 * r / 6) * d6 * r / 5) * d6 * r / 4) * d6 * r / 3) * d6 * r / 2) * d6 * r / 1'
 
-customNonbondedForce = mm.CustomNonbondedForce('C6 * ( 6 * tt6 / r**7 - d6^7 / 720. * exp(-1*d6*r)); tt6=1.0 - tt6sum*exp(-d6*r);tt6sum={}; C6=C6table(type1, type2); d6=d6table(type1, type2)'.format(tt6sum))
+customNonbondedForce = mm.CustomNonbondedForce('-C6*tt6/r^6; tt6=1.0 - tt6sum*exp(-d6*r);tt6sum={}; C6=C6table(type1, type2); d6=d6table(type1, type2)'.format(tt6sum))
+
 customNonbondedForce.setNonbondedMethod(0)
 customNonbondedForce.setCutoffDistance(nonbondedCutoff)
 customNonbondedForce.addTabulatedFunction('C6table', mm.Discrete2DFunction(numAtomClasses, numAtomClasses, C6table))
@@ -71,6 +72,13 @@ customNonbondedForce.addTabulatedFunction('d6table', mm.Discrete2DFunction(numAt
 customNonbondedForce.addPerParticleParameter('type')
 for atom in data.atoms:
      customNonbondedForce.addParticle([typeToClass[data.atomType[atom]]])
+     
+from itertools import combinations
+for atom1, atom2 in itertools.combinations(data.atoms, 2):
+    if (atom1.residue == atom2.residue or atom1.name  == 'M' or atom2.name  == 'M'):
+        customNonbondedForce.addExclusion(atom1.index, atom2.index)
+        #print("excluding bond between atom {} and atom {}".format(atom1.index, atom2.index))
+    
 sys.addForce(customNonbondedForce)
 
  </Script>
