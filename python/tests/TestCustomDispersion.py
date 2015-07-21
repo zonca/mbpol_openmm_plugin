@@ -7,14 +7,13 @@ from simtk import unit
 import sys
 import mbpol
 
-class TestForceField(unittest.TestCase):
+class TestCustomForce(unittest.TestCase):
     """Test the functionality of Custom Dispersion Force xml file."""
 
     def test_three_water(self, nonbondedMethod=app.CutoffNonPeriodic):
         expected_energy = -6.84471477
-        pdb = app.PDBFile("../water3.pdb")
-        forcefield = app.ForceField("../mbpol.xml")
-        forcefield._forces = forcefield._forces[0:0]
+        pdb = app.PDBFile("water3.pdb")
+        forcefield = app.ForceField("customdispersion.xml")
         nonbondedCutoff = 1e3*unit.nanometer
         
         if (nonbondedMethod == app.CutoffPeriodic):
@@ -38,9 +37,8 @@ class TestForceField(unittest.TestCase):
         
     def test_water_and_ion(self):
         expected_energy = -1.306409202e+00
-        pdb = app.PDBFile("../water_and_ion.pdb")
-        forcefield = app.ForceField("../mbpol.xml")
-        forcefield._forces = forcefield._forces[0:0]
+        pdb = app.PDBFile("water_and_ion.pdb")
+        forcefield = app.ForceField("customdispersion.xml")
         nonbondedMethod = app.CutoffNonPeriodic
         nonbondedCutoff = 1e3*unit.nanometer
         system = forcefield.createSystem(pdb.topology, nonbondedMethod=nonbondedMethod, 
