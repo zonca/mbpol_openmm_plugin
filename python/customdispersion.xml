@@ -15,6 +15,9 @@
             <Bond from="0" to="1" />
             <Bond from="0" to="2" />
         </Residue>
+        <Residue name="Cl">
+            <Atom name="Cl" type="MBPol-Cl" />
+        </Residue>
     </Residues>
  <Script>
 numAtomClasses = 4
@@ -32,14 +35,14 @@ C6table = [
         9.92951990e-4, # kJ/(nm**6 mol) O-O
         3.49345451e-4, # kJ/(nm**6 mol) O-H
         0, # O-M
-        0, # J/(nm**6 mol) O-CL
+        0.00456078851, # J/(nm**6 mol) O-CL
         3.49345451e-4, # kJ/(nm**6 mol) O-H
         8.40715638e-5, # kJ/(nm**6 mol) H-H
         0, # H-M
-        0, # J/(nm**6 mol) H-CL
+        0.00085979832, # J/(nm**6 mol) H-CL
         0, 0, 0, 0, # M
-        0, # J/(nm**6 mol) O-CL
-        0, # J/(nm**6 mol) H-CL
+        0.00456078851, # J/(nm**6 mol) O-CL
+        0.00085979832, # J/(nm**6 mol) H-CL
         0, # CL-M
         0, # CL-CL
 ]
@@ -49,14 +52,14 @@ d6table = [
         9.29548582e+01, # (nm**-1) O-O
         9.77520243e+01, # (nm**-1) O-H
         0, # O-M
-        0, # (nm**-1) O-CL
+        1.638868407461115e+02, # (nm**-1) O-CL
         9.77520243e+01, # (nm**-1) O-H
         9.40647517e+01, # (nm**-1) H-H
         0, # H-M
-        0, # (nm**-1) H-CL
+        5.778854012725382e+01, # (nm**-1) H-CL
         0, 0, 0, 0, # M
-        0, # (nm**-1) O-CL
-        0, # (nm**-1) H-CL
+        1.638868407461115e+02, # (nm**-1) O-CL
+        5.778854012725382e+01, # (nm**-1) H-CL
         0, # CL-M
         0, # CL-CL
 ]
