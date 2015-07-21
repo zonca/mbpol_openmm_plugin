@@ -779,12 +779,19 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
             for (size_t i = 0; i < 3; ++i) {
 
-                ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
-                ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge; // charge - charge
+                // Ions or any other particle with no charge derivatives has OtherSiteIndex all set to 0,
+                // so its distance is 0 because it is the distance between one atom with itself.
+                // This causes NaN, so we exclude those checking that each distance is more than 0.
 
-                ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
-                ftm2i[i] -= scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
+                if (distanceI > 0) {
+                    ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
+                    ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
+                }
 
+                if (distanceK > 0) {
+                    ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge;// charge - charge
+                    ftm2i[i] -= scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
+                }
             }
 
         }
@@ -845,8 +852,8 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
 
     if (getIncludeChargeRedistribution())
     {
-        for( unsigned int ii = 0; ii < _numParticles; ii=ii+4 ){ // FIXME this assumes only waters
-            computeWaterCharge(particleData[ii], particleData[ii+1], particleData[ii+2], particleData[ii+3]);
+        for( unsigned int ii = 3; ii < _numParticles; ii=ii+4 ){ // FIXME this assumes only waters
+            computeWaterCharge(particleData[ii-3], particleData[ii-2], particleData[ii-1], particleData[ii]);
         }
     }
 
@@ -2101,8 +2108,6 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
     RealOpenMM energy = 0.0;
     for (int i = 0; i < _numParticles; i++ ) {
 
-        // Compute the torque.
-
         multipole[0] = particleData[i].charge;
 
         const RealOpenMM* phi = &_phi[20*i];
@@ -2722,6 +2727,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
 //        std::cout << "Charge atom " << i << ": " << particleData[i].charge << " C" << std::endl;
 //    }
 
+    if (getIncludeChargeRedistribution()) {
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int s = 0; s < 3; s++ ){
             for( unsigned int xyz = 0; xyz < 3; xyz++ ){
@@ -2729,7 +2735,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
             forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotentialDirect[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
 
         }}    }
-
+    }
 
     return energy;
 }
