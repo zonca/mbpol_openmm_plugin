@@ -84,10 +84,9 @@ tt6sum = '1 + (1 + (1 + (1 + (1 + (1 + (1) * d6 * r / 6) * d6 * r / 5) * d6 * r 
 customNonbondedForce = mm.CustomNonbondedForce('-C6*tt6/r^6; tt6=1.0 - tt6sum*exp(-d6*r);tt6sum={}; C6=C6table(type1, type2); d6=d6table(type1, type2)'.format(tt6sum))
 
 methodMap = {mm.app.NoCutoff:mm.CustomNonbondedForce.NoCutoff,
-mm.app.PME:mm.CustomNonbondedForce.CutoffPeriodic,                     mm.app.CutoffPeriodic:mm.CustomNonbondedForce.CutoffPeriodic, mm.app.CutoffNonPeriodic:mm.CustomNonbondedForce.CutoffNonPeriodic}
-
+mm.app.PME:mm.CustomNonbondedForce.CutoffPeriodic, mm.app.CutoffPeriodic:mm.CustomNonbondedForce.CutoffPeriodic, mm.app.CutoffNonPeriodic:mm.CustomNonbondedForce.CutoffNonPeriodic}
 customNonbondedForce.setNonbondedMethod(methodMap[nonbondedMethod])
-        
+
 customNonbondedForce.setCutoffDistance(nonbondedCutoff)
 customNonbondedForce.addTabulatedFunction('C6table', mm.Discrete2DFunction(numAtomClasses, numAtomClasses, C6table))
 customNonbondedForce.addTabulatedFunction('d6table', mm.Discrete2DFunction(numAtomClasses, numAtomClasses, d6table))
