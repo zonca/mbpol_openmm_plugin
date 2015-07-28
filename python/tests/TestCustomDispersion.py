@@ -12,8 +12,8 @@ class TestCustomForce(unittest.TestCase):
 
     def test_three_water(self, nonbondedMethod=app.CutoffNonPeriodic):
         expected_energy = -6.84471477
-        pdb = app.PDBFile("water3.pdb")
-        forcefield = app.ForceField("customdispersion.xml")
+        pdb = app.PDBFile("../water3.pdb")
+        forcefield = app.ForceField("../customdispersion.xml")
         nonbondedCutoff = 1e3*unit.nanometer
         
         if (nonbondedMethod == app.CutoffPeriodic):
@@ -37,8 +37,8 @@ class TestCustomForce(unittest.TestCase):
         
     def test_water_and_ion(self):
         expected_energy = -1.306409202e+00
-        pdb = app.PDBFile("water_and_ion.pdb")
-        forcefield = app.ForceField("customdispersion.xml")
+        pdb = app.PDBFile("pdb_files/water_and_ion.pdb")
+        forcefield = app.ForceField("../customdispersion.xml")
         nonbondedMethod = app.CutoffNonPeriodic
         nonbondedCutoff = 1e3*unit.nanometer
         system = forcefield.createSystem(pdb.topology, nonbondedMethod=nonbondedMethod, 
