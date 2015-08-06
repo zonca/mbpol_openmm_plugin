@@ -418,11 +418,11 @@ double ReferenceCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool 
     TwoBodyForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
 
-#if OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2
-    computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
-#else
+//#if OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2
+//    computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+//#else
     computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxVectors(context), usePBC, cutoff, 0.0, false);
-#endif
+//#endif
     if( usePBC ){
         TwoBodyForce.setNonbondedMethod( MBPolReferenceTwoBodyForce::CutoffPeriodic);
         RealVec& box = extractBoxSize(context);
@@ -587,11 +587,11 @@ double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bo
     RealOpenMM energy;
     dispersionForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
-#if OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2
-    computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
-#else
+//#if OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2
+//    computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+//#else
     computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxVectors(context), usePBC, cutoff, 0.0, false);
-#endif
+//#endif
 
     dispersionForce.setDispersionParameters(c6d6Data);
     RealOpenMM dispersionCorrection = 0;
