@@ -18,12 +18,12 @@ before_install:
   - conda create --yes -n py3 python=3 --file ci/requirements-conda.txt
   - source activate py3
   - $HOME/miniconda3/envs/py3/bin/pip install $PIP_ARGS nose-exclude
-  - conda install --yes openmm=6.3 runipy
+  - conda install --yes openmm=6.2 runipy
 
 install:
   - mkdir build
   - cd build
-  - cmake .. -DOPENMM_MAJOR_VERSION=6 -DOPENMM_MINOR_VERSION=3 -DCMAKE_INSTALL_PREFIX=$HOME/miniconda3/envs/py3 -DOPENMM_DIR=$HOME/miniconda3/envs/py3
+  - cmake .. -DOPENMM_MAJOR_VERSION=6 -DOPENMM_MINOR_VERSION=2 -DCMAKE_INSTALL_PREFIX=$HOME/miniconda3/envs/py3 -DOPENMM_DIR=$HOME/miniconda3/envs/py3
   - make VERBOSE=1
   - make install
   - make PythonInstall
