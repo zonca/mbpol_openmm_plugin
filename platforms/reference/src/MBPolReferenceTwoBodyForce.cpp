@@ -69,7 +69,7 @@ RealVec MBPolReferenceTwoBodyForce::getPeriodicBox(void) const {
 
 void imageParticles(const RealVec& box, const RealVec & referenceParticle,
 		RealVec& particleToImage) {
-	std::cout << "Got to imageParticles" << std::endl;
+	/* std::cout << "Got to imageParticles" << std::endl; */
 	// Periodic boundary conditions imaging of particleToImage with respect to referenceParticle
 
 	double distance, factor;
@@ -81,7 +81,7 @@ void imageParticles(const RealVec& box, const RealVec & referenceParticle,
 }
 
 void imageMolecules(const RealVec& box, std::vector<RealVec>& allPositions) {
-	std::cout << "Got to imageMolecules" << std::endl;
+	/* std::cout << "Got to imageMolecules" << std::endl; */
 
 	// Take first oxygen as central atom
 
@@ -116,25 +116,25 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		const std::vector<RealVec>& particlePositions,
 		const std::vector<std::vector<int> >& allParticleIndices,
 		vector<RealVec>& forces) const {
-	std::cout << "Got to calculatePairIxn" << std::endl;
+	/* std::cout << "Got to calculatePairIxn" << std::endl; */
 
-	std::cout << siteJ << ": ";
+	/* std::cout << siteJ << ": ";
 	for (unsigned int i = 0; i < 3; i++)
-		std::cout << allParticleIndices[siteJ][i] << " ";
-	std::cout << std::endl;
-	std::cout << siteI << ": ";
+		/* std::cout << allParticleIndices[siteJ][i] << " ";
+	/* std::cout << std::endl; */
+	/* std::cout << siteI << ": ";
 	for (unsigned int i = 0; i < 3; i++)
-		std::cout << allParticleIndices[siteI][i] << " ";
-	std::cout << std::endl;
+		/* std::cout << allParticleIndices[siteI][i] << " ";
+	/* std::cout << std::endl; */
 
-	std::cout << "is check true? :"
+	/* std::cout << "is check true? :"
 			<< (allParticleIndices[siteJ][0] == allParticleIndices[siteJ][1] - 1
 					&& allParticleIndices[siteJ][0]
 							== allParticleIndices[siteJ][2] - 2
 					&& allParticleIndices[siteI][0]
 							== allParticleIndices[siteI][1] - 1
 					&& allParticleIndices[siteI][0]
-							== allParticleIndices[siteI][2] - 2) << std::endl;
+							== allParticleIndices[siteI][2] - 2) << std::endl; */
 
 	// if statement to determine if W-W interaction, based on the fact that waters will have
 	// multiple particles that are increasing in index
@@ -269,11 +269,11 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 
 		std::vector<RealVec> allForces;
 		allForces.resize(allPositions.size());
-		std::cout << "there are " << allForces.size() << " forces" << std::endl;
+		/* std::cout << "there are " << allForces.size() << " forces" << std::endl; */
 
 		std::vector<RealVec> extraForces;
 		extraForces.resize(extraPoints.size());
-		std::cout << "there are " << extraForces.size() << " extra forces" << std::endl;
+		/* std::cout << "there are " << extraForces.size() << " extra forces" << std::endl; */
 
 		ctxt[0].grads(g[0], allForces[Ha1], allForces[Ha2]);
 		ctxt[1].grads(g[1], allForces[Hb1], allForces[Hb2]);
@@ -373,12 +373,12 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		for (unsigned int i = 0; i < 3; i++) {
 			allPositions.push_back(
 					particlePositions[allParticleIndices[siteJ][i]] * nm_to_A);
-			std::cout << "pushed back particle " << allParticleIndices[siteJ][i] << std::endl;
+			/* std::cout << "pushed back particle " << allParticleIndices[siteJ][i] << std::endl; */
 		}
 		// only push back the Cl position
 		allPositions.push_back(
 				particlePositions[allParticleIndices[siteI][0]] * nm_to_A);
-		std::cout << "pushed back particle " << allParticleIndices[siteI][0] << std::endl;
+		/* std::cout << "pushed back particle " << allParticleIndices[siteI][0] << std::endl; */
 		std::vector<RealVec> extraPoints;
 
 		extraPoints.resize(2);
@@ -387,7 +387,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		//			imageMolecules(_periodicBoxDimensions * nm_to_A, allPositions);
 
 		RealVec dOCl = allPositions[Oa] - allPositions[Cl];
-		std::cout << "Is there a way to check this?" << dOCl << " visual check: looks good"<<  std::endl;
+		/* std::cout << "Is there a way to check this?" << dOCl << " visual check: looks good"<<  std::endl; */
 
 		const double rOClsq = dOCl[0] * dOCl[0] + dOCl[1] * dOCl[1]
 				+ dOCl[2] * dOCl[2];
@@ -430,15 +430,15 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		double g[31];
 		const double E_poly = h2o_cl::poly_2b_h2o_cl_v2x::eval(thefit_chloride,
 				v, g);
-		std::cout << "E_poly = " << E_poly << std::endl;
+		/* std::cout << "E_poly = " << E_poly << std::endl; */
 
 		std::vector<RealVec> allForces;
 		allForces.resize(allPositions.size());
-		std::cout << "there are " << allForces.size() << " forces" << std::endl;
+		/* std::cout << "there are " << allForces.size() << " forces" << std::endl; */
 
 		std::vector<RealVec> extraForces;
 		extraForces.resize(extraPoints.size());
-		std::cout << "there are " << extraForces.size() << " extra forces" << std::endl;
+		/* std::cout << "there are " << extraForces.size() << " extra forces" << std::endl; */
 
 		ctxt[0].grads(g[0], allForces[Ha1], allForces[Ha2]);
 
@@ -460,7 +460,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		// the switch
 		double gsw;
 		const double sw = f_switch(rOCl, gsw);
-		std::cout << "sw = " << sw << std::endl;
+		/* std::cout << "sw = " << sw << std::endl; */
 		double cal2joule = 4.184;
 
 		// water molecule
@@ -473,7 +473,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		// Cl
 		forces[allParticleIndices[siteI][0]] += allForces[Cl] * sw * cal2joule
 				* -10.;
-		std::cout << "forces has a size of " << forces.size() << std::endl;
+		/* std::cout << "forces has a size of " << forces.size() << std::endl; */
 		// gradient of the switch
 		gsw *= E_poly / rOCl;
 		for (int i = 0; i < 3; ++i) {
@@ -492,7 +492,7 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculateForceAndEnergy(int numParticles,
 		const vector<RealVec>& particlePositions,
 		const std::vector<std::vector<int> >& allParticleIndices,
 		const NeighborList& neighborList, vector<RealVec>& forces) const {
-	std::cout << "Got to calculateForceAndEnergy" << std::endl;
+	/* std::cout << "Got to calculateForceAndEnergy" << std::endl; */
 
 	// loop over neighbor list
 	//    (1) calculate pair TwoBody ixn
