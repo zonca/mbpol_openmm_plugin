@@ -357,9 +357,15 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		RealOpenMM energy = sw * E_poly * cal2joule;
 		return energy;
 
-	} else { // if a w CL interaction
-		// siteI is the CL, at least in the case of 1 water and 1 CL
-		// setting Cl "2nd" and "3rd" particles to -1
+	} else { // if a w-Cl interaction
+		// for the following code, an ion is in siteI so if the ion comes in as siteJ switch the sites
+		if (allParticleIndices[siteI][0] == allParticleIndices[siteI][1] - 1
+			&& allParticleIndices[siteI][0] == allParticleIndices[siteI][2] - 2) {
+			// if siteI is the water and it is known that there is an ion, switch the sites (not tested)
+			int temp = siteI;
+			siteI = siteJ;
+			siteJ = temp;
+		}
 
 		std::vector<RealVec> allPositions;
 
@@ -425,8 +431,6 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		const double E_poly = h2o_cl::poly_2b_h2o_cl_v2x::eval(thefit_chloride,
 				v, g);
 		std::cout << "E_poly = " << E_poly << std::endl;
-
-		//LOOK HERE This is where it gets "ify"  not sure how well it matches because there is no xgrd
 
 		std::vector<RealVec> allForces;
 		allForces.resize(allPositions.size());
