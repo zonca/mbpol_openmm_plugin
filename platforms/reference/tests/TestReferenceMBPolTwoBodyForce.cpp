@@ -303,8 +303,18 @@ void testImageMolecules( bool runTestWithAtomImaging, bool addPositionOffset) {
     particlePositions[2]             = RealVec( 0., 0., 0. );
 
     particlePositions[3]             = RealVec( 4.5, 0., 0. );
-    particlePositions[4]             = RealVec( 5.5, 0., 0. );
+    particlePositions[4]             = RealVec( -4.5, 0., 0. );
     particlePositions[5]             = RealVec( 4.5, 0., 0. );
+
+    std::vector<RealVec> expectedParticlePositions(numberOfParticles);
+
+    expectedParticlePositions[0]             = RealVec( 0., 0., 0. );
+    expectedParticlePositions[1]             = RealVec( 0., 1., 0. );
+    expectedParticlePositions[2]             = RealVec( 0., 0., 0. );
+
+    expectedParticlePositions[3]             = RealVec( 4.5, 0., 0. );
+    expectedParticlePositions[4]             = RealVec( 5.5, 0., 0. );
+    expectedParticlePositions[5]             = RealVec( 4.5, 0., 0. );
 
     std::vector<RealVec> originalParticlePositions(numberOfParticles);
     originalParticlePositions = particlePositions;
@@ -338,12 +348,12 @@ void testImageMolecules( bool runTestWithAtomImaging, bool addPositionOffset) {
 
     RealVec tempPosition;
     for (int i=0; i<numberOfParticles; i++) {
-        std::cout << "Position atom " << i << ": " << originalParticlePositions[i] << " A" << std::endl;
+        std::cout << "Position atom " << i << ": " << expectedParticlePositions[i] << " A" << std::endl;
         std::cout << "Position atom " << i << ": " << particlePositions[i] << " A" << std::endl;
     }
 
     for (int i=0; i<numberOfParticles; i++) {
-        ASSERT_EQUAL_VEC( originalParticlePositions[i], particlePositions[i], 1e-6 );
+        ASSERT_EQUAL_VEC( expectedParticlePositions[i], particlePositions[i], 1e-6 );
     }
 }
 
