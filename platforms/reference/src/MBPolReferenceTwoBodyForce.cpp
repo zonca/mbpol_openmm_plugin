@@ -71,7 +71,6 @@ void imageParticles(const RealVec& box, const RealVec & referenceParticle,
 		RealVec& particleToImage) {
 	/* std::cout << "Got to imageParticles" << std::endl; */
 	// Periodic boundary conditions imaging of particleToImage with respect to referenceParticle
-
 	double distance, factor;
 	for (unsigned int i = 0; i < 3; i++) {
 		distance = referenceParticle[i] - particleToImage[i];
@@ -84,34 +83,47 @@ void imageMolecules(const RealVec& box, std::vector<RealVec>& allPositions) {
 	/* std::cout << "Got to imageMolecules" << std::endl; */
 
 	// Take first oxygen as central atom
-
 	// image its two hydrogens with respect of the first oxygen
-
 	imageParticles(box, allPositions[Oa], allPositions[Ha1]);
 	imageParticles(box, allPositions[Oa], allPositions[Ha2]);
 
-	if (allPositions.size() >= Hb1) // Two molecules
+	int lastIndex = allPositions.size() - 1;
+	if (lastIndex >= Ob) // at least Two molecules
 			{
-		// Now image the oxygen of the second molecule
+		// Now image the first particle of the second molecule
+		// (the Cl or the oxygen of the first second molecule)
 
 		imageParticles(box, allPositions[Oa], allPositions[Ob]);
 
-		// Image the hydrogen of the second molecule with respect to the oxygen of the second molecule
-		imageParticles(box, allPositions[Ob], allPositions[Hb1]);
-		imageParticles(box, allPositions[Ob], allPositions[Hb2]);
-
-		if (allPositions.size() >= Hc1) // Three molecules
+		// if the second particle is not an ion
+		if (lastIndex > Cl) {
+			// Image the hydrogen of the second molecule with respect to the oxygen of the second molecule
+			imageParticles(box, allPositions[Ob], allPositions[Hb1]);
+			imageParticles(box, allPositions[Ob], allPositions[Hb2]);
+		}
+		if (lastIndex >= Oc) // at least Three molecules
 				{
-			// Now image the oxygen of the third molecule
+			// Now image the first particle of the third molecule
+			// (the Cl or the oxygen of the first third molecule)
+
 			imageParticles(box, allPositions[Oa], allPositions[Oc]);
 
-			// Image the hydrogen of the third molecule with respect to the oxygen of the third molecule
-			imageParticles(box, allPositions[Oc], allPositions[Hc1]);
-			imageParticles(box, allPositions[Oc], allPositions[Hc2]);
+			// if the third particle is not an ion
+			if (lastIndex > Cl2) {
+				// Image the hydrogen of the third molecule with respect to the oxygen of the third molecule
+				imageParticles(box, allPositions[Oc], allPositions[Hc1]);
+				imageParticles(box, allPositions[Oc], allPositions[Hc2]);
+			}
+			// if there is 3 particles and an ion
+			if (lastIndex == Cl3) {
+				// Now image the ion
+				imageParticles(box, allPositions[Oa], allPositions[Cl3]);
+			}
+
 		}
 	}
-
 }
+
 RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		const std::vector<RealVec>& particlePositions,
 		const std::vector<std::vector<int> >& allParticleIndices,
@@ -119,22 +131,22 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 	/* std::cout << "Got to calculatePairIxn" << std::endl; */
 
 	/* std::cout << siteJ << ": ";
-	for (unsigned int i = 0; i < 3; i++)
-		/* std::cout << allParticleIndices[siteJ][i] << " ";
-	/* std::cout << std::endl; */
+	 for (unsigned int i = 0; i < 3; i++)
+	 /* std::cout << allParticleIndices[siteJ][i] << " ";
+	 /* std::cout << std::endl; */
 	/* std::cout << siteI << ": ";
-	for (unsigned int i = 0; i < 3; i++)
-		/* std::cout << allParticleIndices[siteI][i] << " ";
-	/* std::cout << std::endl; */
+	 for (unsigned int i = 0; i < 3; i++)
+	 /* std::cout << allParticleIndices[siteI][i] << " ";
+	 /* std::cout << std::endl; */
 
 	/* std::cout << "is check true? :"
-			<< (allParticleIndices[siteJ][0] == allParticleIndices[siteJ][1] - 1
-					&& allParticleIndices[siteJ][0]
-							== allParticleIndices[siteJ][2] - 2
-					&& allParticleIndices[siteI][0]
-							== allParticleIndices[siteI][1] - 1
-					&& allParticleIndices[siteI][0]
-							== allParticleIndices[siteI][2] - 2) << std::endl; */
+	 << (allParticleIndices[siteJ][0] == allParticleIndices[siteJ][1] - 1
+	 && allParticleIndices[siteJ][0]
+	 == allParticleIndices[siteJ][2] - 2
+	 && allParticleIndices[siteI][0]
+	 == allParticleIndices[siteI][1] - 1
+	 && allParticleIndices[siteI][0]
+	 == allParticleIndices[siteI][2] - 2) << std::endl; */
 
 	// if statement to determine if W-W interaction, based on the fact that waters will have
 	// multiple particles that are increasing in index
@@ -360,7 +372,8 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 	} else { // if a w-Cl interaction
 		// for the following code, an ion is in siteI so if the ion comes in as siteJ switch the sites
 		if (allParticleIndices[siteI][0] == allParticleIndices[siteI][1] - 1
-			&& allParticleIndices[siteI][0] == allParticleIndices[siteI][2] - 2) {
+				&& allParticleIndices[siteI][0]
+						== allParticleIndices[siteI][2] - 2) {
 			// if siteI is the water and it is known that there is an ion, switch the sites (not tested)
 			int temp = siteI;
 			siteI = siteJ;
@@ -399,8 +412,8 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		// the extra-points
 		monomer m;
 		m.setup(allPositions[Oa], allPositions[Ha1], allPositions[Ha2],
-				in_plane_gamma_chloride, out_of_plane_gamma_chloride, extraPoints[Xa1],
-				extraPoints[Xa2]);
+				in_plane_gamma_chloride, out_of_plane_gamma_chloride,
+				extraPoints[Xa1], extraPoints[Xa2]);
 
 		//variables
 		double v[8]; // stored separately (gets passed to poly::eval)
@@ -485,7 +498,6 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculatePairIxn(int siteI, int siteJ,
 		RealOpenMM energy = sw * E_poly * cal2joule;
 		return energy;
 	}
-
 }
 
 RealOpenMM MBPolReferenceTwoBodyForce::calculateForceAndEnergy(int numParticles,
@@ -499,7 +511,6 @@ RealOpenMM MBPolReferenceTwoBodyForce::calculateForceAndEnergy(int numParticles,
 	//    (2) accumulate forces: if particle is a site where interaction position != particle position,
 	//        then call addReducedForce() to apportion force to particle and its covalent partner
 	//        based on reduction factor
-
 	RealOpenMM energy = 0.;
 	for (unsigned int ii = 0; ii < neighborList.size(); ii++) {
 
