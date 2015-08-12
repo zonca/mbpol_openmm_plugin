@@ -12,3 +12,6 @@ The VM automatically runs the `setup_centos_vm.sh` to install requirements and c
 
 Finally execute the `build_conda_package_vagrant.sh` script line by line, making sure
 to update version numbers.
+`conda-build` works only on the root environment, so we install also `miniconda3` separately.
+
+so we have to set the correct miniconda path in `build.sh`, check mbpol and openmp versions in `meta.yaml` and then repeat the build and upload process for python 2 and 3.
