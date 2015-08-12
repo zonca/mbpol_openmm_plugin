@@ -96,16 +96,24 @@ exit 1
 fi
 bash $MINICONDA -b
 
+# Install Conda for Python 3
+MINICONDA=Miniconda3-latest-Linux-x86_64.sh
+MINICONDA_MD5=$(curl -s http://repo.continuum.io/miniconda/ | grep -A3 $MINICONDA | sed -n '4p' | sed -n 's/ *<td>\(.*\)<\/td> */\1/p')
+wget http://repo.continuum.io/miniconda/$MINICONDA
+if [[ $MINICONDA_MD5 != $(md5sum $MINICONDA | cut -d ' ' -f 1) ]]; then
+echo "Miniconda MD5 mismatch"
+exit 1
+fi
+bash $MINICONDA -b
+
 # So there is a bug in some versions of anaconda where the path to swig files is HARDCODED.  Below is workaround.  See https://github.com/ContinuumIO/anaconda-issues/issues/48
 sudo ln -s  ~/miniconda/ /opt/anaconda1anaconda2anaconda3
 
 echo "********** Installing conda/binstar channels and packages..."
 export PATH=$HOME/miniconda/bin:$PATH
 conda config --add channels http://conda.binstar.org/omnia
-conda install --yes fftw3f jinja2 swig sphinx conda-build cmake binstar pip
-
-echo "********** Installing conda/binstar channels and packages..."
-conda create -n py3 --yes python=3.4 anaconda fftw3f jinja2 swig sphinx conda-build cmake binstar pip
+conda install --yes fftw3f jinja2 swig sphinx conda-build cmake binstar pip anaconda-client
+~/miniconda3/bin/conda install --yes fftw3f jinja2 swig sphinx conda-build cmake pip
 
 # Add conda to the path.
 echo "********** Adding paths"
