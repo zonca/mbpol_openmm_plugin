@@ -8,7 +8,8 @@ Only for GNU/Linux 64bit a binary distribution is available through `conda`.
 
         conda config --add  -c https://conda.anaconda.org/omnia
         conda config --add  -c https://conda.anaconda.org/paesanilab
-* Install OpenMM and OpenMM-MBPol with `conda`: `conda install openmm mbpol`
+* Install OpenMM-MBPol (OpenMM will be installed as a requirement) with `conda`: `conda install mbpol`
+* How to update: `conda update mbpol`
 
 ## How to install from source
 
