@@ -36,7 +36,7 @@ class TestCustomForce(unittest.TestCase):
         self.test_three_water(nonbondedMethod=app.CutoffPeriodic)
         
     def test_water_and_ion(self):
-        expected_energy = -1.306409202e+00
+        expected_energy = -1.306598
         pdb = app.PDBFile("pdb_files/water_and_ion.pdb")
         forcefield = app.ForceField("../customdispersion.xml")
         nonbondedMethod = app.CutoffNonPeriodic
@@ -50,7 +50,7 @@ class TestCustomForce(unittest.TestCase):
         simulation.context.computeVirtualSites()
         state = simulation.context.getState(getForces=True, getEnergy=True, getPositions=True)
         potential_energy = state.getPotentialEnergy()
-        potential_energy.in_units_of(unit.kilocalorie_per_mole)
+        print(potential_energy.in_units_of(unit.kilocalorie_per_mole))
         
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .01)
        
