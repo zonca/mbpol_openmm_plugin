@@ -114,11 +114,6 @@ void imageMolecules(const RealVec& box, std::vector<RealVec>& allPositions) {
 				imageParticles(box, allPositions[Oc], allPositions[Hc1]);
 				imageParticles(box, allPositions[Oc], allPositions[Hc2]);
 			}
-			// if there is 3 particles and an ion
-			if (lastIndex == Cl3) {
-				// Now image the ion
-				imageParticles(box, allPositions[Oa], allPositions[Cl3]);
-			}
 
 		}
 	}
