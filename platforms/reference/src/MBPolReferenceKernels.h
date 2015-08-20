@@ -256,7 +256,6 @@ public:
      * @param system     the System this kernel will be applied to
      * @param force      the MBPolDispersionForce this kernel will be used for
      */
-    void initialize(const System& system, const MBPolDispersionForce& force);
     /**
      * Execute the kernel to calculate the forces and/or energy.
      *
@@ -272,7 +271,6 @@ public:
      * @param context    the context to copy parameters to
      * @param force      the MBPolDispersionForce to copy the parameters from
      */
-    void copyParametersToContext(ContextImpl& context, const MBPolDispersionForce& force);
 private:
     int numParticles;
     int useCutoff;
