@@ -54,7 +54,7 @@
 using namespace OpenMM;
 using namespace MBPolPlugin;
 
-const double TOL = 1e-4;\
+const double TOL = 1e-4;
 
 void testTwoWaterOneChloride(double boxDimension, bool addPositionOffset) {
 	std::string testName = "testMBPol2BodyInteraction";

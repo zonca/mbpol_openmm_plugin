@@ -21,8 +21,6 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include <iostream>
-
 #include "MBPolReferenceTwoBodyForce.h"
 #include <algorithm>
 #include <cctype>
