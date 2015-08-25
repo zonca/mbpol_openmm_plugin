@@ -28,7 +28,6 @@
 #include "poly-3b-v2x.h"
 #include "poly-3b-h2o-cl-v2x.h"
 #include <list>
-#include <iostream>
 
 using std::vector;
 using OpenMM::RealVec;
@@ -130,14 +129,12 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn(int siteI,
 		int siteJ, int siteQ, const std::vector<RealVec>& particlePositions,
 		const std::vector<std::vector<int> >& allParticleIndices,
 		vector<RealVec>& forces) const {
-
 	// siteI and siteJ are indices in a oxygen-only array, in order to get the position of an oxygen, we need:
 	// allParticleIndices[siteI][0]
 	// first hydrogen: allParticleIndices[siteI][1]
 	// second hydrogen: allParticleIndices[siteI][2]
 	// same for the second water molecule
 	const double cal2joule = 4.184;
-
 	//if the sites are all waters
 	if ((allParticleIndices[siteJ][0] == allParticleIndices[siteJ][1] - 1
 			&& allParticleIndices[siteJ][0] == allParticleIndices[siteJ][2] - 2
@@ -145,6 +142,7 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn(int siteI,
 			&& allParticleIndices[siteI][0] == allParticleIndices[siteI][2] - 2
 			&& allParticleIndices[siteQ][0] == allParticleIndices[siteQ][1] - 1
 			&& allParticleIndices[siteQ][0] == allParticleIndices[siteQ][2] - 2)) {
+
 		std::vector<RealVec> allPositions;
 
 		// the iterator constructor can also be used to construct from arrays:
@@ -337,31 +335,28 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn(int siteI,
 		}
 
 		RealOpenMM energy = retval * cal2joule;
-
 		return energy;
 	} else {
-		//THERE IS AN ION
 		//determine which site is the ion
-//		// Determine which site is the ion
-//		if (!(allParticleIndices[siteJ][0] == allParticleIndices[siteJ][1] - 1
-//				&& allParticleIndices[siteJ][0]
-//						== allParticleIndices[siteJ][2] - 2)) {
-//			// if siteJ is the ion, swap siteJ and siteI
-//			int temp = siteJ;
-//			siteJ = siteI;
-//			siteI = temp;
-//
-//		} else if (!(allParticleIndices[siteQ][0]
-//				== allParticleIndices[siteQ][1] - 1
-//				&& allParticleIndices[siteQ][0]
-//						== allParticleIndices[siteQ][2] - 2)) {
-//			// if siteJ is the ion, swap siteQ and siteI
-//			int temp = siteQ;
-//			siteQ = siteI;
-//			siteI = temp;
-//
-//		}
-//		// from here on the ion will be in site I
+		if (!(allParticleIndices[siteJ][0] == allParticleIndices[siteJ][1] - 1
+				&& allParticleIndices[siteJ][0]
+						== allParticleIndices[siteJ][2] - 2)) {
+			// if siteJ is the ion, swap siteJ and siteI
+			int temp = siteJ;
+			siteJ = siteI;
+			siteI = temp;
+
+		} else if (!(allParticleIndices[siteQ][0]
+				== allParticleIndices[siteQ][1] - 1
+				&& allParticleIndices[siteQ][0]
+						== allParticleIndices[siteQ][2] - 2)) {
+			// if siteJ is the ion, swap siteQ and siteI
+			int temp = siteQ;
+			siteQ = siteI;
+			siteI = temp;
+
+		}
+		// from here on the ion will be in site I
 		std::vector<RealVec> allPositions;
 
 		// pushes back all positions of particles in waters
@@ -501,9 +496,7 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn(int siteI,
 		gab *= (sac + sbc) * retval / drab;
 		gac *= (sab + sbc) * retval / drac;
 		gbc *= (sab + sac) * retval / drbc;
-
 		retval *= s;
-
 		for (int n = 0; n < 3; ++n) {
 			allForces[Oa][n] += (gab * rab[n] + gac * rac[n]) * cal2joule
 					* -nm_to_A;
@@ -560,7 +553,6 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateForceAndEnergy(
 
 		energy += calculateTripletIxn(siteI, siteJ, siteQ, particlePositions,
 				allParticleIndices, forces);
-
 	}
 
 	return energy;
