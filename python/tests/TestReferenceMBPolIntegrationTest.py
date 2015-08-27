@@ -31,7 +31,7 @@ class TestReferenceMBPolIntegration(unittest.TestCase):
         potential_energy = state.getPotentialEnergy()
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
-        print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
+        #print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .1)
     
     def test_water3_periodic(self):
@@ -60,7 +60,7 @@ class TestReferenceMBPolIntegration(unittest.TestCase):
         potential_energy = state.getPotentialEnergy()
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
-        print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
+        #print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < 1)
         
     def test_water256_periodic(self):
@@ -87,7 +87,7 @@ class TestReferenceMBPolIntegration(unittest.TestCase):
         potential_energy = state.getPotentialEnergy()
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
-        print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
+        #print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
         
         
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < 20)
