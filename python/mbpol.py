@@ -294,7 +294,7 @@ class MBPolElectrostaticsForceGenerator:
         self.types2 = []
         self.types3 = []
         self.typeMap = {}
-        self.chargeRedistribution = True;
+        self.setIncludeChargeRedistribution = True;
 
     @staticmethod
     def parseElement(element, forceField):
@@ -351,11 +351,11 @@ class MBPolElectrostaticsForceGenerator:
                 outputString = "MBPolElectrostaticsForceGenerator: error getting type for atom: %s" % (atom.attrib['type'])
                 raise ValueError(outputString)
                 
-        for value in element.findall('ChargeRedistribution'):
-            if value.attrib['set'] == 'True':
-                generator.chargeRedistribution = True
-            elif value.attrib['set'] == 'False':
-                generator.chargeRedistribution = False
+        for value in element.findall('setIncludeChargeRedistribution'):
+            if value.attrib['chargeRedistribution'] == 'True':
+                generator.setIncludeChargeRedistribution = True
+            elif value.attrib['chargeRedistribution'] == 'False':
+                generator.setIncludeChargeRedistribution = False
          
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
         # CutoffNonPeriodic defaults to NoCutoff
@@ -376,7 +376,7 @@ class MBPolElectrostaticsForceGenerator:
         else:
             force = existing[0]
         
-        if (self.chargeRedistribution == False):
+        if (self.setIncludeChargeRedistribution == False):
             force.setIncludeChargeRedistribution(False)
         else:
             force.setIncludeChargeRedistribution(True)

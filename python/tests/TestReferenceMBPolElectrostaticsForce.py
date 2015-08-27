@@ -46,15 +46,14 @@ class TestReferenceMBPolElectrostatics(unittest.TestCase):
 #        self.testWater3VirtualSite(nonbondedMethod=app.PME)
         
     def testWater3(self):
-        nonbondedMethod=app.NoCutoff
-        expected_energy = -19.6545
         nonbondedCutoff = .7*unit.nanometer
+        nonbondedMethod=app.NoCutoff
+        #charge dirstribution set in the xml
         pdb = app.PDBFile("../water3.pdb")
         forcefield = app.ForceField("../mbpol_no_custom_dispersion.xml") 
         # this xml file is the same as mbpol.xml but the Custom dispersion force is never added to the system.  This is needed because it cannot be removed from the system once it is added and therefore prevents the testing of individual forces within mbpol.xml
         
         forcefield._forces = forcefield._forces[0:1]
-        #print(forcefield._forces[0].getIncludeChargeRedistribution())
         
         system = forcefield.createSystem(pdb.topology, nonbondedMethod=nonbondedMethod, nonbondedCutoff=nonbondedCutoff)
         
@@ -63,13 +62,17 @@ class TestReferenceMBPolElectrostatics(unittest.TestCase):
         simulation = app.Simulation(pdb.topology, system, integrator, platform)
         simulation.context.setPositions(pdb.positions)
         simulation.context.computeVirtualSites()
+        simulation.context.applyConstraints(1e-4)
+        
         state = simulation.context.getState(getForces=True, getEnergy=True, getPositions=True)
         potential_energy = state.getPotentialEnergy()
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
         print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
-        
-        
+        forces = state.getForces()
+        for force in forces:
+            print(force*0.0239005736)
+        expected_energy = -19.6545
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .1)
 if __name__ == '__main__':
     unittest.main()
