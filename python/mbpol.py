@@ -294,6 +294,7 @@ class MBPolElectrostaticsForceGenerator:
         self.types2 = []
         self.types3 = []
         self.typeMap = {}
+        self.chargeRedistribution = True;
 
     @staticmethod
     def parseElement(element, forceField):
@@ -303,11 +304,11 @@ class MBPolElectrostaticsForceGenerator:
         #     <Atom type="MBPol-O" charge="-5.1966000e-01" damping-factor="0.00131" polarizability="0.00131" />
         #     <Atom type="MBPol-H" charge="2.5983000e-01" damping-factor="0.000294" polarizability="0.000294" />
         #     <Atom type="MBPol-M" charge="0" damping-factor="0.00131" polarizability="0" />
+        # <ChargeRedistribution set="False"/>
         # </MBPolElectrostaticsForce>
-
         generator = MBPolElectrostaticsForceGenerator()
         forceField.registerGenerator(generator)
-
+        # mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
         for MBPolElectrostaticsForce_template in element.findall('MBPolElectrostaticsForce'):
             types = forceField._findAtomTypes(MBPolElectrostaticsForce_template.attrib, 3)
             if None not in types:
@@ -324,7 +325,7 @@ class MBPolElectrostaticsForceGenerator:
                 raise ValueError(outputString)
 
         for residue in element.findall('Residue'):
-
+            
         #     <Residue name="HOH" class1="OW" class2="HW" class3="HW" thole-charge-charge="0.4" thole-charge-dipole="0.4" thole-dipole-dipole-intermolecules="0.055" thole-dipole-dipole-1-2="0.055" thole-dipole-dipole-1-3="0.626" thole-dipole-dipole-2-3="0.626" /> 
 
             name = residue.attrib["name"]
@@ -340,7 +341,7 @@ class MBPolElectrostaticsForceGenerator:
         #     <Atom type="MBPol-H" charge="2.5983000e-01" damping-factor="0.000294" polarizability="0.000294" />
             types = forceField._findAtomTypes(atom.attrib, 1)
             if None not in types:
-
+    
                 for t in types[0]:
                     generator.typeMap[t] = dict(  polarizability = float(atom.attrib['polarizability']),
                                              charge         = float(atom.attrib['charge']),
@@ -349,9 +350,14 @@ class MBPolElectrostaticsForceGenerator:
             else:
                 outputString = "MBPolElectrostaticsForceGenerator: error getting type for atom: %s" % (atom.attrib['type'])
                 raise ValueError(outputString)
-
+                
+        for value in element.findall('ChargeRedistribution'):
+            if value.attrib['set'] == 'True':
+                generator.chargeRedistribution = True
+            elif value.attrib['set'] == 'False':
+                generator.chargeRedistribution = False
+         
     def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
-
         # CutoffNonPeriodic defaults to NoCutoff
         methodMap = {app.NoCutoff:mbpolplugin.MBPolElectrostaticsForce.NoCutoff,
                      app.CutoffNonPeriodic:mbpolplugin.MBPolElectrostaticsForce.NoCutoff,
@@ -365,11 +371,15 @@ class MBPolElectrostaticsForceGenerator:
         if len(existing) == 0:
             force = mbpolplugin.MBPolElectrostaticsForce()
             force.setCutoffDistance(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
+            #force.setIncludeChargeRedistribution(False)
             sys.addForce(force)
         else:
             force = existing[0]
-        print("HERE")
-        print(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
+        
+        if (self.chargeRedistribution == False):
+            force.setIncludeChargeRedistribution(False)
+        else:
+            force.setIncludeChargeRedistribution(True)
         force.setNonbondedMethod(methodMap[nonbondedMethod])
 
         for i in range(len(data.angles)):
