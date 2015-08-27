@@ -24,6 +24,7 @@
         <Atom type="MBPol-O" charge="-5.1966000e-01" damping-factor="0.00131" polarizability="0.00131" />
         <Atom type="MBPol-H" charge="2.5983000e-01" damping-factor="0.000294" polarizability="0.000294" />
         <Atom type="MBPol-M" charge="0" damping-factor="0.00131" polarizability="0" />
+        <ChargeRedistribution set="False"/>
     </MBPolElectrostaticsForce>
     <MBPolOneBodyForce>
         <Residue name="HOH" class1="O" class2="H" class3="H" />
