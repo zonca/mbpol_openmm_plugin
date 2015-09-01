@@ -97,7 +97,7 @@ void runTest( double boxDimension ) {
     mbpolThreeBodyForce->setCutoff( cutoff );
     mbpolThreeBodyForce->setForceGroup(3);
 
-    vector<string> forceLabels;
+    vector<std::string> forceLabels;
     forceLabels.push_back("Electrostatics");
     forceLabels.push_back("OneBody");
     forceLabels.push_back("TwoBody");

@@ -229,7 +229,7 @@ void runTest( double boxDimension ) {
 
     double tolerance = 1.0e-02;
 
-    vector<string> forceLabels;
+    vector<std::string> forceLabels;
     forceLabels.push_back("Electrostatics");
     forceLabels.push_back("OneBody");
     forceLabels.push_back("TwoBody");
