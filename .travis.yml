@@ -2,28 +2,25 @@ language: cpp
 compiler:
   - clang
 
+sudo: false
+
+addons:
+    apt:
+        packages:
+        - cmake
+
 before_install:
-  - sudo apt-get update -qq
-  - sudo apt-get install -qq libpcre3 libpcre3-dev gromacs
-  - sudo apt-get install -qq swig doxygen llvm-3.3
-  - sudo apt-get install -qq libgl1-mesa-dev opencl-headers fglrx=2:8.960-0ubuntu1 # for opencl support
-  - export ASAN_SYMBOLIZER_PATH=/usr/bin/llvm-symbolizer-3.3
-  - sudo apt-get install -qq -y g++ gfortran csh
-  - sudo apt-get install -qq -y g++-multilib gcc-multilib
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
   - bash Miniconda3-latest-Linux-x86_64.sh -b
-  - PIP_ARGS="-U"
   - export PATH=$HOME/miniconda3/bin:$PATH
   - conda config --add channels http://conda.binstar.org/omnia
-  - conda create --yes -n py3 python=3 --file ci/requirements-conda.txt
-  - source activate py3
-  - $HOME/miniconda3/envs/py3/bin/pip install $PIP_ARGS nose-exclude
-  - conda install --yes openmm=6.3 runipy
+  - conda install --yes openmm=6.3 runipy numpy cython pip nose swig
 
 install:
+  - export PATH=$HOME/miniconda3/bin:$PATH
   - mkdir build
   - cd build
-  - cmake .. -DOPENMM_MAJOR_VERSION=6 -DOPENMM_MINOR_VERSION=3 -DCMAKE_INSTALL_PREFIX=$HOME/miniconda3/envs/py3 -DOPENMM_DIR=$HOME/miniconda3/envs/py3
+  - cmake .. -DOPENMM_MAJOR_VERSION=6 -DOPENMM_MINOR_VERSION=3 -DCMAKE_INSTALL_PREFIX=$HOME/miniconda3/ -DOPENMM_DIR=$HOME/miniconda3/
   - make VERBOSE=1
   - make install
   - make PythonInstall
