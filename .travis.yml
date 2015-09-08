@@ -14,7 +14,7 @@ before_install:
   - bash Miniconda3-latest-Linux-x86_64.sh -b
   - export PATH=$HOME/miniconda3/bin:$PATH
   - conda config --add channels http://conda.binstar.org/omnia
-  - conda install --yes openmm=6.3 runipy
+  - conda install --yes openmm=6.3 runipy numpy cython pip nose swig
 
 install:
   - export PATH=$HOME/miniconda3/bin:$PATH
