@@ -376,10 +376,7 @@ class MBPolElectrostaticsForceGenerator:
         else:
             force = existing[0]
         
-        if (self.setIncludeChargeRedistribution == False):
-            force.setIncludeChargeRedistribution(False)
-        else:
-            force.setIncludeChargeRedistribution(True)
+        force.setIncludeChargeRedistribution(self.setIncludeChargeRedistribution)
         force.setNonbondedMethod(methodMap[nonbondedMethod])
 
         for i in range(len(data.angles)):
@@ -388,15 +385,19 @@ class MBPolElectrostaticsForceGenerator:
 
             # FIXME cheating! get virtual site index by max(otheratom indices)  + 1
             global_atoms_indices = set([angle[local_atom_index] for local_atom_index in [0,1,2]])
-            virtual_site_index = max(global_atoms_indices) + 1
-            global_atoms_indices.add(virtual_site_index)
+            if self.setIncludeChargeRedistribution:
+                virtual_site_index = max(global_atoms_indices) + 1
+                global_atoms_indices.add(virtual_site_index)
 
             for atomIndex in global_atoms_indices:
                 atom = data.atoms[atomIndex]
                 t = data.atomType[atom]
                 if t in self.typeMap:
                     other_atoms = global_atoms_indices - set([atomIndex])
-                    force.addElectrostatics(self.typeMap[t]['charge'], data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, self.typeMap[atom.residue.name]['thole'], self.typeMap[t]['damping_factor'], self.typeMap[t]['polarizability'])
+                    if len(other_atoms) == 3:
+                        force.addElectrostatics(self.typeMap[t]['charge'], data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, self.typeMap[atom.residue.name]['thole'], self.typeMap[t]['damping_factor'], self.typeMap[t]['polarizability'])
+                    else:
+                        force.addElectrostatics(self.typeMap[t]['charge'], data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, -1, self.typeMap[atom.residue.name]['thole'], self.typeMap[t]['damping_factor'], self.typeMap[t]['polarizability'])
 
                 else:
                     raise ValueError('No type for atom %s %s %d' % (atom.name, atom.residue.name, atom.residue.index))
