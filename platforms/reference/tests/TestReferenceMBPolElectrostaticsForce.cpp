@@ -955,6 +955,8 @@ static void testWater3VirtualSitePMEHugeBox() {
     thole[TDDOH]  = 0.626;
     thole[TDDHH] = 0.055;
 
+    // testing with no polarizability
+
     for( unsigned int jj = 0; jj < numberOfParticles; jj += 4 ){
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
                                             thole, 0.001310, 0.000000 );

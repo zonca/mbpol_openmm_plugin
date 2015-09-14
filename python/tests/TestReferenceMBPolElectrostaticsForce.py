@@ -20,7 +20,8 @@ class TestReferenceMBPolElectrostatics(unittest.TestCase):
          nonbondedCutoff = .7*unit.nanometer
        
          if (nonbondedMethod == app.PME):
-             expected_energy = -13.0493
+             # expected_energy = -13.0493 # with no polarizability
+             expected_energy = -15.818784 # with polarizability
              nonbondedCutoff = 10*unit.nanometer
              boxDimension = 50
              boxsize = [boxDimension, boxDimension, boxDimension]
@@ -42,8 +43,8 @@ class TestReferenceMBPolElectrostatics(unittest.TestCase):
        
          self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .1)
         
-#    def testWater3VirtualSitePMEHugeBox(self):
-#        self.testWater3VirtualSite(nonbondedMethod=app.PME)
+    def testWater3VirtualSitePMEHugeBox(self):
+        self.testWater3VirtualSite(nonbondedMethod=app.PME)
         
     #def testWater3(self):
     #    nonbondedCutoff = .7*unit.nanometer
