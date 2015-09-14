@@ -2,6 +2,11 @@ import mbpolplugin
 from simtk.openmm import app
 from simtk import unit
 
+try:
+    from exceptions import ValueError, NotImplementedError
+except:
+    pass
+
 ## @private
 class MBPolOneBodyForceGenerator:
 
@@ -397,6 +402,7 @@ class MBPolElectrostaticsForceGenerator:
                     if len(other_atoms) == 3:
                         force.addElectrostatics(self.typeMap[t]['charge'], data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, self.typeMap[atom.residue.name]['thole'], self.typeMap[t]['damping_factor'], self.typeMap[t]['polarizability'])
                     else:
+                        raise NotImplementedError("Python wrapper is broken with no charge redistribution")
                         force.addElectrostatics(self.typeMap[t]['charge'], data.atoms[other_atoms.pop()].index, data.atoms[other_atoms.pop()].index, -1, self.typeMap[atom.residue.name]['thole'], self.typeMap[t]['damping_factor'], self.typeMap[t]['polarizability'])
 
                 else:
