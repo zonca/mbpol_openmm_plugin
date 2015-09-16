@@ -61,18 +61,16 @@ class MBPolOneBodyForceGenerator:
 
         force.setNonbondedMethod(methodMap[nonbondedMethod])
 
-        for i in range(len(data.angles)):
-            angle = data.angles[i]
-            atom1 = data.atoms[angle[0]]
-            atom2 = data.atoms[angle[1]]
-            atom3 = data.atoms[angle[2]]
-            if atom1.residue.name == 'HOH' and atom2.residue.name == 'HOH' and atom3.residue.name == 'HOH':
-                # FIXME loop through all residues of MBPolOneBodyForce and match their name
+        for residue in data.atoms[0].residue.chain.residues():
+            global_atoms_indices = [a.index for a in residue.atoms()]
+
+            if len(global_atoms_indices) > 1:
+                global_atoms_indices += [-1] * (3 - len(global_atoms_indices))
                 v = mbpolplugin.vectori()
-                v.push_back(atom2.index)
-                v.push_back(atom1.index)
-                v.push_back(atom3.index)
-                force.addOneBody(v);
+                for i in range(3):
+                    v.push_back(global_atoms_indices[i])
+
+                force.addOneBody(v)
 
 app.forcefield.parsers["MBPolOneBodyForce"] = MBPolOneBodyForceGenerator.parseElement
 
@@ -131,19 +129,15 @@ class MBPolTwoBodyForceGenerator:
 
         force.setNonbondedMethod(methodMap[nonbondedMethod])
 
-        for i in range(len(data.angles)):
-            angle = data.angles[i]
-            atom1 = data.atoms[angle[0]]
-            atom2 = data.atoms[angle[1]]
-            atom3 = data.atoms[angle[2]]
-            if atom1.residue.name == 'HOH' and atom2.residue.name == 'HOH' and atom3.residue.name == 'HOH':
-                # FIXME loop through all residues of MBPolTwoBodyForce and match their name
-                v = mbpolplugin.vectori()
-                v.push_back(atom2.index)
-                v.push_back(atom1.index)
-                v.push_back(atom3.index)
+        for residue in data.atoms[0].residue.chain.residues():
+            global_atoms_indices = [a.index for a in residue.atoms()]
 
-                force.addParticle(v)
+            global_atoms_indices += [-1] * (3 - len(global_atoms_indices))
+            v = mbpolplugin.vectori()
+            for i in range(3):
+                v.push_back(global_atoms_indices[i])
+
+            force.addParticle(v)
 
 app.forcefield.parsers["MBPolTwoBodyForce"] = MBPolTwoBodyForceGenerator.parseElement
 
@@ -202,19 +196,16 @@ class MBPolThreeBodyForceGenerator:
 
         force.setNonbondedMethod(methodMap[nonbondedMethod])
 
-        for i in range(len(data.angles)):
-            angle = data.angles[i]
-            atom1 = data.atoms[angle[0]]
-            atom2 = data.atoms[angle[1]]
-            atom3 = data.atoms[angle[2]]
-            if atom1.residue.name == 'HOH' and atom2.residue.name == 'HOH' and atom3.residue.name == 'HOH':
-                # FIXME loop through all residues of MBPolThreeBodyForce and match their name
-                v = mbpolplugin.vectori()
-                v.push_back(atom2.index)
-                v.push_back(atom1.index)
-                v.push_back(atom3.index)
+        for residue in data.atoms[0].residue.chain.residues():
+            global_atoms_indices = [a.index for a in residue.atoms()]
 
-                force.addParticle(v)
+            global_atoms_indices += [-1] * (3 - len(global_atoms_indices))
+            v = mbpolplugin.vectori()
+            for i in range(3):
+                v.push_back(global_atoms_indices[i])
+
+            force.addParticle(v)
+
 
 app.forcefield.parsers["MBPolThreeBodyForce"] = MBPolThreeBodyForceGenerator.parseElement
 
@@ -388,8 +379,7 @@ class MBPolElectrostaticsForceGenerator:
             t = data.atomType[atom]
             global_atoms_indices = [a.index for a in atom.residue.atoms() if a.index != atom.index]
 
-            if len(global_atoms_indices) < 3:
-                global_atoms_indices += [-1] * (3 - len(global_atoms_indices))
+            global_atoms_indices += [-1] * (3 - len(global_atoms_indices))
 
             force.addElectrostatics(self.typeMap[t]['charge'], global_atoms_indices[0], global_atoms_indices[1], global_atoms_indices[2], self.typeMap[atom.residue.name]['thole'], self.typeMap[t]['damping_factor'], self.typeMap[t]['polarizability'])
 
