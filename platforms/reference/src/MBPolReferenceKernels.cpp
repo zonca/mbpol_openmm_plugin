@@ -145,7 +145,8 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
     numElectrostatics   = force.getNumElectrostatics();
 
     charges.resize(numElectrostatics);
-    tholes.resize(5*numElectrostatics);
+    moleculeIndices.resize(numElectrostatics);
+	atomTypes.resize(numElectrostatics);
     dampingFactors.resize(numElectrostatics);
     polarity.resize(numElectrostatics);
     axisTypes.resize(numElectrostatics);
@@ -154,11 +155,7 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
     multipoleAtomYs.resize(numElectrostatics);
     multipoleAtomCovalentInfo.resize(numElectrostatics);
 
-    int dipoleIndex      = 0;
-    int quadrupoleIndex  = 0;
     int tholeIndex       = 0;
-    int maxCovalentRange = 0;
-    double totalCharge   = 0.0;
     for( int ii = 0; ii < numElectrostatics; ii++ ){
 
         // multipoles
@@ -166,11 +163,10 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
         int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
         double charge, dampingFactorD, polarityD;
         std::vector<double> dipolesD;
-        std::vector<double> tholesD;
+		int moleculeIndex, atomType;
         force.getElectrostaticsParameters(ii, charge, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY,
-                                     tholesD, dampingFactorD, polarityD );
+                                     moleculeIndex, atomType, dampingFactorD, polarityD );
 
-        totalCharge                       += charge;
         axisTypes[ii]                      = axisType;
         multipoleAtomZs[ii]                = multipoleAtomZ;
         multipoleAtomXs[ii]                = multipoleAtomX;
@@ -181,11 +177,8 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
         dampingFactors[ii]                 = static_cast<RealOpenMM>(dampingFactorD);
         polarity[ii]                       = static_cast<RealOpenMM>(polarityD);
 
-        tholes[tholeIndex++]             = static_cast<RealOpenMM>(tholesD[0]);
-        tholes[tholeIndex++]             = static_cast<RealOpenMM>(tholesD[1]);
-        tholes[tholeIndex++]             = static_cast<RealOpenMM>(tholesD[2]);
-        tholes[tholeIndex++]             = static_cast<RealOpenMM>(tholesD[3]);
-        tholes[tholeIndex++]             = static_cast<RealOpenMM>(tholesD[4]);
+		moleculeIndices[ii] = moleculeIndex;
+		atomTypes[ii] = atomType;
 
         // covalent info
 
@@ -202,6 +195,7 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
     }
 
     includeChargeRedistribution = force.getIncludeChargeRedistribution();
+    tholeParameters = force.getTholeParameters();
 
     // PME
 
@@ -268,6 +262,8 @@ MBPolReferenceElectrostaticsForce* ReferenceCalcMBPolElectrostaticsForceKernel::
     }
 
     mbpolReferenceElectrostaticsForce->setIncludeChargeRedistribution(includeChargeRedistribution);
+    if (tholeParameters.size() > 0)
+        mbpolReferenceElectrostaticsForce->setTholeParameters(tholeParameters);
 
     return mbpolReferenceElectrostaticsForce;
 
@@ -342,24 +338,20 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::copyParametersToContext(Contex
 
     // Record the values.
 
-    int dipoleIndex = 0;
-    int quadrupoleIndex = 0;
     int tholeIndex = 0;
     for (int i = 0; i < numElectrostatics; ++i) {
         int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
         double charge, dampingFactorD, polarityD;
         std::vector<double> tholeD;
-        force.getElectrostaticsParameters(i, charge, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY, tholeD, dampingFactorD, polarityD);
+		int moleculeIndex, atomType;
+        force.getElectrostaticsParameters(i, charge, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY, moleculeIndex, atomType, dampingFactorD, polarityD);
         axisTypes[i] = axisType;
         multipoleAtomZs[i] = multipoleAtomZ;
         multipoleAtomXs[i] = multipoleAtomX;
         multipoleAtomYs[i] = multipoleAtomY;
+        moleculeIndices[i] = moleculeIndex;
+        atomTypes[i] = atomType;
         charges[i] = (RealOpenMM) charge;
-        tholes[tholeIndex++] = (RealOpenMM) tholeD[0];
-        tholes[tholeIndex++] = (RealOpenMM) tholeD[1];
-        tholes[tholeIndex++] = (RealOpenMM) tholeD[2];
-        tholes[tholeIndex++] = (RealOpenMM) tholeD[3];
-        tholes[tholeIndex++] = (RealOpenMM) tholeD[4];
         dampingFactors[i] = (RealOpenMM) dampingFactorD;
         polarity[i] = (RealOpenMM) polarityD;
     }

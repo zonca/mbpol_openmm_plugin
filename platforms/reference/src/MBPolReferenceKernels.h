@@ -152,7 +152,10 @@ private:
     std::vector<int>   multipoleAtomZs;
     std::vector<int>   multipoleAtomXs;
     std::vector<int>   multipoleAtomYs;
+    std::vector<int>   moleculeIndices;
+    std::vector<int>   atomTypes;
     bool includeChargeRedistribution;
+    std::vector<RealOpenMM> tholeParameters;
     std::vector< std::vector< std::vector<int> > > multipoleAtomCovalentInfo;
 
     int mutualInducedMaxIterations;

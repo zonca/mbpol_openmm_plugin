@@ -207,11 +207,6 @@ void MBPolReferenceElectrostaticsForce::loadParticleData( const std::vector<Real
         particleData[ii].position             = particlePositions[ii];
         particleData[ii].charge               = charges[ii];
 
-        particleData[ii].thole[TCC]           = tholes[5*ii+0];
-        particleData[ii].thole[TCD]           = tholes[5*ii+1];
-        particleData[ii].thole[TDD]          = tholes[5*ii+2];
-        particleData[ii].thole[TDDOH]         = tholes[5*ii+3];
-        particleData[ii].thole[TDDHH]         = tholes[5*ii+4];
         particleData[ii].dampingFactor        = dampingFactors[ii];
         particleData[ii].polarity             = polarity[ii];
 
@@ -297,7 +292,9 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
         }
     }
 
-    RealOpenMM pgamma = std::min(particleI.thole[interactionType], particleK.thole[interactionType]);
+    std::vector<RealOpenMM> thole = getTholeParameters();
+
+    RealOpenMM pgamma = thole[interactionType];
 
     if (interactionType == TDD) {
         // dipole - dipole thole parameters is different for 3 cases:
@@ -314,12 +311,12 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
                                  (particleK.multipoleAtomYs >= particleK.particleIndex) and
                                  (particleK.multipoleAtomXs >= particleK.particleIndex));
             if (oneIsOxygen) {
-                pgamma = std::min(particleI.thole[TDDOH],particleK.thole[TDDOH]);
+                pgamma = thole[TDDOH];
             } else {
-                pgamma = std::min(particleI.thole[TDDHH],particleK.thole[TDDHH]);
+                pgamma = thole[TDDHH];
             }
         } else {
-            pgamma = std::min(particleI.thole[TDD],particleK.thole[TDD]);
+            pgamma = thole[TDD];
         }
     }
 
@@ -851,6 +848,8 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
     }
 
     calculateInducedDipoles( particleData );
+
+    std::cout << "First induced dipole " << _inducedDipole[0] << std::endl;
 
     if( !getMutualInducedDipoleConverged() ){
         std::stringstream message;

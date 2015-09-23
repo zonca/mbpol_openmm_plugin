@@ -409,6 +409,14 @@ public:
 
     bool getIncludeChargeRedistribution( void ) const;
 
+    void setTholeParameters( std::vector<RealOpenMM> tholeP) {
+        _tholeParameters=tholeP;
+    }
+
+    std::vector<RealOpenMM> getTholeParameters( void ) const {
+        return _tholeParameters;
+    }
+
     /**
      * Get the final epsilon for mutual induced dipoles.
      *
@@ -578,6 +586,7 @@ protected:
     NonbondedMethod _nonbondedMethod;
     PolarizationType _polarizationType;
     bool _includeChargeRedistribution;
+    std::vector<RealOpenMM> _tholeParameters;
     RealOpenMM _electric;
     RealOpenMM _dielectric;
 
