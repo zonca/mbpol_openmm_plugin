@@ -90,7 +90,7 @@ void runTest( double boxDimension ) {
     // Two body interaction
     MBPolTwoBodyForce* mbpolTwoBodyForce = new MBPolTwoBodyForce();
     mbpolTwoBodyForce->setForceGroup(2);
-    double cutoff = .9;
+    double cutoff = 0.9;
     mbpolTwoBodyForce->setCutoff( cutoff );
 
     // Three body interaction
@@ -1250,11 +1250,6 @@ void runTest( double boxDimension ) {
 
     double energy = state.getPotentialEnergy() / CalToJoule;
 
-//    std::cout  << std::endl << "Forces:" << std::endl;
-
-//    for (int i=0; i<numberOfParticles; i++) {
-//           std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl << std::endl;
-//       }
     double expectedEnergy = -2270.88890;
 
     std::cout << "Total Energy: " << energy << " Kcal/mol "<< std::endl;
@@ -1264,23 +1259,6 @@ void runTest( double boxDimension ) {
         state                      = context.getState(State::Energy, false, pow(2, ii));
         std::cout << "Energy " << forceLabels[ii] << ": " << state.getPotentialEnergy() / CalToJoule << " Kcal/mol "<< std::endl;
     }
-
-//    std::cout  << std::endl << "Forces:" << std::endl;
-//
-//    for (int i=0; i<numberOfParticles; i++) {
-//           std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
-//           std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl << std::endl;
-//       }
-//
-//       std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
-//
-//
-//
-//   ASSERT_EQUAL_TOL( expectedEnergy, energy, tolerance );
-//
-//   for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-//       ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
-//   }
    std::cout << "Test Successful: " << testName << std::endl << std::endl;
 
 }
@@ -1291,7 +1269,6 @@ int main( int numberOfArguments, char* argv[] ) {
         std::cout << "TestReferenceMBPolIntegrationTest running test..." << std::endl;
 
         double boxDimension = 19.3996888399961804/10.;
-        // double boxDimension = 5;
         runTest( boxDimension );
 
     } catch(const std::exception& e) {

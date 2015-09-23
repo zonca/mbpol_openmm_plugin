@@ -212,7 +212,7 @@ public:
      * @param dampingFactor        dampingFactor parameter
      * @param polarity             polarity parameter
      */
-    void getElectrostaticsParameters(int index, double& charge, std::vector<double>& molecularDipole, std::vector<double>& molecularQuadrupole,
+    void getElectrostaticsParameters(int index, double& charge,
                                 int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, std::vector<double>& thole, double& dampingFactor, double& polarity) const;
 
     /**
@@ -228,7 +228,7 @@ public:
      * @param multipoleAtomY       index of second atom used in constructing lab<->molecular frames
      * @param polarity             polarity parameter
      */
-    void setElectrostaticsParameters(int index, double charge, const std::vector<double>& molecularDipole, const std::vector<double>& molecularQuadrupole,
+    void setElectrostaticsParameters(int index, double charge,
                                 int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& thole, double dampingFactor, double polarity);
 
     /**
@@ -370,8 +370,6 @@ public:
     int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
     double charge, dampingFactor, polarity;
 
-    std::vector<double> molecularDipole;
-    std::vector<double> molecularQuadrupole;
     std::vector< std::vector<int> > covalentInfo;
     std::vector<double> thole;
 
@@ -379,34 +377,16 @@ public:
         axisType = multipoleAtomZ = multipoleAtomX = multipoleAtomY = -1;
         charge = dampingFactor = polarity = 0.0;
 
-        molecularDipole.resize(3);
-        molecularQuadrupole.resize(9);
         thole.resize(5);
 
     }
 
-    ElectrostaticsInfo(double charge, const std::vector<double>& inputMolecularDipole, const std::vector<double>& inputMolecularQuadrupole,
+    ElectrostaticsInfo(double charge,
                    int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& inputThole, double dampingFactor, double polarity) :
         charge(charge), axisType(axisType), multipoleAtomZ(multipoleAtomZ), multipoleAtomX(multipoleAtomX), multipoleAtomY(multipoleAtomY),
         dampingFactor(dampingFactor), polarity(polarity) {
 
        covalentInfo.resize(CovalentEnd);
-
-       molecularDipole.resize(3);
-       molecularDipole[0]          = inputMolecularDipole[0];
-       molecularDipole[1]          = inputMolecularDipole[1];
-       molecularDipole[2]          = inputMolecularDipole[2];
-
-       molecularQuadrupole.resize(9);
-       molecularQuadrupole[0]      = inputMolecularQuadrupole[0];
-       molecularQuadrupole[1]      = inputMolecularQuadrupole[1];
-       molecularQuadrupole[2]      = inputMolecularQuadrupole[2];
-       molecularQuadrupole[3]      = inputMolecularQuadrupole[3];
-       molecularQuadrupole[4]      = inputMolecularQuadrupole[4];
-       molecularQuadrupole[5]      = inputMolecularQuadrupole[5];
-       molecularQuadrupole[6]      = inputMolecularQuadrupole[6];
-       molecularQuadrupole[7]      = inputMolecularQuadrupole[7];
-       molecularQuadrupole[8]      = inputMolecularQuadrupole[8];
 
        thole.resize(5);
        for (int i=0; i<5; i++){

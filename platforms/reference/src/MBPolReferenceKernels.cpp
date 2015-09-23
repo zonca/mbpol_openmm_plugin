@@ -69,6 +69,12 @@ static RealVec& extractBoxSize(ContextImpl& context) {
     ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
     return *(RealVec*) data->periodicBoxSize;
 }
+#if !(OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2)
+static RealVec* extractBoxVectors(ContextImpl& context) {
+    ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+    return (RealVec*) data->periodicBoxVectors;
+}
+#endif
 
 ReferenceCalcMBPolOneBodyForceKernel::ReferenceCalcMBPolOneBodyForceKernel(std::string name, const Platform& platform, const OpenMM::System& system) :
                    CalcMBPolOneBodyForceKernel(name, platform), system(system) {
@@ -139,8 +145,6 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
     numElectrostatics   = force.getNumElectrostatics();
 
     charges.resize(numElectrostatics);
-    dipoles.resize(3*numElectrostatics);
-    quadrupoles.resize(9*numElectrostatics);
     tholes.resize(5*numElectrostatics);
     dampingFactors.resize(numElectrostatics);
     polarity.resize(numElectrostatics);
@@ -162,9 +166,8 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
         int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
         double charge, dampingFactorD, polarityD;
         std::vector<double> dipolesD;
-        std::vector<double> quadrupolesD;
         std::vector<double> tholesD;
-        force.getElectrostaticsParameters(ii, charge, dipolesD, quadrupolesD, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY,
+        force.getElectrostaticsParameters(ii, charge, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY,
                                      tholesD, dampingFactorD, polarityD );
 
         totalCharge                       += charge;
@@ -177,20 +180,6 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
 
         dampingFactors[ii]                 = static_cast<RealOpenMM>(dampingFactorD);
         polarity[ii]                       = static_cast<RealOpenMM>(polarityD);
-
-        dipoles[dipoleIndex++]             = static_cast<RealOpenMM>(dipolesD[0]);
-        dipoles[dipoleIndex++]             = static_cast<RealOpenMM>(dipolesD[1]);
-        dipoles[dipoleIndex++]             = static_cast<RealOpenMM>(dipolesD[2]);
-        
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[0]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[1]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[2]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[3]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[4]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[5]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[6]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[7]);
-        quadrupoles[quadrupoleIndex++]     = static_cast<RealOpenMM>(quadrupolesD[8]);
 
         tholes[tholeIndex++]             = static_cast<RealOpenMM>(tholesD[0]);
         tholes[tholeIndex++]             = static_cast<RealOpenMM>(tholesD[1]);
@@ -290,7 +279,7 @@ double ReferenceCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context
 
     vector<RealVec>& posData   = extractPositions(context);
     vector<RealVec>& forceData = extractForces(context);
-    RealOpenMM energy          = mbpolReferenceElectrostaticsForce->calculateForceAndEnergy( posData, charges, dipoles, quadrupoles, tholes,
+    RealOpenMM energy          = mbpolReferenceElectrostaticsForce->calculateForceAndEnergy( posData, charges, tholes,
                                                                                          dampingFactors, polarity, axisTypes, 
                                                                                          multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
                                                                                          multipoleAtomCovalentInfo, forceData);
@@ -310,7 +299,7 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(Cont
     for( unsigned int ii = 0; ii < inputGrid.size(); ii++ ){
         grid[ii] = inputGrid[ii];
     }
-    mbpolReferenceElectrostaticsForce->calculateElectrostaticPotential( posData, charges, dipoles, quadrupoles, tholes,
+    mbpolReferenceElectrostaticsForce->calculateElectrostaticPotential( posData, charges, tholes,
                                                                     dampingFactors, polarity, axisTypes, 
                                                                     multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
                                                                     multipoleAtomCovalentInfo, grid, potential );
@@ -337,7 +326,7 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments
 
     MBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = setupMBPolReferenceElectrostaticsForce( context );
     vector<RealVec>& posData                                     = extractPositions(context);
-    mbpolReferenceElectrostaticsForce->calculateMBPolSystemElectrostaticsMoments( masses, posData, charges, dipoles, quadrupoles, tholes,
+    mbpolReferenceElectrostaticsForce->calculateMBPolSystemElectrostaticsMoments( masses, posData, charges, tholes,
                                                                           dampingFactors, polarity, axisTypes, 
                                                                           multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
                                                                           multipoleAtomCovalentInfo, outputElectrostaticsMoments );
@@ -359,10 +348,8 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::copyParametersToContext(Contex
     for (int i = 0; i < numElectrostatics; ++i) {
         int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
         double charge, dampingFactorD, polarityD;
-        std::vector<double> dipolesD;
         std::vector<double> tholeD;
-        std::vector<double> quadrupolesD;
-        force.getElectrostaticsParameters(i, charge, dipolesD, quadrupolesD, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY, tholeD, dampingFactorD, polarityD);
+        force.getElectrostaticsParameters(i, charge, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY, tholeD, dampingFactorD, polarityD);
         axisTypes[i] = axisType;
         multipoleAtomZs[i] = multipoleAtomZ;
         multipoleAtomXs[i] = multipoleAtomX;
@@ -375,18 +362,6 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::copyParametersToContext(Contex
         tholes[tholeIndex++] = (RealOpenMM) tholeD[4];
         dampingFactors[i] = (RealOpenMM) dampingFactorD;
         polarity[i] = (RealOpenMM) polarityD;
-        dipoles[dipoleIndex++] = (RealOpenMM) dipolesD[0];
-        dipoles[dipoleIndex++] = (RealOpenMM) dipolesD[1];
-        dipoles[dipoleIndex++] = (RealOpenMM) dipolesD[2];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[0];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[1];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[2];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[3];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[4];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[5];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[6];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[7];
-        quadrupoles[quadrupoleIndex++] = (RealOpenMM) quadrupolesD[8];
     }
 }
 
@@ -442,7 +417,12 @@ double ReferenceCalcMBPolTwoBodyForceKernel::execute(ContextImpl& context, bool 
     RealOpenMM energy;
     TwoBodyForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
+
+#if OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2
     computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+#else
+    computeNeighborListVoxelHash( *neighborList, numParticles, posData, allExclusions, extractBoxVectors(context), usePBC, cutoff, 0.0, false);
+#endif
     if( usePBC ){
         TwoBodyForce.setNonbondedMethod( MBPolReferenceTwoBodyForce::CutoffPeriodic);
         RealVec& box = extractBoxSize(context);
@@ -607,7 +587,11 @@ double ReferenceCalcMBPolDispersionForceKernel::execute(ContextImpl& context, bo
     RealOpenMM energy;
     dispersionForce.setCutoff( cutoff );
     // neighborList created only with oxygens, then allParticleIndices is used to get reference to the hydrogens
+#if OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2
     computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxSize(context), usePBC, cutoff, 0.0, false);
+#else
+    computeNeighborListVoxelHash( *neighborList, numParticles, allPosData, allExclusions, extractBoxVectors(context), usePBC, cutoff, 0.0, false);
+#endif
 
     dispersionForce.setDispersionParameters(c6d6Data);
     RealOpenMM dispersionCorrection = 0;

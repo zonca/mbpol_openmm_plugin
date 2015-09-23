@@ -1,4 +1,6 @@
 *.swp
+*.swo
+*.ipynb
 *.o
 *.swo
 *.log
@@ -9,3 +11,5 @@
 python/*.pdb
 python/*qtip4*
 python/*qmc*
+*.pyc
+*.log

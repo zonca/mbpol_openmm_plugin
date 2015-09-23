@@ -40,7 +40,7 @@ using OpenMM::RealVec;
 
 MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( ) :
                                                    _nonbondedMethod(NoCutoff),
-                                                   _numParticles(0), 
+                                                   _numParticles(0),
                                                    _electric(138.9354558456),
                                                    _dielectric(1.0),
                                                    _mutualInducedDipoleConverged(0),
@@ -57,7 +57,7 @@ MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( ) :
 
 MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( NonbondedMethod nonbondedMethod ) :
                                                    _nonbondedMethod(NoCutoff),
-                                                   _numParticles(0), 
+                                                   _numParticles(0),
                                                    _electric(138.9354558456),
                                                    _dielectric(1.0),
                                                    _mutualInducedDipoleConverged(0),
@@ -74,39 +74,10 @@ MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( NonbondedM
 
 void MBPolReferenceElectrostaticsForce::initialize( void )
 {
-
-    unsigned int index    = 0;
-    _mScale[index++]      = 0.0;
-    _mScale[index++]      = 0.0;
-    _mScale[index++]      = 0.0;
-    _mScale[index++]      = 0.4;
-    _mScale[index++]      = 0.8;
-
-    index                 = 0;
-    _dScale[index++]      = 0.0;
-    _dScale[index++]      = 1.0;
-    _dScale[index++]      = 1.0;
-    _dScale[index++]      = 1.0;
-    _dScale[index++]      = 1.0;
-
-    index                 = 0;
-    _pScale[index++]      = 0.0;
-    _pScale[index++]      = 0.0;
-    _pScale[index++]      = 0.0;
-    _pScale[index++]      = 1.0;
-    _pScale[index++]      = 1.0;
-
-    index                 = 0;
-    _uScale[index++]      = 1.0;
-    _uScale[index++]      = 1.0;
-    _uScale[index++]      = 1.0;
-    _uScale[index++]      = 1.0;
-    _uScale[index++]      = 1.0;
-
     return;
 }
 
-MBPolReferenceElectrostaticsForce::NonbondedMethod MBPolReferenceElectrostaticsForce::getNonbondedMethod( void ) const 
+MBPolReferenceElectrostaticsForce::NonbondedMethod MBPolReferenceElectrostaticsForce::getNonbondedMethod( void ) const
 {
     return _nonbondedMethod;
 }
@@ -116,7 +87,7 @@ void MBPolReferenceElectrostaticsForce::setNonbondedMethod( MBPolReferenceElectr
     _nonbondedMethod = nonbondedMethod;
 }
 
-MBPolReferenceElectrostaticsForce::PolarizationType MBPolReferenceElectrostaticsForce::getPolarizationType( void ) const 
+MBPolReferenceElectrostaticsForce::PolarizationType MBPolReferenceElectrostaticsForce::getPolarizationType( void ) const
 {
     return _polarizationType;
 }
@@ -135,7 +106,7 @@ bool MBPolReferenceElectrostaticsForce::getIncludeChargeRedistribution( void ) c
     return _includeChargeRedistribution;
 }
 
-int MBPolReferenceElectrostaticsForce::getMutualInducedDipoleConverged( void ) const 
+int MBPolReferenceElectrostaticsForce::getMutualInducedDipoleConverged( void ) const
 {
     return _mutualInducedDipoleConverged;
 }
@@ -145,7 +116,7 @@ void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleConverged( int mut
     _mutualInducedDipoleConverged = mutualInducedDipoleConverged;
 }
 
-int MBPolReferenceElectrostaticsForce::getMutualInducedDipoleIterations( void ) const 
+int MBPolReferenceElectrostaticsForce::getMutualInducedDipoleIterations( void ) const
 {
     return _mutualInducedDipoleIterations;
 }
@@ -155,7 +126,7 @@ void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleIterations( int mu
     _mutualInducedDipoleIterations = mutualInducedDipoleIterations;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::getMutualInducedDipoleEpsilon( void ) const 
+RealOpenMM MBPolReferenceElectrostaticsForce::getMutualInducedDipoleEpsilon( void ) const
 {
     return _mutualInducedDipoleEpsilon;
 }
@@ -165,7 +136,7 @@ void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleEpsilon( RealOpenM
     _mutualInducedDipoleEpsilon = mutualInducedDipoleEpsilon;
 }
 
-int MBPolReferenceElectrostaticsForce::getMaximumMutualInducedDipoleIterations( void ) const 
+int MBPolReferenceElectrostaticsForce::getMaximumMutualInducedDipoleIterations( void ) const
 {
     return _maximumMutualInducedDipoleIterations;
 }
@@ -175,7 +146,7 @@ void MBPolReferenceElectrostaticsForce::setMaximumMutualInducedDipoleIterations(
     _maximumMutualInducedDipoleIterations = maximumMutualInducedDipoleIterations;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::getMutualInducedDipoleTargetEpsilon( void ) const 
+RealOpenMM MBPolReferenceElectrostaticsForce::getMutualInducedDipoleTargetEpsilon( void ) const
 {
     return _mutualInducedDipoleTargetEpsilon;
 }
@@ -185,124 +156,7 @@ void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleTargetEpsilon( Rea
     _mutualInducedDipoleTargetEpsilon = mutualInducedDipoleTargetEpsilon;
 }
 
-void MBPolReferenceElectrostaticsForce::setupScaleMaps( const std::vector< std::vector< std::vector<int> > >& multipoleParticleCovalentInfo )
-{
-
-    /* Setup for scaling maps:
-     *
-     *     _scaleMaps[particleIndex][ScaleType] = map, where map[covalentIndex] = scaleFactor 
-     *     _maxScaleIndex[particleIndex]        = max covalent index for particleIndex
-     *
-     *     multipoleParticleCovalentInfo[ii][jj], jj =0,1,2,3 contains covalent indices (c12, c13, c14, c15)
-     *     multipoleParticleCovalentInfo[ii][jj], jj =4,5,6,7 contains covalent indices (p11, p12, p13, p14)
-     *
-     *     only including covalent particles w/ index >= ii
-     */
-
-    _scaleMaps.resize( multipoleParticleCovalentInfo.size() );
-    _maxScaleIndex.resize( multipoleParticleCovalentInfo.size() );
-
-    for( unsigned int ii = 0; ii < multipoleParticleCovalentInfo.size(); ii++ ){
-
-        _scaleMaps[ii].resize(LAST_SCALE_TYPE_INDEX);
-        _maxScaleIndex[ii] = 0;
-        const std::vector< std::vector<int> >& covalentInfo = multipoleParticleCovalentInfo[ii];
-        const std::vector<int> covalentListP11              = covalentInfo[MBPolElectrostaticsForce::PolarizationCovalent11];
-
-        // pScale & mScale
-
-        for( unsigned jj = 0; jj < MBPolElectrostaticsForce::PolarizationCovalent11; jj++ ){
-            const std::vector<int> covalentList    = covalentInfo[jj];
-            for( unsigned int kk = 0; kk < covalentList.size(); kk++ ){
-                unsigned int covalentIndex             = static_cast<unsigned int>(covalentList[kk]);
-                if( covalentIndex < ii )continue;
-
-                // handle 0.5 factor for p14
-
-                int hit = 0;
-                if( jj == MBPolElectrostaticsForce::Covalent14 ){
-                    for( unsigned int mm = 0; mm < covalentListP11.size() && hit == 0; mm++ ){
-                        if( covalentListP11[mm]  == covalentIndex ){
-                            hit = 1;
-                        }
-                    }
-                } 
-               
-                _scaleMaps[ii][P_SCALE][covalentIndex] = hit ? 0.5*_pScale[jj+1] : _pScale[jj+1];
-                _scaleMaps[ii][M_SCALE][covalentIndex] = _mScale[jj+1];
-                _maxScaleIndex[ii]                     = _maxScaleIndex[ii] < covalentIndex ? covalentIndex : _maxScaleIndex[ii];
-            }
-        }
-
-        // dScale & uScale
-
-        for( unsigned jj = MBPolElectrostaticsForce::PolarizationCovalent11; jj < covalentInfo.size(); jj++ ){
-            const std::vector<int> covalentList = covalentInfo[jj];
-            for( unsigned int kk = 0; kk < covalentList.size(); kk++ ){
-                unsigned int covalentIndex             = static_cast<unsigned int>(covalentList[kk]);
-                if( covalentIndex < ii )continue;
-                _scaleMaps[ii][D_SCALE][covalentIndex] = _dScale[jj-4];
-                _scaleMaps[ii][U_SCALE][covalentIndex] = _uScale[jj-4];
-                _maxScaleIndex[ii]                     = _maxScaleIndex[ii] < covalentIndex ? covalentIndex : _maxScaleIndex[ii];
-            }
-        }
-    }
-
-    //showScaleMapForParticle( 2, stderr );
-    //showScaleMapForParticle( 10, stderr );
-
-    return;
-}
-
-void MBPolReferenceElectrostaticsForce::showScaleMapForParticle( unsigned int particleI, FILE* log ) const 
-{
-
-#ifdef MBPOL_DEBUG
-    (void) fprintf( log, "Scale map particle %5u maxIndex=%u\n", particleI, _maxScaleIndex[particleI] );
-
-    std::string scaleNames[LAST_SCALE_TYPE_INDEX] = { "D", "P", "M" }; 
-    for( unsigned int ii = 0; ii < _scaleMaps[particleI].size(); ii++ ){
-        MapIntRealOpenMM scaleMap = _scaleMaps[particleI][ii];
-        (void) fprintf( log, "  %s scale ", scaleNames[ii].c_str() );
-        for( MapIntRealOpenMMCI jj = scaleMap.begin(); jj != scaleMap.end(); jj++ ){
-            //if( jj->first > particleI && jj->second < 1.0 )
-            if( jj->second < 1.0 )
-            (void) fprintf( log, "%4d=%5.2f ", jj->first, jj->second );
-        }    
-        (void) fprintf( log, "\n" );
-    }    
-    (void) fprintf( log, "\n" );
-    (void) fflush( log );
-#endif
-}
-
-RealOpenMM MBPolReferenceElectrostaticsForce::getElectrostaticsScaleFactor( unsigned int particleI, unsigned int particleJ, ScaleType scaleType ) const 
-{
-
-    MapIntRealOpenMM  scaleMap   = _scaleMaps[particleI][scaleType];
-    MapIntRealOpenMMCI isPresent = scaleMap.find( particleJ );
-    if( isPresent != scaleMap.end() ){
-        return isPresent->second;
-    } else {
-        return 1.0;
-    }
-}
-
-void MBPolReferenceElectrostaticsForce::getDScaleAndPScale( unsigned int particleI, unsigned int particleJ, RealOpenMM& dScale, RealOpenMM& pScale ) const 
-{
-    dScale = getElectrostaticsScaleFactor( particleI, particleJ, D_SCALE );
-    pScale = getElectrostaticsScaleFactor( particleI, particleJ, P_SCALE );
-}
-
-void MBPolReferenceElectrostaticsForce::getElectrostaticsScaleFactors( unsigned int particleI, unsigned int particleJ, std::vector<RealOpenMM>& scaleFactors ) const 
-{
-    scaleFactors[D_SCALE] = getElectrostaticsScaleFactor( particleI, particleJ, D_SCALE );
-    scaleFactors[P_SCALE] = getElectrostaticsScaleFactor( particleI, particleJ, P_SCALE );
-    scaleFactors[M_SCALE] = getElectrostaticsScaleFactor( particleI, particleJ, M_SCALE );
-    scaleFactors[U_SCALE] = getElectrostaticsScaleFactor( particleI, particleJ, U_SCALE );
-}
-
-RealOpenMM MBPolReferenceElectrostaticsForce::normalizeRealVec( RealVec& vectorToNormalize ) const 
+RealOpenMM MBPolReferenceElectrostaticsForce::normalizeRealVec( RealVec& vectorToNormalize ) const
 {
     RealOpenMM norm = SQRT( vectorToNormalize.dot( vectorToNormalize ) );
     if( norm > 0.0 ){
@@ -311,42 +165,40 @@ RealOpenMM MBPolReferenceElectrostaticsForce::normalizeRealVec( RealVec& vectorT
     return norm;
 }
 
-void MBPolReferenceElectrostaticsForce::initializeRealOpenMMVector( vector<RealOpenMM>& vectorToInitialize ) const 
+void MBPolReferenceElectrostaticsForce::initializeRealOpenMMVector( vector<RealOpenMM>& vectorToInitialize ) const
 {
     RealOpenMM zero = 0.0;
     vectorToInitialize.resize( _numParticles );
     std::fill( vectorToInitialize.begin(), vectorToInitialize.end(), zero );
 }
 
-void MBPolReferenceElectrostaticsForce::initializeRealVecVector( vector<RealVec>& vectorToInitialize ) const 
+void MBPolReferenceElectrostaticsForce::initializeRealVecVector( vector<RealVec>& vectorToInitialize ) const
 {
     vectorToInitialize.resize( _numParticles );
     RealVec zeroVec( 0.0, 0.0, 0.0 );
     std::fill( vectorToInitialize.begin(), vectorToInitialize.end(), zeroVec );
 }
 
-void MBPolReferenceElectrostaticsForce::copyRealVecVector( const std::vector<OpenMM::RealVec>& inputVector, std::vector<OpenMM::RealVec>& outputVector ) const 
-{ 
+void MBPolReferenceElectrostaticsForce::copyRealVecVector( const std::vector<OpenMM::RealVec>& inputVector, std::vector<OpenMM::RealVec>& outputVector ) const
+{
     outputVector.resize( inputVector.size() );
     for( unsigned int ii = 0; ii < inputVector.size(); ii++ ){
         outputVector[ii] = inputVector[ii];
-    }   
+    }
     return;
 }
 
 void MBPolReferenceElectrostaticsForce::loadParticleData( const std::vector<RealVec>& particlePositions,
                                                       const std::vector<RealOpenMM>& charges,
-                                                      const std::vector<RealOpenMM>& dipoles,
-                                                      const std::vector<RealOpenMM>& quadrupoles,
                                                       const std::vector<RealOpenMM>& tholes,
                                                       const std::vector<RealOpenMM>& dampingFactors,
                                                       const std::vector<RealOpenMM>& polarity,
                                                       const std::vector<int>& multipoleAtomZs,
                                                       const std::vector<int>& multipoleAtomXs,
                                                       const std::vector<int>& multipoleAtomYs,
-                                                      std::vector<ElectrostaticsParticleData>& particleData ) const 
+                                                      std::vector<ElectrostaticsParticleData>& particleData ) const
 {
-   
+
     particleData.resize( _numParticles );
     for( unsigned int ii = 0; ii < _numParticles; ii++ ){
 
@@ -354,17 +206,6 @@ void MBPolReferenceElectrostaticsForce::loadParticleData( const std::vector<Real
 
         particleData[ii].position             = particlePositions[ii];
         particleData[ii].charge               = charges[ii];
-
-        particleData[ii].dipole[0]            = dipoles[3*ii+0];
-        particleData[ii].dipole[1]            = dipoles[3*ii+1];
-        particleData[ii].dipole[2]            = dipoles[3*ii+2];
-
-        particleData[ii].quadrupole[QXX]      = quadrupoles[9*ii+0];
-        particleData[ii].quadrupole[QXY]      = quadrupoles[9*ii+1];
-        particleData[ii].quadrupole[QXZ]      = quadrupoles[9*ii+2];
-        particleData[ii].quadrupole[QYY]      = quadrupoles[9*ii+4];
-        particleData[ii].quadrupole[QYZ]      = quadrupoles[9*ii+5];
-        particleData[ii].quadrupole[QZZ]      = quadrupoles[9*ii+8];
 
         particleData[ii].thole[TCC]           = tholes[5*ii+0];
         particleData[ii].thole[TCD]           = tholes[5*ii+1];
@@ -387,193 +228,6 @@ void MBPolReferenceElectrostaticsForce::zeroFixedElectrostaticsFields( void )
     initializeRealVecVector( _fixedElectrostaticsFieldPolar );
 }
 
-void MBPolReferenceElectrostaticsForce::checkChiralCenterAtParticle( ElectrostaticsParticleData& particleI, int axisType,
-                                                                 ElectrostaticsParticleData& particleZ, ElectrostaticsParticleData& particleX, 
-                                                                 ElectrostaticsParticleData& particleY ) const 
-{
-
-    if( axisType == MBPolElectrostaticsForce::ZThenX ){
-        return;
-    }
-        
-    RealVec deltaAD   = particleI.position - particleY.position;
-    RealVec deltaBD   = particleZ.position - particleY.position;
-    RealVec deltaCD   = particleX.position - particleY.position;
-
-    RealVec deltaC    = deltaBD.cross( deltaCD );
-    RealOpenMM volume = deltaC.dot( deltaAD );
-
-    if( volume < 0.0 ){
-        particleI.dipole[1]         *= -1.0; // pole(3,i)
-        particleI.quadrupole[QXY]   *= -1.0; // pole(6,i)  && pole(8,i)
-        particleI.quadrupole[QYZ]   *= -1.0; // pole(10,i) && pole(12,i)
-    }
-    return;
-
-}
-
-void MBPolReferenceElectrostaticsForce::checkChiral( std::vector<ElectrostaticsParticleData>& particleData,
-                                                 const std::vector<int>& multipoleAtomXs,
-                                                 const std::vector<int>& multipoleAtomYs,
-                                                 const std::vector<int>& multipoleAtomZs,
-                                                 const std::vector<int>& axisTypes ) const 
-{
-
-    for( unsigned int ii = 0; ii < _numParticles; ii++ ){
-        if( multipoleAtomYs[ii] > -1 ){
-            checkChiralCenterAtParticle( particleData[ii], axisTypes[ii],
-                                         particleData[multipoleAtomZs[ii]],
-                                         particleData[multipoleAtomXs[ii]],
-                                         particleData[multipoleAtomYs[ii]] );
-        }
-    }
-    return;
-}
-
-void MBPolReferenceElectrostaticsForce::applyRotationMatrixToParticle(       ElectrostaticsParticleData& particleI,
-                                                                   const ElectrostaticsParticleData& particleZ,
-                                                                   const ElectrostaticsParticleData& particleX,
-                                                                         ElectrostaticsParticleData* particleY,
-                                                                         int axisType ) const 
-{
-
-    // handle case where rotation matrix is identity (e.g. single ion)
-
-    // get coordinates of this atom and the z & x axis atoms
-    // compute the vector between the atoms and 1/sqrt(d2), d2 is distance between
-    // this atom and the axis atom
-
-    RealVec vectorY;
-    RealVec vectorZ = particleZ.position - particleI.position;
-    RealVec vectorX = particleX.position - particleI.position;
-
-    normalizeRealVec( vectorZ );
- 
-    // branch based on axis type
- 
-    if( axisType == MBPolElectrostaticsForce::Bisector ){
- 
-        // bisector
-  
-        // dx = dx1 + dx2 (in TINKER code)
-       
-        normalizeRealVec( vectorX );
-        vectorZ      += vectorX;
-        normalizeRealVec( vectorZ );
-       
-    } else if( axisType == MBPolElectrostaticsForce::ZBisect ){
- 
-        // z-bisect
-  
-        // dx = dx1 + dx2 (in TINKER code)
-       
-        normalizeRealVec( vectorX );
-
-        vectorY  = particleY->position - particleI.position;
-        normalizeRealVec( vectorY );
-
-        vectorX += vectorY;
-        normalizeRealVec( vectorX );
-       
-    } else if( axisType == MBPolElectrostaticsForce::ThreeFold ){
- 
-        // 3-fold
-  
-        // dx = dx1 + dx2 + dx3 (in TINKER code)
-       
-        normalizeRealVec( vectorX );
-
-        vectorY   = particleY->position - particleI.position;
-        normalizeRealVec( vectorY );
-
-        vectorZ  += vectorX +  vectorY;
-        normalizeRealVec( vectorZ );
-       
-    } else if( axisType == MBPolElectrostaticsForce::ZOnly ){
- 
-        // z-only
-  
-        vectorX = RealVec( 0.1, 0.1, 0.1 );
-
-    }
- 
-    RealOpenMM dot      = vectorZ.dot( vectorX );
-    vectorX            -= vectorZ*dot;
-
-    normalizeRealVec( vectorX );
-    vectorY = vectorZ.cross( vectorX );
-
-    RealVec rotationMatrix[3];
-    rotationMatrix[0] = vectorX;
-    rotationMatrix[1] = vectorY;
-    rotationMatrix[2] = vectorZ; 
-
-    RealVec labDipole;
-    for( int ii = 0; ii < 3; ii++ ){
-        labDipole[ii] = particleI.dipole[0]*rotationMatrix[0][ii];
-        for( int jj = 1; jj < 3; jj++ ){
-            labDipole[ii] += particleI.dipole[jj]*rotationMatrix[jj][ii];
-        }
-    }
-    particleI.dipole = labDipole;
- 
-    RealOpenMM mPole[3][3];
-    RealOpenMM rPole[3][3] = { { 0.0, 0.0, 0.0 },
-                               { 0.0, 0.0, 0.0 },
-                               { 0.0, 0.0, 0.0 } };
-
-    mPole[0][0] = particleI.quadrupole[QXX];
-    mPole[0][1] = particleI.quadrupole[QXY];
-    mPole[0][2] = particleI.quadrupole[QXZ];
-
-    mPole[1][0] = particleI.quadrupole[QXY];
-    mPole[1][1] = particleI.quadrupole[QYY];
-    mPole[1][2] = particleI.quadrupole[QYZ];
-
-    mPole[2][0] = particleI.quadrupole[QXZ];
-    mPole[2][1] = particleI.quadrupole[QYZ];
-    mPole[2][2] = particleI.quadrupole[QZZ];
- 
-    for( int ii = 0; ii < 3; ii++ ){
-       for( int jj = ii; jj < 3; jj++ ){
-          for( int kk = 0; kk < 3; kk++ ){
-             for( int mm = 0; mm < 3; mm++ ){
-                 rPole[ii][jj] += rotationMatrix[kk][ii]*rotationMatrix[mm][jj]*mPole[kk][mm];
-             }
-          }
-       }
-    }
- 
-    particleI.quadrupole[QXX] = rPole[0][0];
-    particleI.quadrupole[QXY] = rPole[0][1];
-    particleI.quadrupole[QXZ] = rPole[0][2];
-
-    particleI.quadrupole[QYY] = rPole[1][1];
-    particleI.quadrupole[QYZ] = rPole[1][2];
-    particleI.quadrupole[QZZ] = rPole[2][2];
-
-    return;
-
-}
-
-void MBPolReferenceElectrostaticsForce::applyRotationMatrix( std::vector<ElectrostaticsParticleData>& particleData,
-                                                         const std::vector<int>& multipoleAtomXs,
-                                                         const std::vector<int>& multipoleAtomYs,
-                                                         const std::vector<int>& multipoleAtomZs,
-                                                         const std::vector<int>& axisTypes ) const 
-{
-
-    for( unsigned int ii = 0; ii < _numParticles; ii++ ){
-        if( multipoleAtomZs[ii] >= 0 && multipoleAtomXs[ii] >= 0 ){
-            applyRotationMatrixToParticle( particleData[ii], particleData[multipoleAtomZs[ii]], particleData[multipoleAtomXs[ii]],
-                                           multipoleAtomYs[ii] > -1 ? &particleData[multipoleAtomYs[ii]] : NULL, axisTypes[ii] );
-        }
-    }
-
-    return;
-}
-
-#if 1
 RealOpenMM MBPolReferencePmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM r, int interactionOrder) const
 {
     // calculate the real space error function terms
@@ -602,21 +256,19 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM 
     switch (interactionOrder) {
 
         case 1:
-	    return bn0;
+            return bn0;
 
         case 3:
-	    return bn1;
+            return bn1;
 
         case 5:
-	    return bn2;
+            return bn2;
 
         case 7:
-	    return bn3;
+            return bn3;
 
     }
 }
-#endif
-
 
 RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
@@ -700,13 +352,13 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
 
 void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn( const ElectrostaticsParticleData& particleI,
                                                                          const ElectrostaticsParticleData& particleJ,
-                                                                         RealOpenMM dScale, RealOpenMM pScale ) 
+                                                                         RealOpenMM dScale, RealOpenMM pScale )
 {
 
     if( particleI.particleIndex == particleJ.particleIndex )return;
 
-    // in MBPol there is no contribution to the Fixed Electrostatics Field 
-    // from atoms of the same water molecule. multipoleAtomZs is used for 
+    // in MBPol there is no contribution to the Fixed Electrostatics Field
+    // from atoms of the same water molecule. multipoleAtomZs is used for
     // defining a reference frame for the water molecules and
     // contains the indices to the other 2 atoms in the same water molecule.
 
@@ -717,9 +369,9 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn
 
     RealVec deltaR    = particleJ.position - particleI.position;
     RealOpenMM r      = SQRT( deltaR.dot( deltaR ) );
- 
+
     // get scaling factors, if needed
-     
+
     // charge - charge
     RealOpenMM rr3 = getAndScaleInverseRs( particleI, particleJ,r,false,3,TCC);
 
@@ -732,16 +384,16 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn
     unsigned int particleIndex                  = particleI.particleIndex;
     _fixedElectrostaticsField[particleIndex]        -= field*dScale;
     _fixedElectrostaticsFieldPolar[particleIndex]   -= field*pScale;
- 
+
     // field at particle J due multipoles at particle I
 
     factor                                      = rr3*particleI.charge;
- 
+
     field                                       = deltaR*factor;
     particleIndex                               = particleJ.particleIndex;
     _fixedElectrostaticsField[particleIndex]        += field*dScale;
     _fixedElectrostaticsFieldPolar[particleIndex]   += field*pScale;
- 
+
     return;
 }
 
@@ -757,7 +409,7 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsField( const
         for( unsigned int jj = ii; jj < _numParticles; jj++ ){
 
             // if site jj is less than max covalent scaling index then get/apply scaling constants
-            // otherwise add unmodified field and fieldPolar to particle fields 
+            // otherwise add unmodified field and fieldPolar to particle fields
 
             RealOpenMM dScale, pScale;
 //            if( jj <= _maxScaleIndex[ii] ){
@@ -787,13 +439,13 @@ void MBPolReferenceElectrostaticsForce::initializeInducedDipoles( std::vector<Up
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxn( unsigned int particleI, 
+void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxn( unsigned int particleI,
                                                                    unsigned int particleJ,
                                                                    RealOpenMM rr3,
                                                                    RealOpenMM rr5,
                                                                    const RealVec& deltaR,
                                                                    const std::vector<RealVec>& inducedDipole,
-                                                                   std::vector<RealVec>& field ) const 
+                                                                   std::vector<RealVec>& field ) const
 {
 
     RealOpenMM dDotDelta            = rr5*(inducedDipole[particleJ].dot( deltaR ) );
@@ -804,7 +456,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxn( unsigned 
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI, 
+void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleJ,
                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
 {
@@ -813,10 +465,10 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const El
 
     RealVec deltaR       = particleJ.position - particleI.position;
     RealOpenMM r         =  SQRT( deltaR.dot( deltaR ) );
-  
+
     RealOpenMM scale3 = getAndScaleInverseRs( particleI, particleJ, r, false, 3, TDD);
     RealOpenMM scale5 = getAndScaleInverseRs( particleI, particleJ, r, false, 5, TDD);
- 
+
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
         calculateInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, -scale3, scale5, deltaR,
                                        *(updateInducedDipoleFields[ii].inducedDipoles), updateInducedDipoleFields[ii].inducedDipoleField );
@@ -842,7 +494,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipoleFields( const s
 {
 
     // (1) zero fields
-    // (2) calculate induced dipole pair ixns 
+    // (2) calculate induced dipole pair ixns
     // (3) update induced dipoles based on pair ixns and calculate/return convergence factor, maxEpsilon
 
     RealVec zeroVec( 0.0, 0.0, 0.0 );
@@ -858,7 +510,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipoleFields( const s
                                                   *(updateInducedDipoleFields[kk].fixedElectrostaticsField),
                                                     updateInducedDipoleFields[kk].inducedDipoleField,
                                                   *(updateInducedDipoleFields[kk].inducedDipoles) );
-   
+
         maxEpsilon = epsilon > maxEpsilon ? epsilon : maxEpsilon;
     }
 
@@ -893,11 +545,11 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
 
     // loop until (1) induced dipoles are converged or
     //            (2) iterations == max iterations or
-    //            (3) convergence factor (spsilon) increases 
+    //            (3) convergence factor (spsilon) increases
 
     while( !done ){
 
-        RealOpenMM epsilon = updateInducedDipoleFields( particleData, updateInducedDipoleField);   
+        RealOpenMM epsilon = updateInducedDipoleFields( particleData, updateInducedDipoleField);
                    epsilon = _polarSOR*_debye*SQRT( epsilon/( static_cast<RealOpenMM>(_numParticles) ) );
 
         if( epsilon < getMutualInducedDipoleTargetEpsilon() ){
@@ -925,12 +577,12 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoles( const std::vect
     calculateFixedElectrostaticsField( particleData );
 
     // initialize inducedDipoles
-    // if polarization type is 'Direct', then return after initializing; otherwise 
+    // if polarization type is 'Direct', then return after initializing; otherwise
     // converge induced dipoles.
 
     for( unsigned int ii = 0; ii < _numParticles; ii++ ){
         _fixedElectrostaticsField[ii]      *= particleData[ii].polarity;
-        _fixedElectrostaticsFieldPolar[ii] *= particleData[ii].polarity; 
+        _fixedElectrostaticsFieldPolar[ii] *= particleData[ii].polarity;
     }
 
     _inducedDipole.resize( _numParticles );
@@ -957,15 +609,13 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoles( const std::vect
 RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                          unsigned int iIndex,
                                                                          unsigned int kIndex,
-                                                                         const std::vector<RealOpenMM>& scalingFactors,
-                                                                         std::vector<RealVec>& forces,
-                                                                         std::vector<RealVec>& torque ) const 
+                                                                         std::vector<RealVec>& forces) const
 {
     RealOpenMM temp3,temp5,temp7;
     RealOpenMM gl[9],gli[7],glip[7];
     RealOpenMM sc[10],sci[8],scip[8];
     RealOpenMM gf[7],gfi[6],gti[6];
- 
+
     ElectrostaticsParticleData particleI = particleData[iIndex];
     ElectrostaticsParticleData particleK = particleData[kIndex];
 
@@ -987,31 +637,31 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
     RealOpenMM rr3      = rr1/r2;
     RealOpenMM rr5      = 3.0*rr3/r2;
     RealOpenMM rr7      = 5.0*rr5/r2;
- 
+
     // calculate scalar products for induced components
 
-    sci[1] = _inducedDipole[iIndex][0]*_inducedDipole[kIndex][0] 
-	   + _inducedDipole[iIndex][1]*_inducedDipole[kIndex][1] 
-	   + _inducedDipole[iIndex][2]*_inducedDipole[kIndex][2];
-    sci[2] = _inducedDipole[iIndex][0]*delta[0] 
-	   + _inducedDipole[iIndex][1]*delta[1] 
-	   + _inducedDipole[iIndex][2]*delta[2];
-    sci[3] = _inducedDipole[kIndex][0]*delta[0] 
-	   + _inducedDipole[kIndex][1]*delta[1] 
-	   + _inducedDipole[kIndex][2]*delta[2];
+    sci[1] = _inducedDipole[iIndex][0]*_inducedDipole[kIndex][0]
+       + _inducedDipole[iIndex][1]*_inducedDipole[kIndex][1]
+       + _inducedDipole[iIndex][2]*_inducedDipole[kIndex][2];
+    sci[2] = _inducedDipole[iIndex][0]*delta[0]
+       + _inducedDipole[iIndex][1]*delta[1]
+       + _inducedDipole[iIndex][2]*delta[2];
+    sci[3] = _inducedDipole[kIndex][0]*delta[0]
+       + _inducedDipole[kIndex][1]*delta[1]
+       + _inducedDipole[kIndex][2]*delta[2];
 
     scip[1] = _inducedDipole[iIndex][0]*_inducedDipolePolar[kIndex][0]
-	    + _inducedDipole[iIndex][1]*_inducedDipolePolar[kIndex][1]
-	    + _inducedDipole[iIndex][2]*_inducedDipolePolar[kIndex][2]
-	    + _inducedDipolePolar[iIndex][0]*_inducedDipole[kIndex][0] 
-	    + _inducedDipolePolar[iIndex][1]*_inducedDipole[kIndex][1]
-	    + _inducedDipolePolar[iIndex][2]*_inducedDipole[kIndex][2];
-    scip[2] = _inducedDipolePolar[iIndex][0]*delta[0] 
-	    + _inducedDipolePolar[iIndex][1]*delta[1] 
-	    + _inducedDipolePolar[iIndex][2]*delta[2];
-    scip[3] = _inducedDipolePolar[kIndex][0]*delta[0] 
-	    + _inducedDipolePolar[kIndex][1]*delta[1] 
-	    + _inducedDipolePolar[kIndex][2]*delta[2];
+        + _inducedDipole[iIndex][1]*_inducedDipolePolar[kIndex][1]
+        + _inducedDipole[iIndex][2]*_inducedDipolePolar[kIndex][2]
+        + _inducedDipolePolar[iIndex][0]*_inducedDipole[kIndex][0]
+        + _inducedDipolePolar[iIndex][1]*_inducedDipole[kIndex][1]
+        + _inducedDipolePolar[iIndex][2]*_inducedDipole[kIndex][2];
+    scip[2] = _inducedDipolePolar[iIndex][0]*delta[0]
+        + _inducedDipolePolar[iIndex][1]*delta[1]
+        + _inducedDipolePolar[iIndex][2]*delta[2];
+    scip[3] = _inducedDipolePolar[kIndex][0]*delta[0]
+        + _inducedDipolePolar[kIndex][1]*delta[1]
+        + _inducedDipolePolar[kIndex][2]*delta[2];
 
     // calculate the gl functions for permanent components
 
@@ -1025,8 +675,8 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
     bool isSameWater = (particleI.multipoleAtomZs == particleK.particleIndex) or
                        (particleI.multipoleAtomYs == particleK.particleIndex) or
-	   	       (particleI.multipoleAtomXs == particleK.particleIndex);
-    // Same water atoms have no charge/charge interaction and 
+                  (particleI.multipoleAtomXs == particleK.particleIndex);
+    // Same water atoms have no charge/charge interaction and
     // no induced-dipole/charge interaction
     if( isSameWater ) {
         gl[0] = 0.;
@@ -1069,15 +719,15 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
     ftm2i += ( _inducedDipolePolar[iIndex] *  sci[3] + // iPdipole_i * idipole_k
                     _inducedDipole[iIndex] * scip[3] +
                _inducedDipolePolar[kIndex] *  sci[2] + // iPdipole_k * idipole_i
-	            _inducedDipole[kIndex] * scip[2]  ) * 0.5 * rr5 * scale5DD;
-    
+                _inducedDipole[kIndex] * scip[2]  ) * 0.5 * rr5 * scale5DD;
+
     // Same water atoms have no induced-dipole/charge interaction
     if (not( isSameWater )) {
-	ftm2i += ( 
-                   ( _inducedDipole[iIndex] + 
-		     _inducedDipolePolar[iIndex] )*-particleK.charge +
-                   ( _inducedDipole[kIndex] + 
-		     _inducedDipolePolar[kIndex] )* particleI.charge
+    ftm2i += (
+                   ( _inducedDipole[iIndex] +
+             _inducedDipolePolar[iIndex] )*-particleK.charge +
+                   ( _inducedDipole[kIndex] +
+             _inducedDipolePolar[kIndex] )* particleI.charge
                  ) * 0.5 * rr3 * scale3CD;
     }
 
@@ -1102,20 +752,20 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
     if (getIncludeChargeRedistribution() and (not (isSameWater))){
 
-        double distanceK, distanceI, 
-	       scale1I, scale1K, scale3I, scale3K, 
-	       inducedDipoleI, inducedDipoleK;
-	RealVec deltaI, deltaK;
+        double distanceK, distanceI,
+           scale1I, scale1K, scale3I, scale3K,
+           inducedDipoleI, inducedDipoleK;
+    RealVec deltaI, deltaK;
 
         for (size_t s = 0; s < 3; ++s) {
 
             // vsH1f, vsH2f, vsMf
 
             deltaI = particleData[particleI.otherSiteIndex[s]].position
-		   - particleK.position;
+           - particleK.position;
             distanceI = SQRT(deltaI.dot(deltaI));
             deltaK = particleData[particleK.otherSiteIndex[s]].position
-		   - particleI.position;
+           - particleI.position;
             distanceK = SQRT(deltaK.dot(deltaK));
 
             scale1I = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleK, distanceI, true, 1, TCC );
@@ -1140,7 +790,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
         }
     }
 
-    RealVec force   = ftm2*scalingFactors[M_SCALE] + ftm2i;
+    RealVec force   = ftm2 + ftm2i;
             force  *= f;
 
     forces[iIndex] -= force;
@@ -1149,275 +799,19 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
     return energy;
 }
 
-void MBPolReferenceElectrostaticsForce::mapTorqueToForceForParticle( const ElectrostaticsParticleData& particleI,
-                                                                 const ElectrostaticsParticleData& particleU,
-                                                                 const ElectrostaticsParticleData& particleV,
-                                                                       ElectrostaticsParticleData* particleW,
-                                                                       int axisType, const Vec3& torque,
-                                                                       std::vector<RealVec>& forces ) const 
-{
- 
-    static const int U                  = 0;
-    static const int V                  = 1;
-    static const int W                  = 2;
-    static const int R                  = 3;
-    static const int S                  = 4;
-    static const int UV                 = 5;
-    static const int UW                 = 6;
-    static const int VW                 = 7;
-    static const int UR                 = 8;
-    static const int US                 = 9;
-    static const int VS                 = 10;
-    static const int WS                 = 11;
-    static const int LastVectorIndex    = 12;
-    
-    static const int X                  = 0;
-    static const int Y                  = 1;
-    static const int Z                  = 2;
-    static const int I                  = 3;
-    
-    RealOpenMM norms[LastVectorIndex];
-    RealOpenMM angles[LastVectorIndex][2];
-
-    // ---------------------------------------------------------------------------------------
- 
-    // get coordinates of this atom and the z & x axis atoms
-    // compute the vector between the atoms and 1/sqrt(d2), d2 is distance between
-    // this atom and the axis atom
-
-    if( axisType == MBPolElectrostaticsForce::NoAxisType ){
-        return;
-    }
-
-    RealVec vectorU = particleU.position - particleI.position;
-    norms[U]        = normalizeRealVec( vectorU );
-
-    RealVec vectorV = particleV.position - particleI.position;
-    norms[V]        = normalizeRealVec( vectorV );
-
-    RealVec vectorW;
-    if( particleW && (axisType == MBPolElectrostaticsForce::ZBisect || axisType == MBPolElectrostaticsForce::ThreeFold) ){
-         vectorW = particleW->position - particleI.position;
-    } else {
-         vectorW = vectorU.cross( vectorV );
-    }
-    norms[W]  = normalizeRealVec( vectorW );
- 
-    RealVec vectorUV, vectorUW, vectorVW;
-    vectorUV = vectorV.cross( vectorU );
-    vectorUW = vectorW.cross( vectorU );
-    vectorVW = vectorW.cross( vectorV );
-    
-    norms[UV]                     = normalizeRealVec( vectorUV );
-    norms[UW]                     = normalizeRealVec( vectorUW );
-    norms[VW]                     = normalizeRealVec( vectorVW );
-
-    // angles[][0] is cosine of angle
-    // angles[][1] is sine   of angle
-
-    angles[UV][0]                 = vectorU.dot( vectorV );
-    angles[UV][1]                 = SQRT( 1.0 - angles[UV][0]*angles[UV][0]);
-    
-    angles[UW][0]                 = vectorU.dot( vectorW );
-    angles[UW][1]                 = SQRT( 1.0 - angles[UW][0]*angles[UW][0]);
-
-    angles[VW][0]                 = vectorV.dot( vectorW );
-    angles[VW][1]                 = SQRT( 1.0 - angles[VW][0]*angles[VW][0]);
-
-    RealVec dphi;
-    dphi[U]                       = vectorU.dot( torque );
-    dphi[V]                       = vectorV.dot( torque );
-    dphi[W]                       = vectorW.dot( torque );
-    dphi                         *= -1.0;
-
-    // branch based on axis type
- 
-    if( axisType == MBPolElectrostaticsForce::ZThenX || axisType == MBPolElectrostaticsForce::Bisector ){
- 
-        RealOpenMM factor1;
-        RealOpenMM factor2;
-        RealOpenMM factor3;
-        RealOpenMM factor4;
-        RealOpenMM half = 0.5;
-    
-        factor1                 =  dphi[V]/(norms[U]*angles[UV][1]);
-        factor2                 =  dphi[W]/(norms[U]);
-        factor3                 = -dphi[U]/(norms[V]*angles[UV][1]);
-    
-        if( axisType == MBPolElectrostaticsForce::Bisector ){ 
-            factor2    *= half;
-            factor4     = half*dphi[W]/(norms[V]);
-        } else {
-            factor4     = 0.0;
-        }
- 
-        for( int ii = 0; ii < 3; ii++ ){
-            double forceU                                        =  vectorUV[ii]*factor1 + factor2*vectorUW[ii];
-            forces[particleU.particleIndex][ii]                 -=  forceU;
-
-            double forceV                                        =  vectorUV[ii]*factor3 + factor4*vectorVW[ii];
-            forces[particleV.particleIndex][ii]                 -=  forceV;
-
-            forces[particleI.particleIndex][ii]                 +=  (forceU + forceV);
-        }
-
-    } else if( axisType == MBPolElectrostaticsForce::ZBisect ){
-
-        RealVec vectorR           = vectorV + vectorW; 
-        RealVec vectorS           = vectorU.cross( vectorR );
-
-        norms[R]                  = normalizeRealVec( vectorR );
-        norms[S]                  = normalizeRealVec( vectorS );
-
-        RealVec vectorUR          =  vectorR.cross( vectorU );
-        RealVec vectorUS          =  vectorS.cross( vectorU );
-        RealVec vectorVS          =  vectorS.cross( vectorV );
-        RealVec vectorWS          =  vectorS.cross( vectorW );
-
-        norms[UR]                 = normalizeRealVec( vectorUR );
-        norms[US]                 = normalizeRealVec( vectorUS );
-        norms[VS]                 = normalizeRealVec( vectorVS );
-        norms[WS]                 = normalizeRealVec( vectorWS );
-
-        angles[UR][0]             = vectorU.dot( vectorR );
-        angles[UR][1]             = SQRT( 1.0 - angles[UR][0]*angles[UR][0]);
-
-        angles[US][0]             = vectorU.dot( vectorS );
-        angles[US][1]             = SQRT( 1.0 - angles[US][0]*angles[US][0]);
-
-        angles[VS][0]             = vectorV.dot( vectorS );
-        angles[VS][1]             = SQRT( 1.0 - angles[VS][0]*angles[VS][0]);
-
-        angles[WS][0]             = vectorW.dot( vectorS );
-        angles[WS][1]             = SQRT( 1.0 - angles[WS][0]*angles[WS][0]);
- 
-        RealVec t1                = vectorV - vectorS*angles[VS][0];
-        RealVec t2                = vectorW - vectorS*angles[WS][0];
-
-        RealOpenMM notUsed        = normalizeRealVec( t1 );
-              notUsed             = normalizeRealVec( t2 );
-
-        RealOpenMM ut1cos         = vectorU.dot( t1 );
-        RealOpenMM ut1sin         = SQRT( 1.0 - ut1cos*ut1cos);
-
-        RealOpenMM ut2cos         = vectorU.dot( t2 );
-        RealOpenMM ut2sin         = SQRT( 1.0 - ut2cos*ut2cos);
-
-        RealOpenMM dphiR          = vectorR.dot( torque )*(-1.0);
-        RealOpenMM dphiS          = vectorS.dot( torque )*(-1.0);
-
-        RealOpenMM factor1        = dphiR/(norms[U]*angles[UR][1]);
-        RealOpenMM factor2        = dphiS/(norms[U]);
-        RealOpenMM factor3        = dphi[U]/(norms[V]*(ut1sin+ut2sin));
-        RealOpenMM factor4        = dphi[U]/(norms[W]*(ut1sin+ut2sin));
-
-        RealVec forceU            =  vectorUR*factor1 + vectorUS*factor2;
-        forces[particleU.particleIndex]        -= forceU;
-
-        RealVec forceV            = (vectorS*angles[VS][1] - t1*angles[VS][0])*factor3;
-        forces[particleV.particleIndex]        -= forceV;
-
-        RealVec forceW            = (vectorS*angles[WS][1] - t2*angles[WS][0])*factor4;
-        forces[particleW->particleIndex]       -= forceW;
-
-        forces[particleI.particleIndex]        += (forceU + forceV + forceW);
-
-    } else if( axisType == MBPolElectrostaticsForce::ThreeFold ){
-
-        // 3-fold
-
-        for( int ii = 0; ii < 3; ii++ ){
-
-            RealOpenMM du =  vectorUW[ii]*dphi[W]/(norms[U]*angles[UW][1]) +
-                             vectorUV[ii]*dphi[V]/(norms[U]*angles[UV][1]) -
-                             vectorUW[ii]*dphi[U]/(norms[U]*angles[UW][1]) -
-                             vectorUV[ii]*dphi[U]/(norms[U]*angles[UV][1]);
-
-            RealOpenMM dv =  vectorVW[ii]*dphi[W]/(norms[V]*angles[VW][1]) -
-                             vectorUV[ii]*dphi[U]/(norms[V]*angles[UV][1]) -
-                             vectorVW[ii]*dphi[V]/(norms[V]*angles[VW][1]) +
-                             vectorUV[ii]*dphi[V]/(norms[V]*angles[UV][1]);
-
-            RealOpenMM dw = -vectorUW[ii]*dphi[U]/(norms[W]*angles[UW][1]) -
-                             vectorVW[ii]*dphi[V]/(norms[W]*angles[VW][1]) +
-                             vectorUW[ii]*dphi[W]/(norms[W]*angles[UW][1]) +
-                             vectorVW[ii]*dphi[W]/(norms[W]*angles[VW][1]);
-
-            du /= 3.0;
-            dv /= 3.0;
-            dw /= 3.0;
-
-            forces[particleU.particleIndex][ii] -= du;
-            forces[particleV.particleIndex][ii] -= dv;
-            if( particleW )
-                forces[particleW->particleIndex][ii] -= dw;
-            forces[particleI.particleIndex][ii] += (du + dv + dw);
-        }
-
-    } else if( axisType == MBPolElectrostaticsForce::ZOnly ){
-
-        // z-only
-
-        for( int ii = 0; ii < 3; ii++ ){
-            RealOpenMM du                               = vectorUV[ii]*dphi[V]/(norms[U]*angles[UV][1]);
-            forces[particleU.particleIndex][ii]        -= du;
-            forces[particleI.particleIndex][ii]        += du;
-        }
-    }
- 
-    return;
- 
-}
-
-void MBPolReferenceElectrostaticsForce::mapTorqueToForce( std::vector<ElectrostaticsParticleData>& particleData,
-                                                      const std::vector<int>& multipoleAtomXs,
-                                                      const std::vector<int>& multipoleAtomYs,
-                                                      const std::vector<int>& multipoleAtomZs,
-                                                      const std::vector<int>& axisTypes,
-                                                      std::vector<RealVec>& torques,
-                                                      std::vector<RealVec>& forces ) const 
-{
-
-    // map torques to forces
-
-    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-        if( axisTypes[ii] != MBPolElectrostaticsForce::NoAxisType ){
-             mapTorqueToForceForParticle( particleData[ii],
-                                          particleData[multipoleAtomZs[ii]], particleData[multipoleAtomXs[ii]],
-                                          multipoleAtomYs[ii] > -1 ? &particleData[multipoleAtomYs[ii]] : NULL,
-                                          axisTypes[ii], torques[ii], forces ); 
-        }
-    }
-    return;
-}
-
 RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                  std::vector<RealVec>& torques,
                                                                   std::vector<RealVec>& forces )
 {
 
     RealOpenMM energy = 0.0;
-    std::vector<RealOpenMM> scaleFactors(LAST_SCALE_TYPE_INDEX);
-    for( unsigned int kk = 0; kk < scaleFactors.size(); kk++ ){
-        scaleFactors[kk] = 1.0;
-    }   
 
     // main loop over particle pairs
 
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
 
-            if( jj <= _maxScaleIndex[ii] ){
-                getElectrostaticsScaleFactors( ii, jj, scaleFactors);
-            }
+            energy += calculateElectrostaticPairIxn( particleData, ii, jj, forces);
 
-            energy += calculateElectrostaticPairIxn( particleData, ii, jj, scaleFactors, forces, torques );
-
-            if( jj <= _maxScaleIndex[ii] ){
-                for( unsigned int kk = 0; kk < LAST_SCALE_TYPE_INDEX; kk++ ){
-                    scaleFactors[kk] = 1.0;
-                }
-            }
         }
     }
 
@@ -1426,8 +820,6 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostatic( const std:
 
 void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& particlePositions,
                                            const std::vector<RealOpenMM>& charges,
-                                           const std::vector<RealOpenMM>& dipoles,
-                                           const std::vector<RealOpenMM>& quadrupoles,
                                            const std::vector<RealOpenMM>& tholes,
                                            const std::vector<RealOpenMM>& dampingFactors,
                                            const std::vector<RealOpenMM>& polarity,
@@ -1448,7 +840,7 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
     // check if induced dipoles converged
 
     _numParticles = particlePositions.size();
-    loadParticleData( particlePositions, charges, dipoles, quadrupoles,
+    loadParticleData( particlePositions, charges,
                       tholes, dampingFactors, polarity, multipoleAtomZs, multipoleAtomXs, multipoleAtomYs, particleData );
 
     if (getIncludeChargeRedistribution())
@@ -1457,11 +849,6 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
             computeWaterCharge(particleData[ii], particleData[ii+1], particleData[ii+2], particleData[ii+3]);
         }
     }
-    checkChiral( particleData, multipoleAtomXs, multipoleAtomYs, multipoleAtomZs, axisTypes );
-
-    applyRotationMatrix( particleData, multipoleAtomXs, multipoleAtomYs, multipoleAtomZs, axisTypes );
-
-    setupScaleMaps( multipoleAtomCovalentInfo );
 
     calculateInducedDipoles( particleData );
 
@@ -1478,8 +865,6 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
 
 RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std::vector<RealVec>& particlePositions,
                                                                    const std::vector<RealOpenMM>& charges,
-                                                                   const std::vector<RealOpenMM>& dipoles,
-                                                                   const std::vector<RealOpenMM>& quadrupoles,
                                                                    const std::vector<RealOpenMM>& tholes,
                                                                    const std::vector<RealOpenMM>& dampingFactors,
                                                                    const std::vector<RealOpenMM>& polarity,
@@ -1494,17 +879,13 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std
     // setup, including calculating induced dipoles
     // calculate electrostatic ixns including torques
     // map torques to forces
-    
+
     std::vector<ElectrostaticsParticleData> particleData;
-    setup( particlePositions, charges, dipoles, quadrupoles, tholes,
+    setup( particlePositions, charges, tholes,
             dampingFactors, polarity, axisTypes, multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
             multipoleAtomCovalentInfo, particleData );
 
-    std::vector<RealVec> torques;
-    initializeRealVecVector( torques );
-    RealOpenMM energy = calculateElectrostatic( particleData, torques, forces );
-
-    mapTorqueToForce( particleData, multipoleAtomXs, multipoleAtomYs, multipoleAtomZs, axisTypes, torques, forces );
+    RealOpenMM energy = calculateElectrostatic( particleData, forces );
 
     return energy;
 }
@@ -1512,8 +893,6 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std
 void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoments( const std::vector<RealOpenMM>& masses,
                                                                            const std::vector<RealVec>& particlePositions,
                                                                            const std::vector<RealOpenMM>& charges,
-                                                                           const std::vector<RealOpenMM>& dipoles,
-                                                                           const std::vector<RealOpenMM>& quadrupoles,
                                                                            const std::vector<RealOpenMM>& tholes,
                                                                            const std::vector<RealOpenMM>& dampingFactors,
                                                                            const std::vector<RealOpenMM>& polarity,
@@ -1530,7 +909,7 @@ void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoment
     // calculate system moments
 
     std::vector<ElectrostaticsParticleData> particleData;
-    setup( particlePositions, charges, dipoles, quadrupoles, tholes,
+    setup( particlePositions, charges, tholes,
            dampingFactors, polarity, axisTypes, multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
            multipoleAtomCovalentInfo, particleData );
 
@@ -1568,7 +947,7 @@ void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoment
         RealVec position          = localPositions[ii];
         netchg                   += charge;
 
-        RealVec netDipole         = (particleData[ii].dipole  + _inducedDipole[ii]);
+        RealVec netDipole         = (_inducedDipole[ii]);
 
         dpl                      += position*charge + netDipole;
 
@@ -1583,8 +962,7 @@ void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoment
 
     }
 
-    // convert the quadrupole from traced to traceless form
- 
+
     outputElectrostaticsMoments.resize( 13 );
     RealOpenMM qave                  = (xxqdp + yyqdp + zzqdp)/3.0;
     outputElectrostaticsMoments[4]        = 0.5*(xxqdp-qave);
@@ -1594,20 +972,10 @@ void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoment
     outputElectrostaticsMoments[9]        = 0.5*yzqdp;
     outputElectrostaticsMoments[12]       = 0.5*(zzqdp-qave);
 
-    // add the traceless atomic quadrupoles to total quadrupole
-
-    for( unsigned int ii = 0; ii < _numParticles; ii++ ){
-        outputElectrostaticsMoments[4]  += particleData[ii].quadrupole[QXX];
-        outputElectrostaticsMoments[5]  += particleData[ii].quadrupole[QXY];
-        outputElectrostaticsMoments[6]  += particleData[ii].quadrupole[QXZ];
-        outputElectrostaticsMoments[8]  += particleData[ii].quadrupole[QYY];
-        outputElectrostaticsMoments[9]  += particleData[ii].quadrupole[QYZ];
-        outputElectrostaticsMoments[12] += particleData[ii].quadrupole[QZZ];
-    }
     outputElectrostaticsMoments[7]  = outputElectrostaticsMoments[5];
     outputElectrostaticsMoments[10] = outputElectrostaticsMoments[6];
     outputElectrostaticsMoments[11] = outputElectrostaticsMoments[9];
- 
+
     RealOpenMM debye           = 4.80321;
 
     outputElectrostaticsMoments[0]  = netchg;
@@ -1616,7 +984,7 @@ void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoment
     outputElectrostaticsMoments[1]  = dpl[0];
     outputElectrostaticsMoments[2]  = dpl[1];
     outputElectrostaticsMoments[3]  = dpl[2];
-    
+
     debye *= 3.0;
     for( unsigned int ii = 4; ii < 13; ii++ ){
         outputElectrostaticsMoments[ii] *= 100.0*debye;
@@ -1625,9 +993,9 @@ void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoment
     return;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPotentialForParticleGridPoint( const ElectrostaticsParticleData& particleI, const RealVec& gridPoint ) const 
+RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPotentialForParticleGridPoint( const ElectrostaticsParticleData& particleI, const RealVec& gridPoint ) const
 {
-  
+
     RealVec deltaR           = particleI.position - gridPoint;
 
     getPeriodicDelta( deltaR );
@@ -1641,15 +1009,10 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPotentialFor
     RealOpenMM rr2           = rr1*rr1;
     RealOpenMM rr3           = rr1*rr2;
 
-    RealOpenMM scd           = particleI.dipole.dot( deltaR );
     RealOpenMM scu           = _inducedDipole[particleI.particleIndex].dot( deltaR );
-    potential               -= (scd + scu)*rr3;
+    potential               -= (scu)*rr3;
 
     RealOpenMM rr5           = 3.0*rr3*rr2;
-    RealOpenMM scq           = deltaR[0]*(particleI.quadrupole[QXX]*deltaR[0] + particleI.quadrupole[QXY]*deltaR[1] + particleI.quadrupole[QXZ]*deltaR[2]);
-          scq               += deltaR[1]*(particleI.quadrupole[QXY]*deltaR[0] + particleI.quadrupole[QYY]*deltaR[1] + particleI.quadrupole[QYZ]*deltaR[2]);
-          scq               += deltaR[2]*(particleI.quadrupole[QXZ]*deltaR[0] + particleI.quadrupole[QYZ]*deltaR[1] + particleI.quadrupole[QZZ]*deltaR[2]);
-    potential               += scq*rr5;
 
     return potential;
 
@@ -1657,8 +1020,6 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPotentialFor
 
 void MBPolReferenceElectrostaticsForce::calculateElectrostaticPotential( const std::vector<RealVec>& particlePositions,
                                                                      const std::vector<RealOpenMM>& charges,
-                                                                     const std::vector<RealOpenMM>& dipoles,
-                                                                     const std::vector<RealOpenMM>& quadrupoles,
                                                                      const std::vector<RealOpenMM>& tholes,
                                                                      const std::vector<RealOpenMM>& dampingFactors,
                                                                      const std::vector<RealOpenMM>& polarity,
@@ -1672,12 +1033,12 @@ void MBPolReferenceElectrostaticsForce::calculateElectrostaticPotential( const s
 {
 
     // setup, including calculating induced dipoles
-    // initialize potential 
+    // initialize potential
     // calculate contribution of each particle to potential at grid point
     // apply prefactor
 
     std::vector<ElectrostaticsParticleData> particleData;
-    setup( particlePositions, charges, dipoles, quadrupoles, tholes,
+    setup( particlePositions, charges, tholes,
            dampingFactors, polarity, axisTypes, multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
            multipoleAtomCovalentInfo, particleData );
 
@@ -1700,12 +1061,12 @@ void MBPolReferenceElectrostaticsForce::calculateElectrostaticPotential( const s
     return;
 }
 
-MBPolReferenceElectrostaticsForce::UpdateInducedDipoleFieldStruct::UpdateInducedDipoleFieldStruct( std::vector<OpenMM::RealVec>* inputFixed_E_Field, std::vector<OpenMM::RealVec>* inputInducedDipoles ) 
-{ 
+MBPolReferenceElectrostaticsForce::UpdateInducedDipoleFieldStruct::UpdateInducedDipoleFieldStruct( std::vector<OpenMM::RealVec>* inputFixed_E_Field, std::vector<OpenMM::RealVec>* inputInducedDipoles )
+{
     fixedElectrostaticsField  = inputFixed_E_Field;
     inducedDipoles = inputInducedDipoles;
     inducedDipoleField.resize( fixedElectrostaticsField->size() );
-}   
+}
 
 const int MBPolReferencePmeElectrostaticsForce::MBPOL_PME_ORDER = 5;
 
@@ -1714,13 +1075,13 @@ const RealOpenMM MBPolReferencePmeElectrostaticsForce::SQRT_PI = 1.77245385091;
 MBPolReferencePmeElectrostaticsForce::MBPolReferencePmeElectrostaticsForce( void ) :
                MBPolReferenceElectrostaticsForce(PME),
                _cutoffDistance(0.9), _cutoffDistanceSquared(0.81),
-               _pmeGridSize(0), _totalGridSize(0), _alphaEwald(0.0) 
+               _pmeGridSize(0), _totalGridSize(0), _alphaEwald(0.0)
 {
 
     _fftplan = NULL;
     _pmeGrid = NULL;
     _pmeGridDimensions = IntVec( -1, -1, -1 );
-} 
+}
 
 MBPolReferencePmeElectrostaticsForce::~MBPolReferencePmeElectrostaticsForce( )
 {
@@ -1731,19 +1092,19 @@ MBPolReferencePmeElectrostaticsForce::~MBPolReferencePmeElectrostaticsForce( )
         delete _pmeGrid;
     }
 };
- 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::getCutoffDistance( void ) const 
+
+RealOpenMM MBPolReferencePmeElectrostaticsForce::getCutoffDistance( void ) const
 {
      return _cutoffDistance;
 };
- 
+
 void MBPolReferencePmeElectrostaticsForce::setCutoffDistance( RealOpenMM cutoffDistance )
 {
      _cutoffDistance        = cutoffDistance;
      _cutoffDistanceSquared = cutoffDistance*cutoffDistance;
 };
- 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::getAlphaEwald( void ) const 
+
+RealOpenMM MBPolReferencePmeElectrostaticsForce::getAlphaEwald( void ) const
 {
      return _alphaEwald;
 };
@@ -1753,7 +1114,7 @@ void MBPolReferencePmeElectrostaticsForce::setAlphaEwald( RealOpenMM alphaEwald 
      _alphaEwald = alphaEwald;
 };
 
-void MBPolReferencePmeElectrostaticsForce::getPmeGridDimensions( std::vector<int>& pmeGridDimensions ) const 
+void MBPolReferencePmeElectrostaticsForce::getPmeGridDimensions( std::vector<int>& pmeGridDimensions ) const
 {
 
     pmeGridDimensions.resize( 3 );
@@ -1768,7 +1129,7 @@ void MBPolReferencePmeElectrostaticsForce::getPmeGridDimensions( std::vector<int
 void MBPolReferencePmeElectrostaticsForce::setPmeGridDimensions( std::vector<int>& pmeGridDimensions )
 {
 
-    if( (pmeGridDimensions[0] == _pmeGridDimensions[0]) && 
+    if( (pmeGridDimensions[0] == _pmeGridDimensions[0]) &&
         (pmeGridDimensions[1] == _pmeGridDimensions[1]) &&
         (pmeGridDimensions[2] == _pmeGridDimensions[2]) )return;
 
@@ -1795,9 +1156,9 @@ void MBPolReferencePmeElectrostaticsForce::setPeriodicBoxSize( RealVec& boxSize 
 
     _periodicBoxSize       = boxSize;
 
-    _invPeriodicBoxSize[0] = 1.0/boxSize[0]; 
-    _invPeriodicBoxSize[1] = 1.0/boxSize[1]; 
-    _invPeriodicBoxSize[2] = 1.0/boxSize[2]; 
+    _invPeriodicBoxSize[0] = 1.0/boxSize[0];
+    _invPeriodicBoxSize[1] = 1.0/boxSize[1];
+    _invPeriodicBoxSize[2] = 1.0/boxSize[2];
 
     return;
 };
@@ -1844,9 +1205,9 @@ void MBPolReferencePmeElectrostaticsForce::initializePmeGrid( void )
         _pmeGrid[jj].re = _pmeGrid[jj].im = 0.0;
     }
     return;
-}    
+}
 
-void MBPolReferencePmeElectrostaticsForce::getPeriodicDelta( RealVec& deltaR ) const 
+void MBPolReferencePmeElectrostaticsForce::getPeriodicDelta( RealVec& deltaR ) const
 {
     deltaR[0]  -= FLOOR(deltaR[0]*_invPeriodicBoxSize[0]+0.5)*_periodicBoxSize[0];
     deltaR[1]  -= FLOOR(deltaR[1]*_invPeriodicBoxSize[1]+0.5)*_periodicBoxSize[1];
@@ -1963,8 +1324,8 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPair
 
     if( particleI.particleIndex == particleJ.particleIndex )return;
 
-    // in MBPol there is no contribution to the Fixed Multipole Field 
-    // from atoms of the same water molecule. multipoleAtomZs is used for 
+    // in MBPol there is no contribution to the Fixed Multipole Field
+    // from atoms of the same water molecule. multipoleAtomZs is used for
     // defining a reference frame for the water molecules and
     // contains the indices to the other 2 atoms in the same water molecule.
 
@@ -2000,7 +1361,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPair
 
     // FIXME verify this
     if( isSameWater ){
-	s3 = 2;
+    s3 = 2;
     }
     RealOpenMM rr3 = (s3 - 1.)/(r2*r);
 
@@ -2046,8 +1407,6 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsField( co
 
     RealOpenMM term = (4.0/3.0)*(_alphaEwald*_alphaEwald*_alphaEwald)/SQRT_PI;
     for( unsigned int jj = 0; jj < _numParticles; jj++ ){
-        RealVec selfEnergy             = particleData[jj].dipole*term;
-        _fixedElectrostaticsField[jj]      += selfEnergy;
         _fixedElectrostaticsFieldPolar[jj]  = _fixedElectrostaticsField[jj];
     }
 
@@ -2139,7 +1498,7 @@ void MBPolReferencePmeElectrostaticsForce::computeBSplinePoint( std::vector<Real
 /**
  * Compute b-spline coefficients.
  */
-void MBPolReferencePmeElectrostaticsForce::computeMBPolBsplines( const std::vector<ElectrostaticsParticleData>& particleData ) 
+void MBPolReferencePmeElectrostaticsForce::computeMBPolBsplines( const std::vector<ElectrostaticsParticleData>& particleData )
 {
 
     //  get the B-spline coefficients for each multipole site
@@ -2162,7 +1521,7 @@ void MBPolReferencePmeElectrostaticsForce::computeMBPolBsplines( const std::vect
                 _thetai[jj][ii*MBPOL_PME_ORDER+kk] = thetaiTemp[kk];
             }
         }
-    
+
         // Record the grid point.
 
         _iGrid[ii]               = igrid;
@@ -2176,7 +1535,7 @@ void MBPolReferencePmeElectrostaticsForce::computeMBPolBsplines( const std::vect
 /**
  * For each grid point, find the range of sorted atoms associated with that point.
  */
-void MBPolReferencePmeElectrostaticsForce::findMBPolAtomRangeForGrid( const vector<ElectrostaticsParticleData>& particleData ) 
+void MBPolReferencePmeElectrostaticsForce::findMBPolAtomRangeForGrid( const vector<ElectrostaticsParticleData>& particleData )
 {
 
     int last;
@@ -2204,7 +1563,7 @@ void MBPolReferencePmeElectrostaticsForce::findMBPolAtomRangeForGrid( const vect
     // some work in the multipole spreading.
 
     for( unsigned int ii = 0; ii < _numParticles; ii++) {
-    
+
         RealOpenMM posz           = particleData[_pmeAtomGridIndex[ii][0]].position[2];
         posz                     -= FLOOR(posz*_invPeriodicBoxSize[2])*_periodicBoxSize[2];
         RealOpenMM w              = posz*_invPeriodicBoxSize[2];
@@ -2216,7 +1575,7 @@ void MBPolReferencePmeElectrostaticsForce::findMBPolAtomRangeForGrid( const vect
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::getGridPointGivenGridIndex( int gridIndex, IntVec& gridPoint ) const 
+void MBPolReferencePmeElectrostaticsForce::getGridPointGivenGridIndex( int gridIndex, IntVec& gridPoint ) const
 {
 
     gridPoint[0]  = gridIndex/(_pmeGridDimensions[1]*_pmeGridDimensions[2]);
@@ -2225,11 +1584,11 @@ void MBPolReferencePmeElectrostaticsForce::getGridPointGivenGridIndex( int gridI
     gridPoint[2]  = remainder-gridPoint[1]*_pmeGridDimensions[2];
 
     return;
-}    
+}
 
 RealOpenMM MBPolReferencePmeElectrostaticsForce::computeFixedElectrostaticssGridValue( const vector<ElectrostaticsParticleData>& particleData,
                                                                               const int2& particleGridIndices, const RealVec& scale,
-                                                                              int ix, int iy, const IntVec& gridPoint ) const 
+                                                                              int ix, int iy, const IntVec& gridPoint ) const
 {
 
     RealOpenMM gridValue = 0.0;
@@ -2243,29 +1602,17 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeFixedElectrostaticssGrid
         }
 
         RealOpenMM atomCharge       = particleData[atomIndex].charge;
-        RealVec atomDipole          = RealVec( scale[0]*particleData[atomIndex].dipole[0],
-                                               scale[1]*particleData[atomIndex].dipole[1],
-                                               scale[2]*particleData[atomIndex].dipole[2] );
-
-        RealOpenMM atomQuadrupoleXX =     scale[0]*scale[0]*particleData[atomIndex].quadrupole[QXX];
-        RealOpenMM atomQuadrupoleXY = 2.0*scale[0]*scale[1]*particleData[atomIndex].quadrupole[QXY];
-        RealOpenMM atomQuadrupoleXZ = 2.0*scale[0]*scale[2]*particleData[atomIndex].quadrupole[QXZ];
-        RealOpenMM atomQuadrupoleYY =     scale[1]*scale[1]*particleData[atomIndex].quadrupole[QYY];
-        RealOpenMM atomQuadrupoleYZ = 2.0*scale[1]*scale[2]*particleData[atomIndex].quadrupole[QYZ];
-        RealOpenMM atomQuadrupoleZZ =     scale[2]*scale[2]*particleData[atomIndex].quadrupole[QZZ];
 
         RealOpenMM4 t = _thetai[0][atomIndex*MBPOL_PME_ORDER+ix];
         RealOpenMM4 u = _thetai[1][atomIndex*MBPOL_PME_ORDER+iy];
         RealOpenMM4 v = _thetai[2][atomIndex*MBPOL_PME_ORDER+iz];
-        RealOpenMM term0 = atomCharge*u[0]*v[0] + atomDipole[1]*u[1]*v[0] + atomDipole[2]*u[0]*v[1] + atomQuadrupoleYY*u[2]*v[0] + atomQuadrupoleZZ*u[0]*v[2] + atomQuadrupoleYZ*u[1]*v[1];
-        RealOpenMM term1 = atomDipole[0]*u[0]*v[0] + atomQuadrupoleXY*u[1]*v[0] + atomQuadrupoleXZ*u[0]*v[1];
-        RealOpenMM term2 = atomQuadrupoleXX * u[0] * v[0];
-        gridValue += term0*t[0] + term1*t[1] + term2*t[2];
+        RealOpenMM term0 = atomCharge*u[0]*v[0];
+        gridValue += term0*t[0];
     }
     return gridValue;
 }
 
-void MBPolReferencePmeElectrostaticsForce::spreadFixedElectrostaticssOntoGrid( const vector<ElectrostaticsParticleData>& particleData ) 
+void MBPolReferencePmeElectrostaticsForce::spreadFixedElectrostaticssOntoGrid( const vector<ElectrostaticsParticleData>& particleData )
 {
 
     RealVec scale;
@@ -2455,15 +1802,15 @@ void MBPolReferencePmeElectrostaticsForce::computeFixedPotentialFromGrid( void )
 t_complex MBPolReferencePmeElectrostaticsForce::computeInducedDipoleGridValue( const int2& particleGridIndices, const RealVec& scale, int ix, int iy,
                                                                            const IntVec& gridPoint,
                                                                            const std::vector<RealVec>& inputInducedDipole,
-                                                                           const std::vector<RealVec>& inputInducedDipolePolar ) const 
+                                                                           const std::vector<RealVec>& inputInducedDipolePolar ) const
 {
 
-    
+
     // loop over particles contributing to this grid point
 
     t_complex gridValue;
     gridValue.re = gridValue.im = 0.0;
-    
+
     for (int i = _pmeAtomRange[particleGridIndices[0]]; i < _pmeAtomRange[particleGridIndices[1]+1]; ++i){
         int2 atomData = _pmeAtomGridIndex[i];
         int atomIndex = atomData[0];
@@ -2743,7 +2090,7 @@ void MBPolReferencePmeElectrostaticsForce::computeInducedPotentialFromGrid( void
 }
 
 RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                                                 std::vector<RealVec>& forces, std::vector<RealVec>& torques ) const 
+                                                                                                 std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
     RealOpenMM multipole[10];
     const int deriv1[] = {1, 4, 7, 8, 10, 15, 17, 13, 14, 19};
@@ -2758,79 +2105,48 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
 
         multipole[0] = particleData[i].charge;
 
-        multipole[1] =  particleData[i].dipole[0];
-        multipole[2] =  particleData[i].dipole[1];
-        multipole[3] =  particleData[i].dipole[2];
-
-        multipole[4] = particleData[i].quadrupole[QXX];
-        multipole[5] = particleData[i].quadrupole[QYY];
-        multipole[6] = particleData[i].quadrupole[QZZ];
-
-        multipole[7] = particleData[i].quadrupole[QXY]*2.0;
-        multipole[8] = particleData[i].quadrupole[QXZ]*2.0;
-        multipole[9] = particleData[i].quadrupole[QYZ]*2.0;
-
         const RealOpenMM* phi = &_phi[20*i];
-#if 0
-        torques[i][0] += _electric*(multipole[3]*scale[1]*phi[2] - multipole[2]*scale[2]*phi[3]
-                      + 2.0*(multipole[6]-multipole[5])*scale[1]*scale[2]*phi[9]
-                      + multipole[8]*scale[0]*scale[1]*phi[7] + multipole[9]*scale[1]*scale[1]*phi[5]
-                      - multipole[7]*scale[0]*scale[2]*phi[8] - multipole[9]*scale[2]*scale[2]*phi[6]);
 
-        torques[i][1] += _electric*(multipole[1]*scale[2]*phi[3] - multipole[3]*scale[0]*phi[1]
-                      + 2.0*(multipole[4]-multipole[6])*scale[0]*scale[2]*phi[8]
-                      + multipole[7]*scale[1]*scale[2]*phi[9] + multipole[8]*scale[2]*scale[2]*phi[6]
-                      - multipole[8]*scale[0]*scale[0]*phi[4] - multipole[9]*scale[0]*scale[1]*phi[7]);
-
-        torques[i][2] += _electric*(multipole[2]*scale[0]*phi[1] - multipole[1]*scale[1]*phi[2]
-                      + 2.0*(multipole[5]-multipole[4])*scale[0]*scale[1]*phi[7]
-                      + multipole[7]*scale[0]*scale[0]*phi[4] + multipole[9]*scale[0]*scale[2]*phi[8]
-                      - multipole[7]*scale[1]*scale[1]*phi[5] - multipole[8]*scale[1]*scale[2]*phi[9]);
-
-        // Compute the force and energy.
-
-        multipole[1] *= scale[0];
-        multipole[2] *= scale[1];
-        multipole[3] *= scale[2];
-        multipole[4] *= scale[0]*scale[0];
-        multipole[5] *= scale[1]*scale[1];
-        multipole[6] *= scale[2]*scale[2];
-        multipole[7] *= scale[0]*scale[1];
-        multipole[8] *= scale[0]*scale[2];
-        multipole[9] *= scale[1]*scale[2];
-#endif
+        electrostaticPotential[i] += phi[0] ; // /2.;
 
         RealVec f = RealVec( 0.0, 0.0, 0.0);
-        for (int k = 0; k < 10; k++) {
+        for (int k = 0; k < 1; k++) {
+        //for (int k = 0; k < 10; k++) {
             energy += multipole[k]*phi[k];
             f[0]   += multipole[k]*phi[deriv1[k]];
             f[1]   += multipole[k]*phi[deriv2[k]];
             f[2]   += multipole[k]*phi[deriv3[k]];
         }
 
-        //FIXMEGREG
         // Need to add charge derivatives here
-	// Need to multiply electrostatic potential by the charge derivative
+       // Need to multiply electrostatic potential by the charge derivative
 
-       	// Reciprocal sum, so never the same water
-	if (getIncludeChargeRedistribution()){
-
-	    for (size_t s = 0; s < 3; ++s) {
-
-		// vsH1f, vsH2f, vsMf
-		//if(particleData[i].otherSiteIndex[s] != jIndex){
-
-		    for (int k = 0; k < 3; ++k){
-//			std::cerr << "i: " << i 
-//			          << ' ' << particleData[i].chargeDerivatives[s][k] 
-//			          << ' ' <<  phi[k] << std::endl;
-			f[k] += particleData[i].chargeDerivatives[s][k] * phi[0];
-//			ftm2i1 += particleI.chargeDerivatives[s][0] * inducedDipoleI;
-		    }
-                //}
-
-	    }
-	} // charge redistribution
+           // Reciprocal sum, so never the same water
+// if (getIncludeChargeRedistribution()){
+//
+// //        std::cerr << i << ' ';
+//         for (size_t s = 0; s < 3; ++s) {
+//
+//         const int is = particleData[i].otherSiteIndex[s];
+// //        std::cerr << is << ' ';
+//         const RealOpenMM* phi_s = &_phi[20*is];
+//
+//        //if(particleData[i].otherSiteIndex[s] != i){
+//
+//         // vsH1f, vsH2f, vsMf
+//
+//         for (int k = 0; k < 3; ++k){
+// //            std::cerr << "i: " << i
+// //                      << ' ' << particleData[i].chargeDerivatives[s][k]
+// //                      << ' ' <<  phi[k] << std::endl;
+//             f[k] += particleData[i].chargeDerivatives[s][k] * phi_s[0];
+// //            f[k] += particleData[i].chargeDerivatives[s][k] * phi[0];
+//             }
+//         //}
+//
+//         }
+// //        std::cerr << std::endl;
+//     } // charge redistribution
 
 
         f[0]           *= scale[0];
@@ -2848,7 +2164,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
  */
 RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( MBPolReferenceElectrostaticsForce::PolarizationType polarizationType,
                                                                                                 const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                                                std::vector<RealVec>& forces, std::vector<RealVec>& torques) const 
+                                                                                                std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const
 {
 
     RealOpenMM multipole[10];
@@ -2869,47 +2185,6 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
 
         multipole[0] = particleData[i].charge;
 
-        multipole[1] = particleData[i].dipole[0];
-        multipole[2] = particleData[i].dipole[1];
-        multipole[3] = particleData[i].dipole[2];
-
-        multipole[4] = particleData[i].quadrupole[QXX];
-        multipole[5] = particleData[i].quadrupole[QYY];
-        multipole[6] = particleData[i].quadrupole[QZZ];
-        multipole[7] = particleData[i].quadrupole[QXY]*2.0;
-        multipole[8] = particleData[i].quadrupole[QXZ]*2.0;
-        multipole[9] = particleData[i].quadrupole[QYZ]*2.0;
-
-#if 0
-        torques[iIndex][0] += 0.5*_electric*(multipole[3]*scale[1]*_phidp[20*i+2] - multipole[2]*scale[2]*_phidp[20*i+3]
-                      + 2.0*(multipole[6]-multipole[5])*scale[1]*scale[2]*_phidp[20*i+9]
-                      + multipole[8]*scale[0]*scale[1]*_phidp[20*i+7] + multipole[9]*scale[1]*scale[1]*_phidp[20*i+5]
-                      - multipole[7]*scale[0]*scale[2]*_phidp[20*i+8] - multipole[9]*scale[2]*scale[2]*_phidp[20*i+6]);
-
-        torques[iIndex][1] += 0.5*_electric*(multipole[1]*scale[2]*_phidp[20*i+3] - multipole[3]*scale[0]*_phidp[20*i+1]
-                      + 2.0*(multipole[4]-multipole[6])*scale[0]*scale[2]*_phidp[20*i+8]
-                      + multipole[7]*scale[1]*scale[2]*_phidp[20*i+9] + multipole[8]*scale[2]*scale[2]*_phidp[20*i+6]
-                      - multipole[8]*scale[0]*scale[0]*_phidp[20*i+4] - multipole[9]*scale[0]*scale[1]*_phidp[20*i+7]);
-
-        torques[iIndex][2] += 0.5*_electric*(multipole[2]*scale[0]*_phidp[20*i+1] - multipole[1]*scale[1]*_phidp[20*i+2]
-                      + 2.0*(multipole[5]-multipole[4])*scale[0]*scale[1]*_phidp[20*i+7]
-                      + multipole[7]*scale[0]*scale[0]*_phidp[20*i+4] + multipole[9]*scale[0]*scale[2]*_phidp[20*i+8]
-                      - multipole[7]*scale[1]*scale[1]*_phidp[20*i+5] - multipole[8]*scale[1]*scale[2]*_phidp[20*i+9]);
-
-        // Compute the force and energy.
-
-        multipole[1] *= scale[0];
-        multipole[2] *= scale[1];
-        multipole[3] *= scale[2];
-
-        multipole[4] *= scale[0]*scale[0];
-        multipole[5] *= scale[1]*scale[1];
-        multipole[6] *= scale[2]*scale[2];
-        multipole[7] *= scale[0]*scale[1];
-        multipole[8] *= scale[0]*scale[2];
-        multipole[9] *= scale[1]*scale[2];
-#endif
-
         inducedDipole[0] = _inducedDipole[i][0];
         inducedDipole[1] = _inducedDipole[i][1];
         inducedDipole[2] = _inducedDipole[i][2];
@@ -2922,6 +2197,8 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
         energy += scale[1]*inducedDipole[1]*_phi[20*i+2];
         energy += scale[2]*inducedDipole[2]*_phi[20*i+3];
 
+        electrostaticPotential[i] += .5* _phidp[20*i];
+
         RealVec f        = RealVec(0.0, 0.0, 0.0 );
 
         for (int k = 0; k < 3; k++) {
@@ -2933,7 +2210,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
             f[0] += (inducedDipole[k]+inducedDipolePolar[k])*_phi[20*i+j1]*(scale[k]/scale[0]);
             f[1] += (inducedDipole[k]+inducedDipolePolar[k])*_phi[20*i+j2]*(scale[k]/scale[1]);
             f[2] += (inducedDipole[k]+inducedDipolePolar[k])*_phi[20*i+j3]*(scale[k]/scale[2]);
- 
+
             if( polarizationType == MBPolReferenceElectrostaticsForce::Mutual )
             {
                 f[0] += (inducedDipole[k]*_phip[10*i+j1] + inducedDipolePolar[k]*_phid[10*i+j1])*(scale[k]/scale[0]);
@@ -2947,7 +2224,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
         f[1] *= scale[1];
         f[2] *= scale[2];
 
-	// phidip appears to be always zero when multipole is a charge
+    // phidip appears to be always zero when multipole is a charge
         for (int k = 0; k < 10; k++) {
             f[0] += multipole[k]*_phidp[20*i+deriv1[k]];
             f[1] += multipole[k]*_phidp[20*i+deriv2[k]];
@@ -2960,11 +2237,11 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
         f              *= (0.5*_electric);
         forces[iIndex] -= f;
 
-	// I don't think this portion of the code needs to be modified
-	// for charge derivatives. I think this section for (MB-pol) is 
-	// only the induced dipole * electric field. So if the charge derivatives
-	// do not have to be added to the electric field, this section of the code
-	// should work as is.
+    // I don't think this portion of the code needs to be modified
+    // for charge derivatives. I think this section for (MB-pol) is
+    // only the induced dipole * electric field. So if the charge derivatives
+    // do not have to be added to the electric field, this section of the code
+    // should work as is.
     }
 
     return (0.5*_electric*energy);
@@ -3056,7 +2333,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxn( 
                                                                             RealOpenMM preFactor1, RealOpenMM preFactor2,
                                                                             const RealVec& delta,
                                                                             const std::vector<RealVec>& inducedDipole,
-                                                                            std::vector<RealVec>& field ) const 
+                                                                            std::vector<RealVec>& field ) const
 {
 
     // field at i due induced dipole at j
@@ -3078,7 +2355,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxns(
 {
 
     // compute the real space portion of the Ewald summation
-  
+
     RealOpenMM uscale = 1.0;
     RealVec deltaR    = particleJ.position - particleI.position;
 
@@ -3144,12 +2421,13 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxns(
         calculateDirectInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, preFactor1, preFactor2, deltaR,
                                             *(updateInducedDipoleFields[ii].inducedDipoles),
                                               updateInducedDipoleFields[ii].inducedDipoleField );
-    }    
+    }
 
     return;
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData ) const 
+RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+        std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
 
     RealOpenMM cii = 0.0;
@@ -3160,46 +2438,37 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const s
         const ElectrostaticsParticleData& particleI = particleData[ii];
 
         cii      +=  particleI.charge*particleI.charge;
-        dii      +=  particleI.dipole.dot( particleI.dipole + _inducedDipole[ii] ) ;
-    
-        qii      +=  particleI.quadrupole[QXX]*particleI.quadrupole[QXX] +
-                     particleI.quadrupole[QYY]*particleI.quadrupole[QYY] +
-                     particleI.quadrupole[QZZ]*particleI.quadrupole[QZZ] +
-                    (particleI.quadrupole[QXY]*particleI.quadrupole[QXY] +
-                     particleI.quadrupole[QXZ]*particleI.quadrupole[QXZ] +
-                     particleI.quadrupole[QYZ]*particleI.quadrupole[QYZ])*2.0;
-    
+
     }
 
     RealOpenMM term      = 2.0*_alphaEwald*_alphaEwald;
     RealOpenMM energy    = (cii + term*(dii/3.0 + 2.0*term*qii/5.0));
                energy   *= -(_electric*_alphaEwald/(_dielectric*SQRT_PI));
 
-    return energy;
-}
-
-void MBPolReferencePmeElectrostaticsForce::calculatePmeSelfTorque( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                               std::vector<RealVec>& torques ) const 
-{
-
-    RealOpenMM term = (2.0/3.0)*(_electric/_dielectric)*(_alphaEwald*_alphaEwald*_alphaEwald)/SQRT_PI;
-
     for( unsigned int ii = 0; ii < _numParticles; ii++ ){
 
         const ElectrostaticsParticleData& particleI = particleData[ii];
-        RealVec ui                             = (_inducedDipole[ii] + _inducedDipolePolar[ii]);
-        RealVec torque                         = particleI.dipole.cross( ui );
-                torque                        *= term;
-       torques[ii]                            += torque;
+
+        electrostaticPotential[ii] += particleI.charge * -(_alphaEwald/(SQRT_PI)) * 2;
+
+//        for( unsigned int s = 0; s < 3; s++ ){
+//
+//            for( unsigned int xyz = 0; xyz < 3; xyz++ ){
+//
+//            forces[ii][xyz] += particleI.chargeDerivatives[s][xyz] * particleI.charge * -(_electric*_alphaEwald/(_dielectric*SQRT_PI));
+//
+//
+//        }}
     }
-    return;
+
+    return energy;
 }
 
 RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
-											 unsigned int iIndex,
-											 unsigned int jIndex,
+                                             unsigned int iIndex,
+                                             unsigned int jIndex,
                                                                                          std::vector<RealVec>& forces,
-                                                                                         std::vector<RealVec>& torques ) const 
+                                                                                         std::vector<RealOpenMM>& electrostaticPotential ) const
 {
 
     ElectrostaticsParticleData particleI = particleData[iIndex];
@@ -3253,26 +2522,13 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     // calculate the scalar products for induced components
 
-    RealOpenMM sci3  = _inducedDipole[iIndex][0]*xr 
-	             + _inducedDipole[iIndex][1]*yr 
-		     + _inducedDipole[iIndex][2]*zr;
-    RealOpenMM sci4  = _inducedDipole[jIndex][0]*xr 
-	             + _inducedDipole[jIndex][1]*yr 
-		     + _inducedDipole[jIndex][2]*zr;
+    RealOpenMM sci3  = _inducedDipole[iIndex].dot(deltaR);
+    RealOpenMM sci4  = _inducedDipole[jIndex].dot(deltaR);
+    RealOpenMM scip2 = _inducedDipole[iIndex].dot(_inducedDipolePolar[jIndex])
+             + _inducedDipolePolar[iIndex].dot(_inducedDipole[jIndex]);
 
-    RealOpenMM scip2 = _inducedDipole[iIndex][0]*_inducedDipolePolar[jIndex][0]
-	             + _inducedDipole[iIndex][1]*_inducedDipolePolar[jIndex][1]
-                     + _inducedDipole[iIndex][2]*_inducedDipolePolar[jIndex][2]
-		     + _inducedDipolePolar[iIndex][0]*_inducedDipole[jIndex][0]
-                     + _inducedDipolePolar[iIndex][1]*_inducedDipole[jIndex][1]
-		     + _inducedDipolePolar[iIndex][2]*_inducedDipole[jIndex][2];
-
-    RealOpenMM scip3 = _inducedDipolePolar[iIndex][0]*xr 
-	             + _inducedDipolePolar[iIndex][1]*yr 
-		     + _inducedDipolePolar[iIndex][2]*zr;
-    RealOpenMM scip4 = _inducedDipolePolar[jIndex][0]*xr 
-	             + _inducedDipolePolar[jIndex][1]*yr 
-		     + _inducedDipolePolar[jIndex][2]*zr;
+    RealOpenMM scip3 = _inducedDipolePolar[iIndex].dot(deltaR);
+    RealOpenMM scip4 = _inducedDipolePolar[jIndex].dot(deltaR);
 
     // calculate the gl functions for permanent components
 
@@ -3288,7 +2544,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
                        (particleI.multipoleAtomYs == particleJ.particleIndex) or
                        (particleI.multipoleAtomXs == particleJ.particleIndex);
 
-    // in PME same water interactions are not excluded, 
+    // in PME same water interactions are not excluded,
     // but the scale factors are set to 0.
 //    if( isSameWater ) {
 ////        gl0 = 0.;
@@ -3306,7 +2562,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     RealOpenMM scale3CD =getAndScaleInverseRs(particleI,particleJ,r,true,3,TCD);
 
     if( isSameWater ) {
-	scale1CC = scale3CD = 0.;
+    scale1CC = scale3CD = 0.;
         //scale1CC = scale3CD = scale3DD = scale5DD = 0.;
     }
     RealOpenMM erl  =       rr1*gl0 *(1 - scale1CC) ; // charge-charge
@@ -3317,7 +2573,11 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     energy              = (e + ei);
 
-#if 1
+    electrostaticPotential[iIndex] += ck * (bn0 - rr1 * (1 - scale1CC)); // /2.;
+    electrostaticPotential[jIndex] += ci * (bn0 - rr1 * (1 - scale1CC));//  /2.;
+
+    electrostaticPotential[iIndex] -= sci4 * (bn1 - rr3 * (1 - scale3CD)); // /2.;
+    electrostaticPotential[jIndex] += sci3 * (bn1 - rr3 * (1 - scale3CD));//  /2.;
 
     RealOpenMM scale3CC =getAndScaleInverseRs(particleI,particleJ,r,true,3,TCC);
     RealOpenMM scale5CD =getAndScaleInverseRs(particleI,particleJ,r,true,5,TCD);
@@ -3325,7 +2585,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     RealOpenMM scale7DD =getAndScaleInverseRs(particleI,particleJ,r,true,7,TDD);
 
     if( isSameWater ) {
-    	scale3CC = scale5CD = scale5DD = scale7DD = 0.;
+        scale3CC = scale5CD = 0.;
     }
 
     // intermediate variables for permanent force terms
@@ -3336,433 +2596,157 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     // intermediate variables for induced force terms
 
-    RealOpenMM gfi1  = 0.5*( bn2* ( gli1 
-	                          + glip1
-	                          + scip2 ) // inddip - inddip 
-			   - bn3*(sci3*scip4+scip3*sci4));
+    RealOpenMM gfi1  = 0.5*( bn2* ( gli1
+                              + glip1
+                              + scip2 ) // inddip - inddip
+               - bn3*(sci3*scip4+scip3*sci4));
 
     RealOpenMM gfi2 = -ck*bn1;
     RealOpenMM gfi3 =  ci*bn1;
 
-    RealOpenMM gfri1 = 0.5*(rr5 * ( gli1  * (1 - scale5CD)   // charge - inddip 
-			      	  + glip1 * (1 - scale5CD)   // charge - inddip 
-				  + scip2 * (1 - scale5DD) ) // inddip - inddip
-	    //FIXME Should there be an rr7 in front of sci3*scip4????!?
-	                  - rr7 * (sci3*scip4+scip3*sci4)
-			                  * (1 - scale7DD)   // inddip - inddip
-			   );
+    RealOpenMM gfri1 = 0.5*(rr5 * ( gli1  * (1 - scale5CD)   // charge - inddip
+                        + glip1 * (1 - scale5CD)   // charge - inddip
+                  + scip2 * (1 - scale5DD) ) // inddip - inddip
+        //FIXME Should there be an rr7 in front of sci3*scip4????!?
+                      - rr7 * (sci3*scip4+scip3*sci4)
+                              * (1 - scale7DD)   // inddip - inddip
+               );
 
     // get the permanent force with screening
 
-    RealOpenMM ftm21 = gf1*xr;
-    RealOpenMM ftm22 = gf1*yr;
-    RealOpenMM ftm23 = gf1*zr;
+    RealVec ftm2 = deltaR*gf1;
 
     // get the permanent force without screening
 
-    RealOpenMM ftm2r1 = gfr1*xr;
-    RealOpenMM ftm2r2 = gfr1*yr;
-    RealOpenMM ftm2r3 = gfr1*zr;
+    RealVec ftm2r = deltaR*gfr1;
 
     // get the induced force with screening
 
-    RealOpenMM ftm2i1 = gfi1*xr;
+    RealVec ftm2i = deltaR*gfi1;
     // charge_i * inddip_j
-    ftm2i1 += 0.5*( gfi2* (       _inducedDipole[iIndex][0]
-			  +       _inducedDipolePolar[iIndex][0])
-	          + gfi3* (       _inducedDipole[jIndex][0]
-			  +       _inducedDipolePolar[jIndex][0])
+    ftm2i += ( (       _inducedDipole[iIndex]
+              +       _inducedDipolePolar[iIndex]) * gfi2
+              + (       _inducedDipole[jIndex]
+              +       _inducedDipolePolar[jIndex]) * gfi3
     // inddipP_i* inddip_j
-                  + bn2 * ( sci4 *_inducedDipolePolar[iIndex][0]
-			  + scip4*_inducedDipole[iIndex][0]     ) 
-	          + bn2 * ( sci3 *_inducedDipolePolar[jIndex][0]
-			  + scip3*_inducedDipole[jIndex][0]     ));
-
-    RealOpenMM ftm2i2 = gfi1*yr;
-    // charge_i * inddip_j
-    ftm2i2 += 0.5*( gfi2* (       _inducedDipole[iIndex][1]
-			  +       _inducedDipolePolar[iIndex][1])
-	          + gfi3* (       _inducedDipole[jIndex][1]
-			  +       _inducedDipolePolar[jIndex][1])
-    // inddipP_i* inddip_j
-                  + bn2 * ( sci4 *_inducedDipolePolar[iIndex][1]
-			  + scip4*_inducedDipole[iIndex][1]     ) 
-	          + bn2 * ( sci3 *_inducedDipolePolar[jIndex][1]
-			  + scip3*_inducedDipole[jIndex][1]     ));
-
-    RealOpenMM ftm2i3 = gfi1*zr;
-    // charge_i * inddip_j
-    ftm2i3 += 0.5*( gfi2* (       _inducedDipole[iIndex][2]
-			  +       _inducedDipolePolar[iIndex][2])
-	          + gfi3* (       _inducedDipole[jIndex][2]
-			  +       _inducedDipolePolar[jIndex][2])
-    // inddipP_i* inddip_j
-                  + bn2 * ( sci4 *_inducedDipolePolar[iIndex][2]
-			  + scip4*_inducedDipole[iIndex][2]     ) 
-	          + bn2 * ( sci3 *_inducedDipolePolar[jIndex][2]
-			  + scip3*_inducedDipole[jIndex][2]     ));
+                  + ( _inducedDipolePolar[iIndex] * sci4
+              + _inducedDipole[iIndex] * scip4   ) * bn2
+              +  ( _inducedDipolePolar[jIndex] * sci3
+              + _inducedDipole[jIndex]  * scip3   ) * bn2) * 0.5;
 
     // get the induced force without screening
 
-    RealOpenMM ftm2ri1 = gfri1*xr;
-    ftm2ri1 += 0.5*rr5*(1 - scale5DD)*( sci4 * _inducedDipolePolar[iIndex][0]
-				      + scip4* _inducedDipole[iIndex][0] 
-			              + sci3 * _inducedDipolePolar[jIndex][0]
-				      + scip3* _inducedDipole[jIndex][0]);
+    RealVec ftm2ri = deltaR * gfri1;
+    ftm2ri += ( _inducedDipolePolar[iIndex] * sci4
+                      + _inducedDipole[iIndex] * scip4
+                          +  _inducedDipolePolar[jIndex] * sci3
+                      + _inducedDipole[jIndex] * scip3)*0.5*rr5*(1 - scale5DD);
 
     // Same water atoms have no induced-dipole/charge interaction
 
-    ftm2ri1 += 0.5*rr3*(1 - scale3CD)*( - ck *(_inducedDipole[iIndex][0]
-		                              +_inducedDipolePolar[iIndex][0])
-				        + ci *(_inducedDipole[jIndex][0]
-				              +_inducedDipolePolar[jIndex][0]));
+    ftm2ri += ( - (_inducedDipole[iIndex]
+                                      +_inducedDipolePolar[iIndex])*ck
+                        + (_inducedDipole[jIndex]
+                              +_inducedDipolePolar[jIndex])*ci)*0.5*rr3*(1 - scale3CD);
 
-    RealOpenMM ftm2ri2 = gfri1*yr;
-    ftm2ri2 += 0.5*rr5*(1 - scale5DD)*( sci4 * _inducedDipolePolar[iIndex][1]
-				      + scip4* _inducedDipole[iIndex][1] 
-			              + sci3 * _inducedDipolePolar[jIndex][1]
-				      + scip3* _inducedDipole[jIndex][1]);
-
-    ftm2ri2 += 0.5*rr3*(1 - scale3CD)*( - ck *(_inducedDipole[iIndex][1]
-		                              +_inducedDipolePolar[iIndex][1])
-				        + ci *(_inducedDipole[jIndex][1]
-				              +_inducedDipolePolar[jIndex][1]));
-
-
-    RealOpenMM ftm2ri3 = gfri1*zr;
-    ftm2ri3 += 0.5*rr5*(1 - scale5DD)*( sci4 * _inducedDipolePolar[iIndex][2]
-				      + scip4* _inducedDipole[iIndex][2] 
-			              + sci3 * _inducedDipolePolar[jIndex][2]
-				      + scip3* _inducedDipole[jIndex][2]);
-
-    ftm2ri3 += 0.5*rr3*(1 - scale3CD)*( - ck *(_inducedDipole[iIndex][2]
-		                              +_inducedDipolePolar[iIndex][2])
-				        + ci *(_inducedDipole[jIndex][2]
-				              +_inducedDipolePolar[jIndex][2]));
-
-#endif
-
-
-#if 0 // partially excluded + direct polarization correction
-//    // account for partially excluded induced interactions
-//
-//    RealOpenMM temp3 = 0.5 * rr3 * ((gli1+gli6)*scalingFactors[P_SCALE]
-//                               +(glip1+glip6)*scalingFactors[D_SCALE]);
-//
-//    RealOpenMM temp5 = 0.5 * rr5 * ((gli2+gli7)*scalingFactors[P_SCALE]
-//                               +(glip2+glip7)*scalingFactors[D_SCALE]);
-//
-//    RealOpenMM temp7 = 0.5 * rr7 * (gli3*scalingFactors[P_SCALE]
-//                               +glip3*scalingFactors[D_SCALE]);
-//
-//    RealOpenMM fridmp1 = temp3*ddsc31 + temp5*ddsc51 + temp7*ddsc71;
-//    RealOpenMM fridmp2 = temp3*ddsc32 + temp5*ddsc52 + temp7*ddsc72;
-//    RealOpenMM fridmp3 = temp3*ddsc33 + temp5*ddsc53 + temp7*ddsc73;
-//
-//    // find some scaling terms for induced-induced force
-//
-//    temp3         = 0.5 * rr3 * scalingFactors[U_SCALE] * scip2;
-//    temp5         = -0.5 * rr5 * scalingFactors[U_SCALE] * (sci3*scip4+scip3*sci4);
-//    RealOpenMM findmp1 = temp3*ddsc31 + temp5*ddsc51;
-//    RealOpenMM findmp2 = temp3*ddsc32 + temp5*ddsc52;
-//    RealOpenMM findmp3 = temp3*ddsc33 + temp5*ddsc53;
-
-    // modify the forces for partially excluded interactions
-    // FIXME check how to disable this in the xml
-
-//    ftm2i1       -= (fridmp1 + findmp1);
-//    ftm2i2       -= (fridmp2 + findmp2);
-//    ftm2i3       -= (fridmp3 + findmp3);
-
-//    // correction to convert mutual to direct polarization force
-//
-//    if( getPolarizationType() == MBPolReferenceElectrostaticsForce::Direct ){
-//
-//       RealOpenMM gfd     = 0.5 * (bn2*scip2 - bn3*(scip3*sci4+sci3*scip4));
-//       ftm2i1       -= gfd*xr + 0.5*bn2*(sci4*_inducedDipolePolar[iIndex][0]+scip4*_inducedDipole[iIndex][0]+sci3*_inducedDipolePolar[jIndex][0]+scip3*_inducedDipole[jIndex][0]);
-//       ftm2i2       -= gfd*yr + 0.5*bn2*(sci4*_inducedDipolePolar[iIndex][1]+scip4*_inducedDipole[iIndex][1]+sci3*_inducedDipolePolar[jIndex][1]+scip3*_inducedDipole[jIndex][1]);
-//       ftm2i3       -= gfd*zr + 0.5*bn2*(sci4*_inducedDipolePolar[iIndex][2]+scip4*_inducedDipole[iIndex][2]+sci3*_inducedDipolePolar[jIndex][2]+scip3*_inducedDipole[jIndex][2]);
-//
-//       RealOpenMM gfdr    = 0.5 * (rr5*scip2*usc3 - rr7*(scip3*sci4 +sci3*scip4)*usc5);
-//       RealOpenMM fdir1   = gfdr*xr + 0.5*usc5*rr5*(sci4*_inducedDipolePolar[iIndex][0]+scip4*_inducedDipole[iIndex][0] + sci3*_inducedDipolePolar[jIndex][0]+scip3*_inducedDipole[jIndex][0]);
-//       RealOpenMM fdir2   = gfdr*yr + 0.5*usc5*rr5*(sci4*_inducedDipolePolar[iIndex][1]+scip4*_inducedDipole[iIndex][1] + sci3*_inducedDipolePolar[jIndex][1]+scip3*_inducedDipole[jIndex][1]);
-//       RealOpenMM fdir3   = gfdr*zr + 0.5*usc5*rr5*(sci4*_inducedDipolePolar[iIndex][2]+scip4*_inducedDipole[iIndex][2] + sci3*_inducedDipolePolar[jIndex][2]+scip3*_inducedDipole[jIndex][2]);
-//
-//       ftm2i1       += fdir1 + findmp1;
-//       ftm2i2       += fdir2 + findmp2;
-//       ftm2i3       += fdir3 + findmp3;
-//    }
-#endif
-
-#if 0 // torque
-//    // intermediate variables for induced torque terms
-//
-//    RealOpenMM gti2  = 0.5 * bn2 * (sci4+scip4);
-//    RealOpenMM gti3  = 0.5 * bn2 * (sci3+scip3);
-//    RealOpenMM gti4  = gfi4;
-//    RealOpenMM gti5  = gfi5;
-//    RealOpenMM gti6  = gfi6;
-//    RealOpenMM gtri2 = 0.5 * rr5 * (sci4*psc5+scip4*dsc5);
-//    RealOpenMM gtri3 = 0.5 * rr5 * (sci3*psc5+scip3*dsc5);
-//    RealOpenMM gtri4 = gfri4;
-//    RealOpenMM gtri5 = gfri5;
-//    RealOpenMM gtri6 = gfri6;
-//
-//    // get the permanent torque with screening
-//
-//    RealOpenMM ttm21 = -bn1*dixdk1 + gf2*dixr1
-//        + gf4*(dixqkr1+dkxqir1+rxqidk1-2.0*qixqk1)
-//        - gf5*rxqir1 - gf7*(rxqikr1+qkrxqir1);
-//    RealOpenMM ttm22 = -bn1*dixdk2 + gf2*dixr2
-//        + gf4*(dixqkr2+dkxqir2+rxqidk2-2.0*qixqk2)
-//        - gf5*rxqir2 - gf7*(rxqikr2+qkrxqir2);
-//    RealOpenMM ttm23 = -bn1*dixdk3 + gf2*dixr3
-//        + gf4*(dixqkr3+dkxqir3+rxqidk3-2.0*qixqk3)
-//        - gf5*rxqir3 - gf7*(rxqikr3+qkrxqir3);
-//    RealOpenMM ttm31 = bn1*dixdk1 + gf3*dkxr1
-//        - gf4*(dixqkr1+dkxqir1+rxqkdi1-2.0*qixqk1)
-//        - gf6*rxqkr1 - gf7*(rxqkir1-qkrxqir1);
-//    RealOpenMM ttm32 = bn1*dixdk2 + gf3*dkxr2
-//        - gf4*(dixqkr2+dkxqir2+rxqkdi2-2.0*qixqk2)
-//        - gf6*rxqkr2 - gf7*(rxqkir2-qkrxqir2);
-//    RealOpenMM ttm33 = bn1*dixdk3 + gf3*dkxr3
-//        - gf4*(dixqkr3+dkxqir3+rxqkdi3-2.0*qixqk3)
-//        - gf6*rxqkr3 - gf7*(rxqkir3-qkrxqir3);
-//
-//    // get the permanent torque without screening
-//
-//    RealOpenMM ttm2r1 = -rr3*dixdk1 + gfr2*dixr1-gfr5*rxqir1
-//        + gfr4*(dixqkr1+dkxqir1+rxqidk1-2.0*qixqk1)
-//        - gfr7*(rxqikr1+qkrxqir1);
-//    RealOpenMM ttm2r2 = -rr3*dixdk2 + gfr2*dixr2-gfr5*rxqir2
-//        + gfr4*(dixqkr2+dkxqir2+rxqidk2-2.0*qixqk2)
-//        - gfr7*(rxqikr2+qkrxqir2);
-//    RealOpenMM ttm2r3 = -rr3*dixdk3 + gfr2*dixr3-gfr5*rxqir3
-//        + gfr4*(dixqkr3+dkxqir3+rxqidk3-2.0*qixqk3)
-//        - gfr7*(rxqikr3+qkrxqir3);
-//    RealOpenMM ttm3r1 = rr3*dixdk1 + gfr3*dkxr1 -gfr6*rxqkr1
-//        - gfr4*(dixqkr1+dkxqir1+rxqkdi1-2.0*qixqk1)
-//        - gfr7*(rxqkir1-qkrxqir1);
-//    RealOpenMM ttm3r2 = rr3*dixdk2 + gfr3*dkxr2 -gfr6*rxqkr2
-//        - gfr4*(dixqkr2+dkxqir2+rxqkdi2-2.0*qixqk2)
-//        - gfr7*(rxqkir2-qkrxqir2);
-//    RealOpenMM ttm3r3 = rr3*dixdk3 + gfr3*dkxr3 -gfr6*rxqkr3
-//        - gfr4*(dixqkr3+dkxqir3+rxqkdi3-2.0*qixqk3)
-//        - gfr7*(rxqkir3-qkrxqir3);
-//
-//    // get the induced torque with screening
-//
-//    RealOpenMM ttm2i1 = -bn1*(dixuk1+dixukp1)*0.5
-//        + gti2*dixr1 + gti4*(ukxqir1+rxqiuk1
-//        + ukxqirp1+rxqiukp1)*0.5 - gti5*rxqir1;
-//    RealOpenMM ttm2i2 = -bn1*(dixuk2+dixukp2)*0.5
-//        + gti2*dixr2 + gti4*(ukxqir2+rxqiuk2
-//        + ukxqirp2+rxqiukp2)*0.5 - gti5*rxqir2;
-//    RealOpenMM ttm2i3 = -bn1*(dixuk3+dixukp3)*0.5
-//        + gti2*dixr3 + gti4*(ukxqir3+rxqiuk3
-//        + ukxqirp3+rxqiukp3)*0.5 - gti5*rxqir3;
-//    RealOpenMM ttm3i1 = -bn1*(dkxui1+dkxuip1)*0.5
-//        + gti3*dkxr1 - gti4*(uixqkr1+rxqkui1
-//        + uixqkrp1+rxqkuip1)*0.5 - gti6*rxqkr1;
-//    RealOpenMM ttm3i2 = -bn1*(dkxui2+dkxuip2)*0.5
-//        + gti3*dkxr2 - gti4*(uixqkr2+rxqkui2
-//        + uixqkrp2+rxqkuip2)*0.5 - gti6*rxqkr2;
-//    RealOpenMM ttm3i3 = -bn1*(dkxui3+dkxuip3)*0.5
-//        + gti3*dkxr3 - gti4*(uixqkr3+rxqkui3
-//        + uixqkrp3+rxqkuip3)*0.5 - gti6*rxqkr3;
-//
-//    // get the induced torque without screening
-//
-//    RealOpenMM ttm2ri1 = -rr3*(dixuk1*psc3+dixukp1*dsc3)*0.5
-//        + gtri2*dixr1 + gtri4*((ukxqir1+rxqiuk1)*psc5
-//        +(ukxqirp1+rxqiukp1)*dsc5)*0.5 - gtri5*rxqir1;
-//    RealOpenMM ttm2ri2 = -rr3*(dixuk2*psc3+dixukp2*dsc3)*0.5
-//        + gtri2*dixr2 + gtri4*((ukxqir2+rxqiuk2)*psc5
-//        +(ukxqirp2+rxqiukp2)*dsc5)*0.5 - gtri5*rxqir2;
-//    RealOpenMM ttm2ri3 = -rr3*(dixuk3*psc3+dixukp3*dsc3)*0.5
-//        + gtri2*dixr3 + gtri4*((ukxqir3+rxqiuk3)*psc5
-//        +(ukxqirp3+rxqiukp3)*dsc5)*0.5 - gtri5*rxqir3;
-//    RealOpenMM ttm3ri1 = -rr3*(dkxui1*psc3+dkxuip1*dsc3)*0.5
-//        + gtri3*dkxr1 - gtri4*((uixqkr1+rxqkui1)*psc5
-//        +(uixqkrp1+rxqkuip1)*dsc5)*0.5 - gtri6*rxqkr1;
-//    RealOpenMM ttm3ri2 = -rr3*(dkxui2*psc3+dkxuip2*dsc3)*0.5
-//        + gtri3*dkxr2 - gtri4*((uixqkr2+rxqkui2)*psc5
-//        +(uixqkrp2+rxqkuip2)*dsc5)*0.5 - gtri6*rxqkr2;
-//    RealOpenMM ttm3ri3 = -rr3*(dkxui3*psc3+dkxuip3*dsc3)*0.5
-//        + gtri3*dkxr3 - gtri4*((uixqkr3+rxqkui3)*psc5
-//        +(uixqkrp3+rxqkuip3)*dsc5)*0.5 - gtri6*rxqkr3;
-//
-#endif
     // handle the case where scaling is used
 
-#if 1
     // it was (1.0 - -scalingFactors[M_SCALE]) in each term
-    ftm21  = (ftm21-(1.0)*ftm2r1);
-    ftm2i1 = (ftm2i1-ftm2ri1);
-//    ttm21  = (ttm21-(1.0)*ttm2r1);
-//    ttm2i1 = (ttm2i1-ttm2ri1);
-//    ttm31  = (ttm31-(1.0)*ttm3r1);
-//    ttm3i1 = (ttm3i1-ttm3ri1);
-
-    ftm22  = (ftm22-(1.0)*ftm2r2);
-    ftm2i2 = (ftm2i2-ftm2ri2);
-//    ttm22  = (ttm22-(1.0)*ttm2r2);
-//    ttm2i2 = (ttm2i2-ttm2ri2);
-//    ttm32  = (ttm32-(1.0)*ttm3r2);
-//    ttm3i2 = (ttm3i2-ttm3ri2);
-
-    ftm23  = (ftm23-(1.0)*ftm2r3);
-    ftm2i3 = (ftm2i3-ftm2ri3);
-//    ttm23  = (ttm23-(1.0)*ttm2r3);
-//    ttm2i3 = (ttm2i3-ttm2ri3);
-//    ttm33  = (ttm33-(1.0)*ttm3r3);
-//    ttm3i3 = (ttm3i3-ttm3ri3);
+    ftm2  -= ftm2r;
+    ftm2i -= ftm2ri;
 
     // increment gradient due to force and torque on first site;
-#endif
     RealOpenMM conversionFactor  = (_electric/_dielectric);
 
     energy                 *= conversionFactor;
 
-#if 1
-    //if (getIncludeChargeRedistribution() and (not (isSameWater))){
-    if (getIncludeChargeRedistribution()){
+    forces[iIndex]      -= (ftm2 + ftm2i)*conversionFactor;
 
-        double distanceJ, distanceI, 
-	       inducedDipoleI, inducedDipoleJ;
-	RealVec deltaI, deltaJ;
-
-        for (size_t s = 0; s < 3; ++s) {
-
-            // vsH1f, vsH2f, vsMf
-	    if(particleI.otherSiteIndex[s] != jIndex){
-
-                deltaI = particleData[particleI.otherSiteIndex[s]].position
-	               - particleJ.position;
-	        getPeriodicDelta( deltaI );
-                distanceI = SQRT(deltaI.dot(deltaI));
-
-		double rr1I_screen, rr3I_screen;
-	        if( isSameWater ) {
-	            rr1I_screen = rr3I_screen = 0.;
-	        }else{
-                    rr1I_screen = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, false, 1, TCC );
-                    rr3I_screen = getAndScaleInverseRs( particleData[particleI.otherSiteIndex[s]], particleJ, distanceI, false, 3, TCC );
-	        }
-		const double rr1I_ewald = ewaldScalingReal( distanceI, 1);
-		const double rr3I_ewald = ewaldScalingReal( distanceI, 3);
-
-		const double rr1I = 1.0/distanceI;
-		const double rr3I = rr1I*rr1I*rr1I;
-
-                inducedDipoleI = _inducedDipole[jIndex].dot(deltaI);
-
-                ftm21 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][0] * particleJ.charge; // charge - charge
-                ftm2i1 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][0] * inducedDipoleI;// charge - charge
-
-                ftm22 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][1] * particleJ.charge; // charge - charge
-                ftm2i2 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][1] * inducedDipoleI;// charge - charge
-
-                ftm23 +=  (rr1I_ewald + rr1I_screen - rr1I) * particleI.chargeDerivatives[s][2] * particleJ.charge; // charge - charge
-                ftm2i3 += (rr3I_ewald + rr3I_screen - rr3I) * particleI.chargeDerivatives[s][2] * inducedDipoleI;// charge - charge
-
-	    }
-
-	    if(particleJ.otherSiteIndex[s] != iIndex){
-
-                deltaJ = particleData[particleJ.otherSiteIndex[s]].position
-	               - particleI.position;
-	        getPeriodicDelta( deltaJ );
-                distanceJ = SQRT(deltaJ.dot(deltaJ));
-
-	       double rr1J_screen, rr3J_screen;
-	        if( isSameWater ) {
-	            rr1J_screen = rr3J_screen = 0.;
-	        }else{
-                    rr1J_screen = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, false, 1, TCC );
-                    rr3J_screen = getAndScaleInverseRs( particleData[particleJ.otherSiteIndex[s]], particleI, distanceJ, false, 3, TCC );
-	        }
-
-		const double rr1J_ewald = ewaldScalingReal( distanceJ, 1);
-		const double rr3J_ewald = ewaldScalingReal( distanceJ, 3);
-
-		const double rr1J = 1.0/distanceJ;
-		const double rr3J = rr1J*rr1J*rr1J;
-
-                inducedDipoleJ = _inducedDipole[iIndex].dot(deltaJ);
-
-                ftm21 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][0] * particleI.charge; // charge - charge
-                ftm2i1 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][0] * inducedDipoleJ;// charge - charge
-
-                ftm22 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][1] * particleI.charge; // charge - charge
-                ftm2i2 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][1] * inducedDipoleJ;// charge - charge
-
-                ftm23 -=  (rr1J_ewald + rr1J_screen - rr1J) * particleJ.chargeDerivatives[s][2] * particleI.charge; // charge - charge
-	        ftm2i3 -= (rr3J_ewald + rr3J_screen - rr3J) * particleJ.chargeDerivatives[s][2] * inducedDipoleJ;// charge - charge
-
-	    }
-
-        }
-    }
-#endif
-
-#if 1
-    forces[iIndex][0]      -= (ftm21 + ftm2i1)*conversionFactor;
-    forces[iIndex][1]      -= (ftm22 + ftm2i2)*conversionFactor;
-    forces[iIndex][2]      -= (ftm23 + ftm2i3)*conversionFactor;
-
-    forces[jIndex][0]      += (ftm21 + ftm2i1)*conversionFactor;
-    forces[jIndex][1]      += (ftm22 + ftm2i2)*conversionFactor;
-    forces[jIndex][2]      += (ftm23 + ftm2i3)*conversionFactor;
-#endif
-//
-//    torques[iIndex][0]     += (ttm21 + ttm2i1)*conversionFactor;
-//    torques[iIndex][1]     += (ttm22 + ttm2i2)*conversionFactor;
-//    torques[iIndex][2]     += (ttm23 + ttm2i3)*conversionFactor;
-//
-//    torques[jIndex][0]     += (ttm31 + ttm3i1)*conversionFactor;
-//    torques[jIndex][1]     += (ttm32 + ttm3i2)*conversionFactor;
-//    torques[jIndex][2]     += (ttm33 + ttm3i3)*conversionFactor;
+    forces[jIndex]      += (ftm2 + ftm2i)*conversionFactor;
 
     return energy;
 
 }
 
 RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                     std::vector<RealVec>& torques, std::vector<RealVec>& forces )
+                                                                     std::vector<RealVec>& forces )
 {
 
     RealOpenMM energy = 0.0;
-    std::vector<RealOpenMM> scaleFactors(LAST_SCALE_TYPE_INDEX);
-    for( unsigned int kk = 0; kk < scaleFactors.size(); kk++ ){
-        scaleFactors[kk] = 1.0;
-    }   
 
+    std::vector<RealOpenMM> electrostaticPotentialDirect(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotentialInduced(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotentialReciprocal(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotentialSelf(particleData.size());
+    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+        electrostaticPotentialDirect[ii] = 0.;
+        electrostaticPotentialReciprocal[ii] = 0.;
+        electrostaticPotentialSelf[ii] = 0.;
+    }
     // loop over particle pairs for direct space interactions
 
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
 
-            if( jj <= _maxScaleIndex[ii] ){
-                getElectrostaticsScaleFactors( ii, jj, scaleFactors);
-            }
+            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, electrostaticPotentialDirect );
 
-            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, torques );
-
-            if( jj <= _maxScaleIndex[ii] ){
-                for( unsigned int kk = 0; kk < LAST_SCALE_TYPE_INDEX; kk++ ){
-                    scaleFactors[kk] = 1.0;
-                }
-            }
         }
     }
 
-    calculatePmeSelfTorque( particleData, torques );
-    energy += computeReciprocalSpaceInducedDipoleForceAndEnergy( getPolarizationType(), particleData, forces, torques );
-    energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, torques );
-    energy += calculatePmeSelfEnergy( particleData );
+    printPotential (electrostaticPotentialDirect, energy ,"Direct Space", particleData);
+
+    double previousEnergy = energy;
+
+    energy += computeReciprocalSpaceInducedDipoleForceAndEnergy( getPolarizationType(), particleData, forces, electrostaticPotentialInduced );
+    printPotential (electrostaticPotentialInduced, energy - previousEnergy , "Reciprocal Induced", particleData);
+
+    previousEnergy = energy;
+    energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, electrostaticPotentialReciprocal );
+    printPotential (electrostaticPotentialReciprocal, energy - previousEnergy , "Reciprocal Space Fixed", particleData);
+
+    previousEnergy = energy;
+    energy += calculatePmeSelfEnergy( particleData, forces, electrostaticPotentialSelf );
+
+    printPotential (electrostaticPotentialSelf, energy - previousEnergy , "Pme Self energy", particleData);
+
+    for (int i=0; i<particleData.size(); i++) {
+        electrostaticPotentialDirect[i] += electrostaticPotentialReciprocal[i];
+        electrostaticPotentialDirect[i] += electrostaticPotentialInduced[i];
+        electrostaticPotentialDirect[i] += electrostaticPotentialSelf[i];
+    }
+
+    printPotential (electrostaticPotentialDirect, energy, "Total", particleData);
+
+//    std::cout << std::endl << "Charges" << std::endl;
+//    for (int i=0; i<particleData.size(); i++) {
+//        std::cout << "Charge atom " << i << ": " << particleData[i].charge << " C" << std::endl;
+//    }
+
+    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+        for( unsigned int s = 0; s < 3; s++ ){
+            for( unsigned int xyz = 0; xyz < 3; xyz++ ){
+
+            forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotentialDirect[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
+
+        }}    }
+
 
     return energy;
+}
+
+
+void MBPolReferenceElectrostaticsForce::printPotential (std::vector<RealOpenMM> electrostaticPotential, RealOpenMM energy, std::string name, const std::vector<ElectrostaticsParticleData>& particleData ) {
+#ifdef DEBUG_MBPOL
+    RealOpenMM energyFromPotential = 0;
+    std::cout << std::endl << name << std::endl;
+    for (int i=0; i<particleData.size(); i++) {
+        // std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (4.184) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
+        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
+    }
+    energyFromPotential *= _electric/_dielectric;
+    std::cout << "Energy: " << energy / 4.184 << " Kcal/mol <openmm-mbpol>" << std::endl;
+    std::cout << "Energy from potential: " << energyFromPotential / 4.184 / 2. << " Kcal/mol <openmm-mbpol>" << std::endl;
+#endif
 }
 
 void MBPolReferenceElectrostaticsForce::computeWaterCharge(

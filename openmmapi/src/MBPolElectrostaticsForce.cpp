@@ -138,35 +138,13 @@ void MBPolElectrostaticsForce::setEwaldErrorTolerance(double tol) {
 
 int MBPolElectrostaticsForce::addElectrostatics( double charge, 
                                        int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& thole, double dampingFactor, double polarity) {
-    std::vector<double> zeroDipole(3);
-    std::vector<double> zeroQuadrupole(9);
-
-    std::fill(zeroDipole.begin(), zeroDipole.end(), 0.);
-    std::fill(zeroQuadrupole.begin(), zeroQuadrupole.end(), 0.);
-
-    multipoles.push_back(ElectrostaticsInfo( charge, zeroDipole, zeroQuadrupole,  0, multipoleAtomZ,  multipoleAtomX, multipoleAtomY, thole, dampingFactor, polarity));
+    multipoles.push_back(ElectrostaticsInfo( charge, 0, multipoleAtomZ,  multipoleAtomX, multipoleAtomY, thole, dampingFactor, polarity));
     return multipoles.size()-1;
 }
 
-void MBPolElectrostaticsForce::getElectrostaticsParameters(int index, double& charge, std::vector<double>& molecularDipole, std::vector<double>& molecularQuadrupole, 
+void MBPolElectrostaticsForce::getElectrostaticsParameters(int index, double& charge,
                                                   int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, std::vector<double>& thole, double& dampingFactor, double& polarity ) const {
     charge                      = multipoles[index].charge;
-
-    molecularDipole.resize( 3 );
-    molecularDipole[0]          = multipoles[index].molecularDipole[0];
-    molecularDipole[1]          = multipoles[index].molecularDipole[1];
-    molecularDipole[2]          = multipoles[index].molecularDipole[2];
-
-    molecularQuadrupole.resize( 9 );
-    molecularQuadrupole[0]      = multipoles[index].molecularQuadrupole[0];
-    molecularQuadrupole[1]      = multipoles[index].molecularQuadrupole[1];
-    molecularQuadrupole[2]      = multipoles[index].molecularQuadrupole[2];
-    molecularQuadrupole[3]      = multipoles[index].molecularQuadrupole[3];
-    molecularQuadrupole[4]      = multipoles[index].molecularQuadrupole[4];
-    molecularQuadrupole[5]      = multipoles[index].molecularQuadrupole[5];
-    molecularQuadrupole[6]      = multipoles[index].molecularQuadrupole[6];
-    molecularQuadrupole[7]      = multipoles[index].molecularQuadrupole[7];
-    molecularQuadrupole[8]      = multipoles[index].molecularQuadrupole[8];
 
     axisType                    = multipoles[index].axisType;
     multipoleAtomZ              = multipoles[index].multipoleAtomZ;
@@ -180,24 +158,10 @@ void MBPolElectrostaticsForce::getElectrostaticsParameters(int index, double& ch
     polarity                    = multipoles[index].polarity;
 }
 
-void MBPolElectrostaticsForce::setElectrostaticsParameters(int index, double charge, const std::vector<double>& molecularDipole, const std::vector<double>& molecularQuadrupole, 
+void MBPolElectrostaticsForce::setElectrostaticsParameters(int index, double charge,
                                                   int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>&  thole, double dampingFactor, double polarity ) {
 
     multipoles[index].charge                      = charge;
-
-    multipoles[index].molecularDipole[0]          = molecularDipole[0];
-    multipoles[index].molecularDipole[1]          = molecularDipole[1];
-    multipoles[index].molecularDipole[2]          = molecularDipole[2];
-
-    multipoles[index].molecularQuadrupole[0]      = molecularQuadrupole[0];
-    multipoles[index].molecularQuadrupole[1]      = molecularQuadrupole[1];
-    multipoles[index].molecularQuadrupole[2]      = molecularQuadrupole[2];
-    multipoles[index].molecularQuadrupole[3]      = molecularQuadrupole[3];
-    multipoles[index].molecularQuadrupole[4]      = molecularQuadrupole[4];
-    multipoles[index].molecularQuadrupole[5]      = molecularQuadrupole[5];
-    multipoles[index].molecularQuadrupole[6]      = molecularQuadrupole[6];
-    multipoles[index].molecularQuadrupole[7]      = molecularQuadrupole[7];
-    multipoles[index].molecularQuadrupole[8]      = molecularQuadrupole[8];
 
     multipoles[index].axisType                    = axisType;
     multipoles[index].multipoleAtomZ              = multipoleAtomZ;

@@ -66,66 +66,6 @@ void MBPolElectrostaticsForceImpl::initialize(ContextImpl& context) {
             throw OpenMMException("MBPolElectrostaticsForce: The cutoff distance cannot be greater than half the periodic box size.");
     }   
 
-    double quadrupoleValidationTolerance = 1.0e-05;
-    for( int ii = 0; ii < system.getNumParticles(); ii++ ){
-
-        int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
-        double charge, dampingFactor, polarity ;
-        std::vector<double> molecularDipole;
-        std::vector<double> molecularQuadrupole;
-        std::vector<double> thole;
-
-        owner.getElectrostaticsParameters( ii, charge, molecularDipole, molecularQuadrupole, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY,
-                                      thole, dampingFactor, polarity );
-
-       // check quadrupole is traceless and symmetric
-
-       double trace = fabs( molecularQuadrupole[0] + molecularQuadrupole[4] + molecularQuadrupole[8] );
-       if( trace > quadrupoleValidationTolerance ){
-             std::stringstream buffer;
-             buffer << "MBPolElectrostaticsForce: qudarupole for particle=" << ii;
-             buffer << " has nonzero trace: " << trace << "; MBPOL plugin assumes traceless quadrupole.";
-             throw OpenMMException(buffer.str());
-       }
-       if( fabs( molecularQuadrupole[1] - molecularQuadrupole[3] ) > quadrupoleValidationTolerance  ){
-             std::stringstream buffer;
-             buffer << "MBPolElectrostaticsForce: XY and YX components of quadrupole for particle=" << ii;
-             buffer << "  are not equal: [" << molecularQuadrupole[1] << " " << molecularQuadrupole[3] << "];";
-             buffer << " MBPOL plugin assumes symmetric quadrupole tensor.";
-             throw OpenMMException(buffer.str());
-       }
-
-       if( fabs( molecularQuadrupole[2] - molecularQuadrupole[6] ) > quadrupoleValidationTolerance  ){
-             std::stringstream buffer;
-             buffer << "MBPolElectrostaticsForce: XZ and ZX components of quadrupole for particle=" << ii;
-             buffer << "  are not equal: [" << molecularQuadrupole[2] << " " << molecularQuadrupole[6] << "];";
-             buffer << " MBPOL plugin assumes symmetric quadrupole tensor.";
-             throw OpenMMException(buffer.str());
-       }
-
-       if( fabs( molecularQuadrupole[5] - molecularQuadrupole[7] ) > quadrupoleValidationTolerance  ){
-             std::stringstream buffer;
-             buffer << "MBPolElectrostaticsForce: YZ and ZY components of quadrupole for particle=" << ii;
-             buffer << "  are not equal: [" << molecularQuadrupole[5] << " " << molecularQuadrupole[7] << "];";
-             buffer << " MBPOL plugin assumes symmetric quadrupole tensor.";
-             throw OpenMMException(buffer.str());
-       }
-
-       // only 'Z-then-X', 'Bisector', Z-Bisect, ThreeFold  currently handled
-
-        if( axisType != MBPolElectrostaticsForce::ZThenX     && axisType != MBPolElectrostaticsForce::Bisector &&
-            axisType != MBPolElectrostaticsForce::ZBisect    && axisType != MBPolElectrostaticsForce::ThreeFold &&
-            axisType != MBPolElectrostaticsForce::ZOnly      && axisType != MBPolElectrostaticsForce::NoAxisType ) {
-             std::stringstream buffer;
-             buffer << "MBPolElectrostaticsForce: axis type=" << axisType;
-             buffer << " not currently handled - only axisTypes[ ";
-             buffer << MBPolElectrostaticsForce::ZThenX   << ", " << MBPolElectrostaticsForce::Bisector  << ", ";
-             buffer << MBPolElectrostaticsForce::ZBisect  << ", " << MBPolElectrostaticsForce::ThreeFold << ", ";
-             buffer << MBPolElectrostaticsForce::NoAxisType;
-             buffer << "] (ZThenX, Bisector, Z-Bisect, ThreeFold, NoAxisType) currently handled .";
-             throw OpenMMException(buffer.str());
-        }
-    }
     kernel = context.getPlatform().createKernel(CalcMBPolElectrostaticsForceKernel::Name(), context);
     kernel.getAs<CalcMBPolElectrostaticsForceKernel>().initialize(context.getSystem(), owner);
 }
