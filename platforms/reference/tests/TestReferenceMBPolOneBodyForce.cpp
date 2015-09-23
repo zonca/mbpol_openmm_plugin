@@ -50,7 +50,7 @@ const double TOL = 1e-4;
 #define PI_M               3.141592653589
 #define RADIAN            57.29577951308
 
-void testOneOneBody( FILE* log ) {
+void testOneOneBody() {
 
     System system;
     int numberOfParticles = 3;
@@ -147,14 +147,7 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolOneBodyForce running test..." << std::endl;
 
-        FILE* log = NULL;
-        //FILE* log = stderr;
-        //FILE* log = fopen( "MBPolOneBodyForce1.log", "w" );;
-        testOneOneBody( log );
-#ifdef MBPOL_DEBUG
-        if( log && log != stderr )
-            (void) fclose( log );
-#endif
+        testOneOneBody();
 
     }
     catch(const std::exception& e) {

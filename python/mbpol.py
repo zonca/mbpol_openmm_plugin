@@ -364,6 +364,7 @@ class MBPolElectrostaticsForceGenerator:
 
         if len(existing) == 0:
             force = mbpolplugin.MBPolElectrostaticsForce()
+            force.setCutoffDistance(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
             sys.addForce(force)
         else:
             force = existing[0]

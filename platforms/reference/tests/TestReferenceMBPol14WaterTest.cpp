@@ -60,7 +60,7 @@ using namespace MBPolPlugin;
 const double TOL = 1e-4;
 const double cal2joule = 4.184;
 
-void testWater14( FILE* log ) {
+void testWater14( ) {
 
     std::string testName      = "testMBPolWater14Test";
 
@@ -321,9 +321,7 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "testMBPolWater14Test running test..." << std::endl;
 
-        FILE* log = NULL;
-
-        testWater14( log );
+        testWater14();
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
