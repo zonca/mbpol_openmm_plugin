@@ -41,20 +41,13 @@
 #ifdef WIN32
   #define _USE_MATH_DEFINES // Needed to get M_PI
 #endif
-#include "AmoebaCudaKernels.h"
-#include "CudaAmoebaKernelSources.h"
 #include "openmm/internal/ContextImpl.h"
-#include "openmm/internal/AmoebaGeneralizedKirkwoodForceImpl.h"
 #include "openmm/internal/AmoebaMultipoleForceImpl.h"
-#include "openmm/internal/AmoebaWcaDispersionForceImpl.h"
-#include "openmm/internal/AmoebaTorsionTorsionForceImpl.h"
-#include "openmm/internal/AmoebaVdwForceImpl.h"
 #include "openmm/internal/NonbondedForceImpl.h"
-#include "CudaBondedUtilities.h"
-#include "CudaForceInfo.h"
+#include "openmm/cuda/CudaBondedUtilities.h"
+#include "openmm/cuda/CudaForceInfo.h"
 #include "CudaKernelSources.h"
-#include "CudaNonbondedUtilities.h"
-#include "jama_svd.h"
+#include "openmm/cuda/CudaNonbondedUtilities.h"
 
 #include <algorithm>
 #include <cmath>
@@ -287,10 +280,10 @@ void CudaCalcMBPolTwoBodyForceKernel::copyParametersToContext(ContextImpl& conte
 
 
 /* -------------------------------------------------------------------------- *
- *                             AmoebaMultipole                                *
+ *                             Electrostatics                                 *
  * -------------------------------------------------------------------------- */
 
-class CudaCalcAmoebaMultipoleForceKernel::ForceInfo : public CudaForceInfo {
+class CudaCalcMBPolElectrostaticsForceKernel::ForceInfo : public CudaForceInfo {
 public:
     ForceInfo(const AmoebaMultipoleForce& force) : force(force) {
     }
@@ -330,8 +323,8 @@ private:
     const AmoebaMultipoleForce& force;
 };
 
-CudaCalcAmoebaMultipoleForceKernel::CudaCalcAmoebaMultipoleForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) :
-        CalcAmoebaMultipoleForceKernel(name, platform), cu(cu), system(system), hasInitializedScaleFactors(false), hasInitializedFFT(false), multipolesAreValid(false),
+CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system) :
+		CalcMBPolElectrostaticsForceKernel(name, platform), cu(cu), system(system), hasInitializedScaleFactors(false), hasInitializedFFT(false), multipolesAreValid(false),
         multipoleParticles(NULL), molecularDipoles(NULL), molecularQuadrupoles(NULL), labFrameDipoles(NULL), labFrameQuadrupoles(NULL), fracDipoles(NULL),
         fracQuadrupoles(NULL), field(NULL), fieldPolar(NULL), inducedField(NULL), inducedFieldPolar(NULL), torque(NULL), dampingAndThole(NULL), inducedDipole(NULL),
         diisCoefficients(NULL), inducedDipolePolar(NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(NULL), prevDipolesGk(NULL),
@@ -340,7 +333,7 @@ CudaCalcAmoebaMultipoleForceKernel::CudaCalcAmoebaMultipoleForceKernel(std::stri
         pmePhid(NULL), pmePhip(NULL), pmePhidp(NULL), pmeCphi(NULL), pmeAtomGridIndex(NULL), lastPositions(NULL), sort(NULL), gkKernel(NULL) {
 }
 
-CudaCalcAmoebaMultipoleForceKernel::~CudaCalcAmoebaMultipoleForceKernel() {
+CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel() {
     cu.setAsCurrent();
     if (multipoleParticles != NULL)
         delete multipoleParticles;
@@ -444,7 +437,7 @@ static int findFFTDimension(int minimum) {
     }
 }
 
-void CudaCalcAmoebaMultipoleForceKernel::initialize(const System& system, const AmoebaMultipoleForce& force) {
+void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, const AmoebaMultipoleForce& force) {
     cu.setAsCurrent();
 
     // Initialize multipole parameters.
@@ -871,7 +864,7 @@ void CudaCalcAmoebaMultipoleForceKernel::initialize(const System& system, const 
     cu.addForce(new ForceInfo(force));
 }
 
-void CudaCalcAmoebaMultipoleForceKernel::initializeScaleFactors() {
+void CudaCalcMBPolElectrostaticsForceKernel::initializeScaleFactors() {
     hasInitializedScaleFactors = true;
     CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
 
@@ -944,7 +937,7 @@ void CudaCalcAmoebaMultipoleForceKernel::initializeScaleFactors() {
     polarizationGroupFlags->upload(polarizationGroupFlagsVec);
 }
 
-double CudaCalcAmoebaMultipoleForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
+double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
     if (!hasInitializedScaleFactors) {
         initializeScaleFactors();
         for (int i = 0; i < (int) context.getForceImpls().size() && gkKernel == NULL; i++) {
@@ -1204,7 +1197,7 @@ double CudaCalcAmoebaMultipoleForceKernel::execute(ContextImpl& context, bool in
     return 0.0;
 }
 
-bool CudaCalcAmoebaMultipoleForceKernel::iterateDipolesByDIIS(int iteration) {
+bool CudaCalcMBPolElectrostaticsForceKernel::iterateDipolesByDIIS(int iteration) {
     void* npt = NULL;
     bool trueValue = true, falseValue = false;
     int elementSize = (cu.getUseDoublePrecision() ? sizeof(double) : sizeof(float));
@@ -1302,7 +1295,7 @@ bool CudaCalcAmoebaMultipoleForceKernel::iterateDipolesByDIIS(int iteration) {
     return false;
 }
 
-void CudaCalcAmoebaMultipoleForceKernel::ensureMultipolesValid(ContextImpl& context) {
+void CudaCalcMBPolElectrostaticsForceKernel::ensureMultipolesValid(ContextImpl& context) {
     if (multipolesAreValid) {
         int numParticles = cu.getNumAtoms();
         if (cu.getUseDoublePrecision()) {
@@ -1330,7 +1323,7 @@ void CudaCalcAmoebaMultipoleForceKernel::ensureMultipolesValid(ContextImpl& cont
         context.calcForcesAndEnergy(false, false, -1);
 }
 
-void CudaCalcAmoebaMultipoleForceKernel::getInducedDipoles(ContextImpl& context, vector<Vec3>& dipoles) {
+void CudaCalcMBPolElectrostaticsForceKernel::getInducedDipoles(ContextImpl& context, vector<Vec3>& dipoles) {
     ensureMultipolesValid(context);
     int numParticles = cu.getNumAtoms();
     dipoles.resize(numParticles);
@@ -1349,7 +1342,7 @@ void CudaCalcAmoebaMultipoleForceKernel::getInducedDipoles(ContextImpl& context,
     }
 }
 
-void CudaCalcAmoebaMultipoleForceKernel::getElectrostaticPotential(ContextImpl& context, const vector<Vec3>& inputGrid, vector<double>& outputElectrostaticPotential) {
+void CudaCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(ContextImpl& context, const vector<Vec3>& inputGrid, vector<double>& outputElectrostaticPotential) {
     ensureMultipolesValid(context);
     int numPoints = inputGrid.size();
     int elementSize = (cu.getUseDoublePrecision() ? sizeof(double) : sizeof(float));
@@ -1391,7 +1384,7 @@ void CudaCalcAmoebaMultipoleForceKernel::getElectrostaticPotential(ContextImpl& 
 }
 
 template <class T, class T4, class M4>
-void CudaCalcAmoebaMultipoleForceKernel::computeSystemMultipoleMoments(ContextImpl& context, vector<double>& outputMultipoleMoments) {
+void CudaCalcMBPolElectrostaticsForceKernel::computeSystemMultipoleMoments(ContextImpl& context, vector<double>& outputMultipoleMoments) {
     // Compute the local coordinates relative to the center of mass.
     int numAtoms = cu.getNumAtoms();
     vector<T4> posq;
@@ -1502,7 +1495,7 @@ void CudaCalcAmoebaMultipoleForceKernel::computeSystemMultipoleMoments(ContextIm
     outputMultipoleMoments[12] = 100.0*zzqdp*debye;
 }
 
-void CudaCalcAmoebaMultipoleForceKernel::getSystemMultipoleMoments(ContextImpl& context, vector<double>& outputMultipoleMoments) {
+void CudaCalcMBPolElectrostaticsForceKernel::getSystemMultipoleMoments(ContextImpl& context, vector<double>& outputMultipoleMoments) {
     ensureMultipolesValid(context);
     if (cu.getUseDoublePrecision())
         computeSystemMultipoleMoments<double, double4, double4>(context, outputMultipoleMoments);
@@ -1512,7 +1505,7 @@ void CudaCalcAmoebaMultipoleForceKernel::getSystemMultipoleMoments(ContextImpl& 
         computeSystemMultipoleMoments<float, float4, float4>(context, outputMultipoleMoments);
 }
 
-void CudaCalcAmoebaMultipoleForceKernel::copyParametersToContext(ContextImpl& context, const AmoebaMultipoleForce& force) {
+void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(ContextImpl& context, const AmoebaMultipoleForce& force) {
     // Make sure the new parameters are acceptable.
 
     cu.setAsCurrent();

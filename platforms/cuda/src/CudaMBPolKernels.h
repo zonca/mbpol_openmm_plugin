@@ -132,10 +132,10 @@ private:
 /**
  * This kernel is invoked by AmoebaMultipoleForce to calculate the forces acting on the system and the energy of the system.
  */
-class CudaCalcAmoebaMultipoleForceKernel : public CalcAmoebaMultipoleForceKernel {
+class CudaCalcMBPolElectrostaticsForceKernel : public CalcMBPolElectrostaticsForceKernel {
 public:
-    CudaCalcAmoebaMultipoleForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
-    ~CudaCalcAmoebaMultipoleForceKernel();
+	CudaCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
+    ~CudaCalcMBPolElectrostaticsForceKernel();
     /**
      * Initialize the kernel.
      *
