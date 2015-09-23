@@ -51,6 +51,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector_functions.hpp>
+#include </usr/local/openmm/include/openmm/cuda/CudaContext.h>
 #ifdef _MSC_VER
 #include <windows.h>
 #endif
@@ -585,7 +587,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, co
     defines["NUM_ATOMS"] = cu.intToString(numMultipoles);
     defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
     defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
-    defines["ENERGY_SCALE_FACTOR"] = cu.doubleToString(138.9354558456/innerDielectric);
+    defines["ENERGY_SCALE_FACTOR"] = 0;
     if (force.getPolarizationType() == AmoebaMultipoleForce::Direct)
         defines["DIRECT_POLARIZATION"] = "";
     if (useShuffle)
@@ -628,18 +630,18 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, co
     int maxThreads = cu.getNonbondedUtilities().getForceThreadBlockSize();
     fixedFieldThreads = min(maxThreads, cu.computeThreadBlockSize(fixedThreadMemory));
     inducedFieldThreads = min(maxThreads, cu.computeThreadBlockSize(inducedThreadMemory));
-    CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaAmoebaKernelSources::multipoles, defines);
+    CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multipoles, defines);
     computeMomentsKernel = cu.getKernel(module, "computeLabFrameMoments");
     recordInducedDipolesKernel = cu.getKernel(module, "recordInducedDipoles");
     mapTorqueKernel = cu.getKernel(module, "mapTorqueToForce");
     computePotentialKernel = cu.getKernel(module, "computePotentialAtPoints");
     defines["THREAD_BLOCK_SIZE"] = cu.intToString(fixedFieldThreads);
-    module = cu.createModule(CudaKernelSources::vectorOps+CudaAmoebaKernelSources::multipoleFixedField, defines);
+    module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multipoleFixedField, defines);
     computeFixedFieldKernel = cu.getKernel(module, "computeFixedField");
     if (maxInducedIterations > 0) {
         defines["THREAD_BLOCK_SIZE"] = cu.intToString(inducedFieldThreads);
         defines["MAX_PREV_DIIS_DIPOLES"] = cu.intToString(MaxPrevDIISDipoles);
-        module = cu.createModule(CudaKernelSources::vectorOps+CudaAmoebaKernelSources::multipoleInducedField, defines);
+        module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multipoleInducedField, defines);
         computeInducedFieldKernel = cu.getKernel(module, "computeInducedField");
         updateInducedFieldKernel = cu.getKernel(module, "updateInducedFieldByDIIS");
         recordDIISDipolesKernel = cu.getKernel(module, "recordInducedDipolesForDIIS");
@@ -648,25 +650,25 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, co
     stringstream electrostaticsSource;
     if (usePME) {
         electrostaticsSource << CudaKernelSources::vectorOps;
-        electrostaticsSource << CudaAmoebaKernelSources::pmeMultipoleElectrostatics;
-        electrostaticsSource << (hasQuadrupoles ? CudaAmoebaKernelSources::pmeElectrostaticPairForce : CudaAmoebaKernelSources::pmeElectrostaticPairForceNoQuadrupoles);
+        electrostaticsSource << CudaMBPolKernelSources::pmeMultipoleElectrostatics;
+        electrostaticsSource << (hasQuadrupoles ? CudaMBPolKernelSources::pmeElectrostaticPairForce : CudaMBPolKernelSources::pmeElectrostaticPairForceNoQuadrupoles);
         electrostaticsSource << "#define APPLY_SCALE\n";
-        electrostaticsSource << (hasQuadrupoles ? CudaAmoebaKernelSources::pmeElectrostaticPairForce : CudaAmoebaKernelSources::pmeElectrostaticPairForceNoQuadrupoles);
+        electrostaticsSource << (hasQuadrupoles ? CudaMBPolKernelSources::pmeElectrostaticPairForce : CudaMBPolKernelSources::pmeElectrostaticPairForceNoQuadrupoles);
         electrostaticsThreadMemory = 24*elementSize+3*sizeof(float)+3*sizeof(int)/(double) cu.TileSize;
         if (!useShuffle)
             electrostaticsThreadMemory += 3*elementSize;
     }
     else {
         electrostaticsSource << CudaKernelSources::vectorOps;
-        electrostaticsSource << CudaAmoebaKernelSources::multipoleElectrostatics;
+        electrostaticsSource << CudaMBPolKernelSources::multipoleElectrostatics;
         electrostaticsSource << "#define F1\n";
-        electrostaticsSource << (hasQuadrupoles ? CudaAmoebaKernelSources::electrostaticPairForce : CudaAmoebaKernelSources::electrostaticPairForceNoQuadrupoles);
+        electrostaticsSource << (hasQuadrupoles ? CudaMBPolKernelSources::electrostaticPairForce : CudaMBPolKernelSources::electrostaticPairForceNoQuadrupoles);
         electrostaticsSource << "#undef F1\n";
         electrostaticsSource << "#define T1\n";
-        electrostaticsSource << (hasQuadrupoles ? CudaAmoebaKernelSources::electrostaticPairForce : CudaAmoebaKernelSources::electrostaticPairForceNoQuadrupoles);
+        electrostaticsSource << (hasQuadrupoles ? CudaMBPolKernelSources::electrostaticPairForce : CudaMBPolKernelSources::electrostaticPairForceNoQuadrupoles);
         electrostaticsSource << "#undef T1\n";
         electrostaticsSource << "#define T3\n";
-        electrostaticsSource << (hasQuadrupoles ? CudaAmoebaKernelSources::electrostaticPairForce : CudaAmoebaKernelSources::electrostaticPairForceNoQuadrupoles);
+        electrostaticsSource << (hasQuadrupoles ? CudaMBPolKernelSources::electrostaticPairForce : CudaMBPolKernelSources::electrostaticPairForceNoQuadrupoles);
         electrostaticsThreadMemory = 21*elementSize+2*sizeof(float)+3*sizeof(int)/(double) cu.TileSize;
         if (!useShuffle)
             electrostaticsThreadMemory += 3*elementSize;
@@ -694,7 +696,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, co
         pmeDefines["SQRT_PI"] = cu.doubleToString(sqrt(M_PI));
         if (force.getPolarizationType() == AmoebaMultipoleForce::Direct)
             pmeDefines["DIRECT_POLARIZATION"] = "";
-        CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaAmoebaKernelSources::multipolePme, pmeDefines);
+        CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multipolePme, pmeDefines);
         pmeGridIndexKernel = cu.getKernel(module, "findAtomGridIndex");
         pmeTransformMultipolesKernel = cu.getKernel(module, "transformMultipolesToFractionalCoordinates");
         pmeTransformPotentialKernel = cu.getKernel(module, "transformPotentialToCartesianCoordinates");
