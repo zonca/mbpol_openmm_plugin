@@ -229,8 +229,6 @@ private:
     CudaArray* inducedDipoleErrors;
     CudaArray* prevDipoles;
     CudaArray* prevDipolesPolar;
-    CudaArray* prevDipolesGk;
-    CudaArray* prevDipolesGkPolar;
     CudaArray* prevErrors;
     CudaArray* diisMatrix;
     CudaArray* diisCoefficients;

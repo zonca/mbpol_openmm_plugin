@@ -327,10 +327,9 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(s
 		CalcMBPolElectrostaticsForceKernel(name, platform), cu(cu), system(system), hasInitializedScaleFactors(false), hasInitializedFFT(false), multipolesAreValid(false),
         multipoleParticles(NULL), molecularDipoles(NULL), molecularQuadrupoles(NULL), labFrameDipoles(NULL), labFrameQuadrupoles(NULL), fracDipoles(NULL),
         fracQuadrupoles(NULL), field(NULL), fieldPolar(NULL), inducedField(NULL), inducedFieldPolar(NULL), torque(NULL), dampingAndThole(NULL), inducedDipole(NULL),
-        diisCoefficients(NULL), inducedDipolePolar(NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(NULL), prevDipolesGk(NULL),
-        prevDipolesGkPolar(NULL), prevErrors(NULL), diisMatrix(NULL), polarizability(NULL), covalentFlags(NULL), polarizationGroupFlags(NULL),
-        pmeGrid(NULL), pmeBsplineModuliX(NULL), pmeBsplineModuliY(NULL), pmeBsplineModuliZ(NULL), pmeIgrid(NULL), pmePhi(NULL),
-        pmePhid(NULL), pmePhip(NULL), pmePhidp(NULL), pmeCphi(NULL), pmeAtomGridIndex(NULL), lastPositions(NULL), sort(NULL), gkKernel(NULL) {
+        diisCoefficients(NULL), inducedDipolePolar(NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(NULL), prevErrors(NULL), diisMatrix(NULL),
+		polarizability(NULL), covalentFlags(NULL), polarizationGroupFlags(NULL), pmeGrid(NULL), pmeBsplineModuliX(NULL), pmeBsplineModuliY(NULL), pmeBsplineModuliZ(NULL),
+		pmeIgrid(NULL), pmePhi(NULL), pmePhid(NULL), pmePhip(NULL), pmePhidp(NULL), pmeCphi(NULL), pmeAtomGridIndex(NULL), lastPositions(NULL), sort(NULL) {
 }
 
 CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel() {
@@ -371,10 +370,6 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
         delete prevDipoles;
     if (prevDipolesPolar != NULL)
         delete prevDipolesPolar;
-    if (prevDipolesGk != NULL)
-        delete prevDipolesGk;
-    if (prevDipolesGkPolar != NULL)
-        delete prevDipolesGkPolar;
     if (prevErrors != NULL)
         delete prevErrors;
     if (diisMatrix != NULL)
@@ -578,13 +573,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, co
         maxInducedIterations = 0;
     bool usePME = (force.getNonbondedMethod() == AmoebaMultipoleForce::PME);
 
-    // See whether there's an AmoebaGeneralizedKirkwoodForce in the System.
-
-    const AmoebaGeneralizedKirkwoodForce* gk = NULL;
-    for (int i = 0; i < system.getNumForces() && gk == NULL; i++)
-        gk = dynamic_cast<const AmoebaGeneralizedKirkwoodForce*>(&system.getForce(i));
-    double innerDielectric = (gk == NULL ? 1.0 : gk->getSoluteDielectric());
-
     // Create the kernels.
 
     bool useShuffle = (cu.getComputeCapability() >= 3.0 && !cu.getUseDoublePrecision());
@@ -637,18 +625,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, co
         defines["USE_PERIODIC"] = "";
         defines["CUTOFF_SQUARED"] = cu.doubleToString(force.getCutoffDistance()*force.getCutoffDistance());
     }
-    if (gk != NULL) {
-        defines["USE_GK"] = "";
-        defines["GK_C"] = cu.doubleToString(2.455);
-        double solventDielectric = gk->getSolventDielectric();
-        defines["GK_FC"] = cu.doubleToString(1*(1-solventDielectric)/(0+1*solventDielectric));
-        defines["GK_FD"] = cu.doubleToString(2*(1-solventDielectric)/(1+2*solventDielectric));
-        defines["GK_FQ"] = cu.doubleToString(3*(1-solventDielectric)/(2+3*solventDielectric));
-        fixedThreadMemory += 4*elementSize;
-        inducedThreadMemory += 13*elementSize;
-        prevDipolesGk = new CudaArray(cu, 3*numMultipoles*MaxPrevDIISDipoles, elementSize, "prevDipolesGk");
-        prevDipolesGkPolar = new CudaArray(cu, 3*numMultipoles*MaxPrevDIISDipoles, elementSize, "prevDipolesGkPolar");
-    }
     int maxThreads = cu.getNonbondedUtilities().getForceThreadBlockSize();
     fixedFieldThreads = min(maxThreads, cu.computeThreadBlockSize(fixedThreadMemory));
     inducedFieldThreads = min(maxThreads, cu.computeThreadBlockSize(inducedThreadMemory));
@@ -694,8 +670,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system, co
         electrostaticsThreadMemory = 21*elementSize+2*sizeof(float)+3*sizeof(int)/(double) cu.TileSize;
         if (!useShuffle)
             electrostaticsThreadMemory += 3*elementSize;
-        if (gk != NULL)
-            electrostaticsThreadMemory += 4*elementSize;
     }
     electrostaticsThreads = min(maxThreads, cu.computeThreadBlockSize(electrostaticsThreadMemory));
     defines["THREAD_BLOCK_SIZE"] = cu.intToString(electrostaticsThreads);
@@ -940,11 +914,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initializeScaleFactors() {
 double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
     if (!hasInitializedScaleFactors) {
         initializeScaleFactors();
-        for (int i = 0; i < (int) context.getForceImpls().size() && gkKernel == NULL; i++) {
-            AmoebaGeneralizedKirkwoodForceImpl* gkImpl = dynamic_cast<AmoebaGeneralizedKirkwoodForceImpl*>(context.getForceImpls()[i]);
-            if (gkImpl != NULL)
-                gkKernel = dynamic_cast<CudaCalcAmoebaGeneralizedKirkwoodForceKernel*>(&gkImpl->getKernel().getImpl());
-        }
     }
     CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
 
@@ -962,7 +931,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context, boo
     if (pmeGrid == NULL) {
         // Compute induced dipoles.
 
-        if (gkKernel == NULL) {
             void* computeFixedFieldArgs[] = {&field->getDevicePointer(), &fieldPolar->getDevicePointer(), &cu.getPosq().getDevicePointer(),
                 &covalentFlags->getDevicePointer(), &polarizationGroupFlags->getDevicePointer(), &nb.getExclusionTiles().getDevicePointer(), &startTileIndex, &numTileIndices,
                 &labFrameDipoles->getDevicePointer(), &labFrameQuadrupoles->getDevicePointer(), &dampingAndThole->getDevicePointer()};
@@ -970,42 +938,19 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context, boo
             void* recordInducedDipolesArgs[] = {&field->getDevicePointer(), &fieldPolar->getDevicePointer(),
                 &inducedDipole->getDevicePointer(), &inducedDipolePolar->getDevicePointer(), &polarizability->getDevicePointer()};
             cu.executeKernel(recordInducedDipolesKernel, recordInducedDipolesArgs, cu.getNumAtoms());
-        }
-        else {
-            gkKernel->computeBornRadii();
-            void* computeFixedFieldArgs[] = {&field->getDevicePointer(), &fieldPolar->getDevicePointer(), &cu.getPosq().getDevicePointer(),
-                &covalentFlags->getDevicePointer(), &polarizationGroupFlags->getDevicePointer(), &nb.getExclusionTiles().getDevicePointer(), &startTileIndex, &numTileIndices,
-                &gkKernel->getBornRadii()->getDevicePointer(), &gkKernel->getField()->getDevicePointer(),
-                &labFrameDipoles->getDevicePointer(), &labFrameQuadrupoles->getDevicePointer(), &dampingAndThole->getDevicePointer()};
-            cu.executeKernel(computeFixedFieldKernel, computeFixedFieldArgs, numForceThreadBlocks*fixedFieldThreads, fixedFieldThreads);
-            void* recordInducedDipolesArgs[] = {&field->getDevicePointer(), &fieldPolar->getDevicePointer(),
-                &gkKernel->getField()->getDevicePointer(), &gkKernel->getInducedDipoles()->getDevicePointer(),
-                &gkKernel->getInducedDipolesPolar()->getDevicePointer(), &inducedDipole->getDevicePointer(),
-                &inducedDipolePolar->getDevicePointer(), &polarizability->getDevicePointer()};
-            cu.executeKernel(recordInducedDipolesKernel, recordInducedDipolesArgs, cu.getNumAtoms());
-        }
+
 
         // Iterate until the dipoles converge.
 
         for (int i = 0; i < maxInducedIterations; i++) {
             cu.clearBuffer(*inducedField);
             cu.clearBuffer(*inducedFieldPolar);
-            if (gkKernel == NULL) {
+
                 void* computeInducedFieldArgs[] = {&inducedField->getDevicePointer(), &inducedFieldPolar->getDevicePointer(), &cu.getPosq().getDevicePointer(),
                     &nb.getExclusionTiles().getDevicePointer(), &inducedDipole->getDevicePointer(), &inducedDipolePolar->getDevicePointer(), &startTileIndex, &numTileIndices,
                     &dampingAndThole->getDevicePointer()};
                 cu.executeKernel(computeInducedFieldKernel, computeInducedFieldArgs, numForceThreadBlocks*inducedFieldThreads, inducedFieldThreads);
-            }
-            else {
-                cu.clearBuffer(*gkKernel->getInducedField());
-                cu.clearBuffer(*gkKernel->getInducedFieldPolar());
-                void* computeInducedFieldArgs[] = {&inducedField->getDevicePointer(), &inducedFieldPolar->getDevicePointer(), &cu.getPosq().getDevicePointer(),
-                    &nb.getExclusionTiles().getDevicePointer(), &inducedDipole->getDevicePointer(), &inducedDipolePolar->getDevicePointer(), &startTileIndex, &numTileIndices,
-                    &gkKernel->getInducedField()->getDevicePointer(), &gkKernel->getInducedFieldPolar()->getDevicePointer(),
-                    &gkKernel->getInducedDipoles()->getDevicePointer(), &gkKernel->getInducedDipolesPolar()->getDevicePointer(),
-                    &gkKernel->getBornRadii()->getDevicePointer(), &dampingAndThole->getDevicePointer()};
-                cu.executeKernel(computeInducedFieldKernel, computeInducedFieldArgs, numForceThreadBlocks*inducedFieldThreads, inducedFieldThreads);
-            }
+
             bool converged = iterateDipolesByDIIS(i);
             if (converged)
                 break;
@@ -1019,8 +964,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context, boo
             &labFrameDipoles->getDevicePointer(), &labFrameQuadrupoles->getDevicePointer(), &inducedDipole->getDevicePointer(),
             &inducedDipolePolar->getDevicePointer(), &dampingAndThole->getDevicePointer()};
         cu.executeKernel(electrostaticsKernel, electrostaticsArgs, numForceThreadBlocks*electrostaticsThreads, electrostaticsThreads);
-        if (gkKernel != NULL)
-            gkKernel->finishComputation(*torque, *labFrameDipoles, *labFrameQuadrupoles, *inducedDipole, *inducedDipolePolar, *dampingAndThole, *covalentFlags, *polarizationGroupFlags);
     }
     else {
         // Compute reciprocal box vectors.
@@ -1204,13 +1147,6 @@ bool CudaCalcMBPolElectrostaticsForceKernel::iterateDipolesByDIIS(int iteration)
 
     // Record the dipoles and errors into the lists of previous dipoles.
 
-    if (gkKernel != NULL) {
-        void* recordDIISDipolesGkArgs[] = {&field->getDevicePointer(), &fieldPolar->getDevicePointer(), &gkKernel->getField()->getDevicePointer(), &gkKernel->getInducedField()->getDevicePointer(),
-            &gkKernel->getInducedFieldPolar()->getDevicePointer(), &gkKernel->getInducedDipoles()->getDevicePointer(), &gkKernel->getInducedDipolesPolar()->getDevicePointer(),
-            &polarizability->getDevicePointer(), &inducedDipoleErrors->getDevicePointer(), &prevDipolesGk->getDevicePointer(),
-            &prevDipolesGkPolar->getDevicePointer(), &prevErrors->getDevicePointer(), &iteration, &falseValue, &diisMatrix->getDevicePointer()};
-        cu.executeKernel(recordDIISDipolesKernel, recordDIISDipolesGkArgs, cu.getNumThreadBlocks()*cu.ThreadBlockSize, cu.ThreadBlockSize, cu.ThreadBlockSize*elementSize*2);
-    }
     void* recordDIISDipolesArgs[] = {&field->getDevicePointer(), &fieldPolar->getDevicePointer(), &npt, &inducedField->getDevicePointer(),
         &inducedFieldPolar->getDevicePointer(), &inducedDipole->getDevicePointer(), &inducedDipolePolar->getDevicePointer(),
         &polarizability->getDevicePointer(), &inducedDipoleErrors->getDevicePointer(), &prevDipoles->getDevicePointer(),
@@ -1287,11 +1223,6 @@ bool CudaCalcMBPolElectrostaticsForceKernel::iterateDipolesByDIIS(int iteration)
     void* updateInducedFieldArgs[] = {&inducedDipole->getDevicePointer(), &inducedDipolePolar->getDevicePointer(),
         &prevDipoles->getDevicePointer(), &prevDipolesPolar->getDevicePointer(), &diisCoefficients->getDevicePointer(), &numPrev};
     cu.executeKernel(updateInducedFieldKernel, updateInducedFieldArgs, cu.getNumThreadBlocks()*cu.ThreadBlockSize);
-    if (gkKernel != NULL) {
-        void* updateInducedFieldGkArgs[] = {&gkKernel->getInducedDipoles()->getDevicePointer(), &gkKernel->getInducedDipolesPolar()->getDevicePointer(),
-            &prevDipolesGk->getDevicePointer(), &prevDipolesGkPolar->getDevicePointer(), &diisCoefficients->getDevicePointer(), &numPrev};
-        cu.executeKernel(updateInducedFieldKernel, updateInducedFieldGkArgs, cu.getNumThreadBlocks()*cu.ThreadBlockSize);
-    }
     return false;
 }
 
