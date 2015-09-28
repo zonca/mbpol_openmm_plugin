@@ -48,8 +48,8 @@ extern "C" OPENMM_EXPORT void registerKernelFactories() {
         Platform& platform = Platform::getPlatformByName("CUDA");
         CudaMBPolKernelFactory* factory = new CudaMBPolKernelFactory();
         platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(), factory);
-        platform.registerKernelFactory(CudaCalcMBPolElectrostaticsForceKernel::Name(), factory);
-        platform.registerKernelFactory(CalcAmoebaMultipoleForceKernel::Name(), factory);
+        platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(), factory);
+        platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(), factory);
 
     }
     catch (std::exception & ex) {

@@ -35,9 +35,11 @@
 #include "openmm/mbpolKernels.h"
 #include "openmm/cuda/CudaContext.h"
 #include "openmm/cuda/CudaArray.h"
+#include "openmm/internal/ContextImpl.h"
+
 
 //for electrostatics
-#include "openmm/amoebaKernels.h"
+//#include "openmm/amoebaKernels.h"
 #include "openmm/kernels.h"
 #include "openmm/System.h"
 //#include "CudaArray.h"
@@ -135,14 +137,14 @@ private:
 class CudaCalcMBPolElectrostaticsForceKernel : public CalcMBPolElectrostaticsForceKernel {
 public:
 	CudaCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
-    ~CudaCalcMBPolElectrostaticsForceKernel();
+		~CudaCalcMBPolElectrostaticsForceKernel();
     /**
      * Initialize the kernel.
      *
      * @param system     the System this kernel will be applied to
      * @param force      the AmoebaMultipoleForce this kernel will be used for
      */
-    void initialize(const System& system, const AmoebaMultipoleForce& force);
+    void initialize(const System& system, const MBPolElectrostaticsForce& force);
     /**
      * Execute the kernel to calculate the forces and/or energy.
      *
@@ -186,7 +188,10 @@ public:
      * @param context    the context to copy parameters to
      * @param force      the AmoebaMultipoleForce to copy the parameters from
      */
-    void copyParametersToContext(ContextImpl& context, const AmoebaMultipoleForce& force);
+    void copyParametersToContext(ContextImpl& context, const MBPolElectrostaticsForce& force);
+
+    void getSystemElectrostaticsMoments(Context& context, std::vector< double >& outputElectrostaticsMoments);
+
 private:
     class ForceInfo;
     class SortTrait : public CudaSort::SortTrait {
@@ -200,7 +205,6 @@ private:
         const char* getSortKey() const {return "value.y";}
     };
     void initializeScaleFactors();
-    bool iterateDipolesByDIIS(int iteration);
     void ensureMultipolesValid(ContextImpl& context);
     template <class T, class T4, class M4> void computeSystemMultipoleMoments(ContextImpl& context, std::vector<double>& outputMultipoleMoments);
     int numMultipoles, maxInducedIterations;
@@ -230,8 +234,6 @@ private:
     CudaArray* prevDipoles;
     CudaArray* prevDipolesPolar;
     CudaArray* prevErrors;
-    CudaArray* diisMatrix;
-    CudaArray* diisCoefficients;
     CudaArray* polarizability;
     CudaArray* covalentFlags;
     CudaArray* polarizationGroupFlags;
@@ -253,10 +255,8 @@ private:
     CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;
     CUfunction pmeGridIndexKernel, pmeSpreadFixedMultipolesKernel, pmeSpreadInducedDipolesKernel, pmeFinishSpreadChargeKernel, pmeConvolutionKernel;
     CUfunction pmeFixedPotentialKernel, pmeInducedPotentialKernel, pmeFixedForceKernel, pmeInducedForceKernel, pmeRecordInducedFieldDipolesKernel, computePotentialKernel;
-    CUfunction recordDIISDipolesKernel, buildMatrixKernel;
     CUfunction pmeTransformMultipolesKernel, pmeTransformPotentialKernel;
     static const int PmeOrder = 5;
-    static const int MaxPrevDIISDipoles = 20;
 };
 
 
