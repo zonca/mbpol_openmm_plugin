@@ -190,7 +190,7 @@ public:
      */
     void copyParametersToContext(ContextImpl& context, const MBPolElectrostaticsForce& force);
 
-    void getSystemElectrostaticsMoments(Context& context, std::vector< double >& outputElectrostaticsMoments);
+    void getSystemElectrostaticsMoments( ContextImpl& context, std::vector< double >& outputElectrostaticsMonents );
 
 private:
     class ForceInfo;

@@ -43,7 +43,7 @@
 #endif
 //#include "openmm/internal/ContextImpl.h"
 //#include "openmm/internal/AmoebaMultipoleForceImpl.h"
-//#include "openmm/internal/NonbondedForceImpl.h"
+#include "openmm/internal/NonbondedForceImpl.h"
 //#include "openmm/cuda/CudaBondedUtilities.h"
 //#include "openmm/cuda/CudaForceInfo.h"
 //#include "CudaKernelSources.h"
@@ -311,9 +311,9 @@ void CudaCalcMBPolTwoBodyForceKernel::copyParametersToContext(
  *                             Electrostatics                                 *
  * -------------------------------------------------------------------------- */
 
-class CudaCalcMBPolElectrostaticsForceKernel::ForceInfo: public CudaForceInfo {
+class CudaMBPolElectrostaticsForceInfo: public CudaForceInfo {
 public:
-	ForceInfo(const MBPolElectrostaticsForce& force) :
+	CudaMBPolElectrostaticsForceInfo(const MBPolElectrostaticsForce& force) :
 			force(force) {
 	}
 	bool areParticlesIdentical(int particle1, int particle2) {
@@ -498,8 +498,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			posqd[i] = make_double4(0, 0, 0, charge);
 		else
 			posqf[i] = make_float4(0, 0, 0, (float) charge);
-		dampingAndTholeVec.push_back(
-				make_float2((float) damping, (float) thole));
+//		dampingAndTholeVec.push_back(
+//				make_float2((float) damping, (float) thole));
 		polarizabilityVec.push_back((float) polarity);
 		multipoleParticlesVec.push_back(
 				make_int4(atomX, atomY, atomZ, axisType));
@@ -639,7 +639,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	defines["NUM_ATOMS"] = cu.intToString(numMultipoles);
 	defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
 	defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
-	defines["ENERGY_SCALE_FACTOR"] = 0;
+	defines["ENERGY_SCALE_FACTOR"] = "0";
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
 		defines["DIRECT_POLARIZATION"] = "";
 	if (useShuffle)
@@ -943,7 +943,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	cu.getNonbondedUtilities().addInteraction(usePME, usePME, true,
 			force.getCutoffDistance(), exclusions, "", force.getForceGroup());
 	cu.getNonbondedUtilities().setUsePadding(false);
-	cu.addForce(new ForceInfo(force));
+	cu.addForce(new CudaMBPolElectrostaticsForceInfo(force));
 }
 
 void CudaCalcMBPolElectrostaticsForceKernel::initializeScaleFactors() {
@@ -1684,8 +1684,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 			posqd[i].w = charge;
 		else
 			posqf[i].w = (float) charge;
-		dampingAndTholeVec.push_back(
-				make_float2((float) damping, (float) thole));
+//		dampingAndTholeVec.push_back(
+//				make_float2((float) damping, (float) thole));
 		polarizabilityVec.push_back((float) polarity);
 		multipoleParticlesVec.push_back(
 				make_int4(atomX, atomY, atomZ, axisType));
@@ -1715,6 +1715,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 	multipolesAreValid = false;
 }
 
-void CudaCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments(Context& context, std::vector< double >& outputElectrostaticsMoments) {
+void CudaCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments( ContextImpl& context, std::vector< double >& outputElectrostaticsMonents ) {
 	return;
 }
