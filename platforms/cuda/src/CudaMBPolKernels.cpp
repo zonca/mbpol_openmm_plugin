@@ -999,9 +999,8 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 	void* computeMomentsArgs[] = { &cu.getPosq().getDevicePointer(),
 			&multipoleParticles->getDevicePointer(),
 			&molecularDipoles->getDevicePointer(),
-			&labFrameDipoles->getDevicePointer(),}
-	cu.executeKernel(computeMomentsKernel, computeMomentsArgs,
-			cu.getNumAtoms());
+			&labFrameDipoles->getDevicePointer()};
+	cu.executeKernel(computeMomentsKernel, computeMomentsArgs, cu.getNumAtoms());
 	int startTileIndex = nb.getStartTileIndex();
 	int numTileIndices = nb.getNumTiles();
 	int numForceThreadBlocks = nb.getNumForceThreadBlocks();
