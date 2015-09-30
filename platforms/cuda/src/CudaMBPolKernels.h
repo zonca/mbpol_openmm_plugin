@@ -227,7 +227,7 @@ private:
     CudaArray* inducedField;
     CudaArray* inducedFieldPolar;
     CudaArray* torque;
-    CudaArray* dampingAndThole;
+    CudaArray* damping;
     CudaArray* inducedDipole;
     CudaArray* inducedDipolePolar;
     CudaArray* inducedDipoleErrors;

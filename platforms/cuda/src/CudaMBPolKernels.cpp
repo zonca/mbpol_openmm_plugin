@@ -367,7 +367,7 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(
 				NULL), molecularQuadrupoles(NULL), labFrameDipoles(NULL), labFrameQuadrupoles(
 				NULL), fracDipoles(NULL), fracQuadrupoles(NULL), field(NULL), fieldPolar(
 				NULL), inducedField(NULL), inducedFieldPolar(NULL), torque(
-				NULL), dampingAndThole(NULL), inducedDipole(NULL), inducedDipolePolar(
+				NULL), damping(NULL), inducedDipole(NULL), inducedDipolePolar(
 				NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(
 				NULL), prevErrors(NULL), polarizability(NULL), covalentFlags(
 				NULL), polarizationGroupFlags(NULL), pmeGrid(NULL), pmeBsplineModuliX(
@@ -403,8 +403,8 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
 		delete inducedFieldPolar;
 	if (torque != NULL)
 		delete torque;
-	if (dampingAndThole != NULL)
-		delete dampingAndThole;
+	if (damping != NULL)
+		delete damping;
 	if (inducedDipole != NULL)
 		delete inducedDipole;
 	if (inducedDipolePolar != NULL)
@@ -484,10 +484,9 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	vector<double4> temp(posq.getSize());
 	float4* posqf = (float4*) &temp[0];
 	double4* posqd = (double4*) &temp[0];
-	vector<float2> dampingAndTholeVec;
+	vector<float> dampingVec;
 	vector<float> polarizabilityVec;
 	vector<float> molecularDipolesVec;
-	vector<float> molecularQuadrupolesVec;
 	vector<int4> multipoleParticlesVec;
 	for (int i = 0; i < numMultipoles; i++) {
 		double charge, damping, polarity;
@@ -498,28 +497,21 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			posqd[i] = make_double4(0, 0, 0, charge);
 		else
 			posqf[i] = make_float4(0, 0, 0, (float) charge);
-//		dampingAndTholeVec.push_back(
-//				make_float2((float) damping, (float) thole));
+		dampingVec.push_back((float) damping);
 		polarizabilityVec.push_back((float) polarity);
 		multipoleParticlesVec.push_back(
 				make_int4(atomX, atomY, atomZ, axisType));
 	}
-	hasQuadrupoles = false;
-	for (int i = 0; i < (int) molecularQuadrupolesVec.size(); i++)
-		if (molecularQuadrupolesVec[i] != 0.0)
-			hasQuadrupoles = true;
 	int paddedNumAtoms = cu.getPaddedNumAtoms();
 	for (int i = numMultipoles; i < paddedNumAtoms; i++) {
-		dampingAndTholeVec.push_back(make_float2(0, 0));
+		dampingVec.push_back( 0 );
 		polarizabilityVec.push_back(0);
 		multipoleParticlesVec.push_back(make_int4(0, 0, 0, 0));
 		for (int j = 0; j < 3; j++)
 			molecularDipolesVec.push_back(0);
-		for (int j = 0; j < 5; j++)
-			molecularQuadrupolesVec.push_back(0);
 	}
-	dampingAndThole = CudaArray::create<float2>(cu, paddedNumAtoms,
-			"dampingAndThole");
+	damping = CudaArray::create<float>(cu, paddedNumAtoms,
+			"damping");
 	polarizability = CudaArray::create<float>(cu, paddedNumAtoms,
 			"polarizability");
 	multipoleParticles = CudaArray::create<int4>(cu, paddedNumAtoms,
@@ -530,11 +522,10 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			"molecularQuadrupoles");
 	lastPositions = new CudaArray(cu, cu.getPosq().getSize(),
 			cu.getPosq().getElementSize(), "lastPositions");
-	dampingAndThole->upload(dampingAndTholeVec);
+	damping->upload(dampingVec);
 	polarizability->upload(polarizabilityVec);
 	multipoleParticles->upload(multipoleParticlesVec);
 	molecularDipoles->upload(molecularDipolesVec);
-	molecularQuadrupoles->upload(molecularQuadrupolesVec);
 	posq.upload(&temp[0]);
 
 	// Create workspace arrays.
@@ -1059,7 +1050,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
 				&numTileIndices, &labFrameDipoles->getDevicePointer(),
 				&labFrameQuadrupoles->getDevicePointer(),
-				&dampingAndThole->getDevicePointer() };
+				&damping->getDevicePointer() };
 		cu.executeKernel(computeFixedFieldKernel, computeFixedFieldArgs,
 				numForceThreadBlocks * fixedFieldThreads, fixedFieldThreads);
 		void* recordInducedDipolesArgs[] = { &field->getDevicePointer(),
@@ -1083,7 +1074,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 					&nb.getExclusionTiles().getDevicePointer(),
 					&inducedDipole->getDevicePointer(),
 					&inducedDipolePolar->getDevicePointer(), &startTileIndex,
-					&numTileIndices, &dampingAndThole->getDevicePointer() };
+					&numTileIndices, &damping->getDevicePointer() };
 			cu.executeKernel(computeInducedFieldKernel, computeInducedFieldArgs,
 					numForceThreadBlocks * inducedFieldThreads,
 					inducedFieldThreads);
@@ -1102,7 +1093,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&labFrameQuadrupoles->getDevicePointer(),
 				&inducedDipole->getDevicePointer(),
 				&inducedDipolePolar->getDevicePointer(),
-				&dampingAndThole->getDevicePointer() };
+				&damping->getDevicePointer() };
 		cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
 				numForceThreadBlocks * electrostaticsThreads,
 				electrostaticsThreads);
@@ -1245,7 +1236,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&nb.getInteractingAtoms().getDevicePointer(),
 				&labFrameDipoles->getDevicePointer(),
 				&labFrameQuadrupoles->getDevicePointer(),
-				&dampingAndThole->getDevicePointer() };
+				&damping->getDevicePointer() };
 		cu.executeKernel(computeFixedFieldKernel, computeFixedFieldArgs,
 				numForceThreadBlocks * fixedFieldThreads, fixedFieldThreads);
 		void* recordInducedDipolesArgs[] = { &field->getDevicePointer(),
@@ -1320,7 +1311,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 					cu.getPeriodicBoxVecZPointer(), &maxTiles,
 					&nb.getBlockCenters().getDevicePointer(),
 					&nb.getInteractingAtoms().getDevicePointer(),
-					&dampingAndThole->getDevicePointer() };
+					&damping->getDevicePointer() };
 			cu.executeKernel(computeInducedFieldKernel, computeInducedFieldArgs,
 					numForceThreadBlocks * inducedFieldThreads,
 					inducedFieldThreads);
@@ -1377,7 +1368,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&labFrameQuadrupoles->getDevicePointer(),
 				&inducedDipole->getDevicePointer(),
 				&inducedDipolePolar->getDevicePointer(),
-				&dampingAndThole->getDevicePointer() };
+				&damping->getDevicePointer() };
 		cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
 				numForceThreadBlocks * electrostaticsThreads,
 				electrostaticsThreads);
@@ -1669,7 +1660,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 	cu.getPosq().download(cu.getPinnedBuffer());
 	float4* posqf = (float4*) cu.getPinnedBuffer();
 	double4* posqd = (double4*) cu.getPinnedBuffer();
-	vector<float2> dampingAndTholeVec;
+	vector<float> dampingVec;
 	vector<float> polarizabilityVec;
 	vector<float> molecularDipolesVec;
 	vector<float> molecularQuadrupolesVec;
@@ -1697,7 +1688,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 						"updateParametersInContext: Cannot set a non-zero quadrupole moment, because quadrupoles were excluded from the kernel");
 	}
 	for (int i = force.getNumElectrostatics(); i < cu.getPaddedNumAtoms(); i++) {
-		dampingAndTholeVec.push_back(make_float2(0, 0));
+		dampingVec.push_back(0);
 		polarizabilityVec.push_back(0);
 		multipoleParticlesVec.push_back(make_int4(0, 0, 0, 0));
 		for (int j = 0; j < 3; j++)
@@ -1705,7 +1696,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 		for (int j = 0; j < 5; j++)
 			molecularQuadrupolesVec.push_back(0);
 	}
-	dampingAndThole->upload(dampingAndTholeVec);
+	damping->upload(dampingVec);
 	polarizability->upload(polarizabilityVec);
 	multipoleParticles->upload(multipoleParticlesVec);
 	molecularDipoles->upload(molecularDipolesVec);
