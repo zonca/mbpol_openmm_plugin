@@ -4,10 +4,6 @@ typedef struct {
     real4 posq;
     real3 field, fieldPolar, dipole;
     float damp;
-#ifdef USE_GK
-    real3 gkField;
-    real bornRadius;
-#endif
 } AtomData;
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole, const float* __restrict__ damping) {

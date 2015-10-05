@@ -3,21 +3,11 @@
 typedef struct {
     real3 pos;
     real3 field, fieldPolar, inducedDipole, inducedDipolePolar;
-#ifdef USE_GK
-    real3 fieldS, fieldPolarS, inducedDipoleS, inducedDipolePolarS;
-    real bornRadius;
-#endif
-    float thole, damp;
+    float damp;
 } AtomData;
 
-#ifdef USE_GK
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ inducedDipole,
-        const real* __restrict__ inducedDipolePolar, const float2* __restrict__ dampingAndThole, const real* __restrict__ inducedDipoleS,
-        const real* __restrict__ inducedDipolePolarS, const real* __restrict__ bornRadii) {
-#else
-inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ inducedDipole,
-        const real* __restrict__ inducedDipolePolar, const float2* __restrict__ dampingAndThole) {
-#endif
+        const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping) {
     real4 atomPosq = posq[atom];
     data.pos = make_real3(atomPosq.x, atomPosq.y, atomPosq.z);
     data.inducedDipole.x = inducedDipole[atom*3];
@@ -26,27 +16,12 @@ inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __res
     data.inducedDipolePolar.x = inducedDipolePolar[atom*3];
     data.inducedDipolePolar.y = inducedDipolePolar[atom*3+1];
     data.inducedDipolePolar.z = inducedDipolePolar[atom*3+2];
-    float2 temp = dampingAndThole[atom];
-    data.damp = temp.x;
-    data.thole = temp.y;
-#ifdef USE_GK
-    data.inducedDipoleS.x = inducedDipoleS[atom*3];
-    data.inducedDipoleS.y = inducedDipoleS[atom*3+1];
-    data.inducedDipoleS.z = inducedDipoleS[atom*3+2];
-    data.inducedDipolePolarS.x = inducedDipolePolarS[atom*3];
-    data.inducedDipolePolarS.y = inducedDipolePolarS[atom*3+1];
-    data.inducedDipolePolarS.z = inducedDipolePolarS[atom*3+2];
-    data.bornRadius = bornRadii[atom];
-#endif
+    data.damp = damping[atom];
 }
 
 inline __device__ void zeroAtomData(AtomData& data) {
     data.field = make_real3(0);
     data.fieldPolar = make_real3(0);
-#ifdef USE_GK
-    data.fieldS = make_real3(0);
-    data.fieldPolarS = make_real3(0);
-#endif
 }
 
 #ifdef USE_EWALD
@@ -88,8 +63,9 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         real scale5 = 1;
         real damp = atom1.damp*atom2.damp;
         real ratio = (r/damp);
-        ratio = ratio*ratio*ratio;
-        float pgamma = atom1.thole < atom2.thole ? atom1.thole : atom2.thole;
+        ratio = ratio*ratio*ratio;           
+        float thole = 0.4;
+        float pgamma = thole;
         damp = damp == 0 ? 0 : -pgamma*ratio;
         real expdamp = EXP(damp);
         scale3 = 1 - expdamp;
@@ -117,62 +93,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     dDotDelta = scale2*dot(deltaR, atom1.inducedDipolePolar);
     atom2.fieldPolar += scale1*atom1.inducedDipolePolar + dDotDelta*deltaR;
 }
-#elif defined USE_GK
-__device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 deltaR, bool isSelfInteraction) {
-    real r2 = dot(deltaR, deltaR);
-    real r = SQRT(r2);
-    if (!isSelfInteraction) {
-        real rI = RECIP(r);
-        real r2I = rI*rI;
-        real rr3 = -rI*r2I;
-        real rr5 = -3*rr3*r2I;
-
-        real dampProd = atom1.damp*atom2.damp;
-        real ratio = (dampProd != 0 ? r/dampProd : 1);
-        float pGamma = (atom1.thole > atom2.thole ? atom2.thole: atom1.thole);
-        real damp = ratio*ratio*ratio*pGamma;
-        real dampExp = (dampProd != 0 ? EXP(-damp) : 0); 
-
-        rr3 *= 1-dampExp;
-        rr5 *= 1-(1+damp)*dampExp;
-
-        real dDotDelta = rr5*dot(deltaR, atom2.inducedDipole);
-        atom1.field += rr3*atom2.inducedDipole + dDotDelta*deltaR;
-        dDotDelta = rr5*dot(deltaR, atom2.inducedDipolePolar);
-        atom1.fieldPolar += rr3*atom2.inducedDipolePolar + dDotDelta*deltaR;
-        dDotDelta = rr5*dot(deltaR, atom1.inducedDipole);
-        atom2.field += rr3*atom1.inducedDipole + dDotDelta*deltaR;
-        dDotDelta = rr5*dot(deltaR, atom1.inducedDipolePolar);
-        atom2.fieldPolar += rr3*atom1.inducedDipolePolar + dDotDelta*deltaR;
-        dDotDelta = rr5*dot(deltaR, atom2.inducedDipoleS);
-        atom1.fieldS += rr3*atom2.inducedDipoleS + dDotDelta*deltaR;
-        dDotDelta = rr5*dot(deltaR, atom2.inducedDipolePolarS);
-        atom1.fieldPolarS += rr3*atom2.inducedDipolePolarS + dDotDelta*deltaR;
-        dDotDelta = rr5*dot(deltaR, atom1.inducedDipoleS);
-        atom2.fieldS += rr3*atom1.inducedDipoleS + dDotDelta*deltaR;
-        dDotDelta = rr5*dot(deltaR, atom1.inducedDipolePolarS);
-        atom2.fieldPolarS += rr3*atom1.inducedDipolePolarS + dDotDelta*deltaR;
-    }
-
-    real rb2 = atom1.bornRadius*atom2.bornRadius;
-    real expterm = EXP(-r2/(GK_C*rb2));
-    real expc = expterm/GK_C; 
-    real gf2 = RECIP(r2+rb2*expterm);
-    real gf = SQRT(gf2);
-    real gf3 = gf2*gf;
-    real gf5 = gf3*gf2;
-    real a10 = -gf3;
-    real expc1 = 1 - expc;
-    real a11 = expc1 * 3 * gf5;
-    real3 gux = GK_FD*make_real3(a10+deltaR.x*deltaR.x*a11, deltaR.x*deltaR.y*a11, deltaR.x*deltaR.z*a11);
-    real3 guy = make_real3(gux.y, GK_FD*(a10+deltaR.y*deltaR.y*a11), GK_FD*deltaR.y*deltaR.z*a11);
-    real3 guz = make_real3(gux.z, guy.z, GK_FD*(a10+deltaR.z*deltaR.z*a11));
- 
-    atom1.fieldS += atom2.inducedDipoleS.x*gux+atom2.inducedDipoleS.y*guy+atom2.inducedDipoleS.z*guz;
-    atom2.fieldS += atom1.inducedDipoleS.x*gux+atom1.inducedDipoleS.y*guy+atom1.inducedDipoleS.z*guz;
-    atom1.fieldPolarS += atom2.inducedDipolePolarS.x*gux+atom2.inducedDipolePolarS.y*guy+atom2.inducedDipolePolarS.z*guz;
-    atom2.fieldPolarS += atom1.inducedDipolePolarS.x*gux+atom1.inducedDipolePolarS.y*guy+atom1.inducedDipolePolarS.z*guz;
-}
 #else
 __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 deltaR, bool isSelfInteraction) {
     if (isSelfInteraction)
@@ -184,8 +104,8 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real rr5 = -3*rr3*r2I;
     real dampProd = atom1.damp*atom2.damp;
     real ratio = (dampProd != 0 ? r/dampProd : 1);
-    float pGamma = (atom2.thole > atom1.thole ? atom1.thole: atom2.thole);
-    real damp = ratio*ratio*ratio*pGamma;
+	float thole = 0.4;
+    float pGamma = thole;     real damp = ratio*ratio*ratio*pGamma;
     real dampExp = (dampProd != 0 ? EXP(-damp) : 0); 
     rr3 *= 1 - dampExp;
     rr5 *= 1 - (1+damp)*dampExp;
@@ -209,11 +129,8 @@ extern "C" __global__ void computeInducedField(
 #ifdef USE_CUTOFF
         const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize,
         real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, unsigned int maxTiles, const real4* __restrict__ blockCenter, const unsigned int* __restrict__ interactingAtoms,
-#elif defined USE_GK
-        unsigned long long* __restrict__ fieldS, unsigned long long* __restrict__ fieldPolarS, const real* __restrict__ inducedDipoleS,
-        const real* __restrict__ inducedDipolePolarS, const real* __restrict__ bornRadii,
 #endif
-        const float2* __restrict__ dampingAndThole) {
+        const float* __restrict__ damping) {
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1);
@@ -231,24 +148,15 @@ extern "C" __global__ void computeInducedField(
         AtomData data;
         zeroAtomData(data);
         unsigned int atom1 = x*TILE_SIZE + tgx;
-#ifdef USE_GK
-        loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, dampingAndThole, inducedDipoleS, inducedDipolePolarS, bornRadii);
-#else
-        loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, dampingAndThole);
-#endif
+        loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping);
         if (x == y) {
             // This tile is on the diagonal.
 
             localData[threadIdx.x].pos = data.pos;
             localData[threadIdx.x].inducedDipole = data.inducedDipole;
             localData[threadIdx.x].inducedDipolePolar = data.inducedDipolePolar;
-            localData[threadIdx.x].thole = data.thole;
             localData[threadIdx.x].damp = data.damp;
-#ifdef USE_GK
-            localData[threadIdx.x].inducedDipoleS = data.inducedDipoleS;
-            localData[threadIdx.x].inducedDipolePolarS = data.inducedDipolePolarS;
-            localData[threadIdx.x].bornRadius = data.bornRadius;
-#endif
+
             for (unsigned int j = 0; j < TILE_SIZE; j++) {
                 real3 delta = localData[tbx+j].pos-data.pos;
 #ifdef USE_PERIODIC
@@ -262,11 +170,8 @@ extern "C" __global__ void computeInducedField(
         else {
             // This is an off-diagonal tile.
 
-#ifdef USE_GK
-            loadAtomData(localData[threadIdx.x], y*TILE_SIZE+tgx, posq, inducedDipole, inducedDipolePolar, dampingAndThole, inducedDipoleS, inducedDipolePolarS, bornRadii);
-#else
-            loadAtomData(localData[threadIdx.x], y*TILE_SIZE+tgx, posq, inducedDipole, inducedDipolePolar, dampingAndThole);
-#endif
+            loadAtomData(localData[threadIdx.x], y*TILE_SIZE+tgx, posq, inducedDipole, inducedDipolePolar, damping);
+
             zeroAtomData(localData[threadIdx.x]);
             unsigned int tj = tgx;
             for (unsigned int j = 0; j < TILE_SIZE; j++) {
@@ -290,14 +195,7 @@ extern "C" __global__ void computeInducedField(
         atomicAdd(&fieldPolar[offset], static_cast<unsigned long long>((long long) (data.fieldPolar.x*0x100000000)));
         atomicAdd(&fieldPolar[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolar.y*0x100000000)));
         atomicAdd(&fieldPolar[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolar.z*0x100000000)));
-#ifdef USE_GK
-        atomicAdd(&fieldS[offset], static_cast<unsigned long long>((long long) (data.fieldS.x*0x100000000)));
-        atomicAdd(&fieldS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldS.y*0x100000000)));
-        atomicAdd(&fieldS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldS.z*0x100000000)));
-        atomicAdd(&fieldPolarS[offset], static_cast<unsigned long long>((long long) (data.fieldPolarS.x*0x100000000)));
-        atomicAdd(&fieldPolarS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolarS.y*0x100000000)));
-        atomicAdd(&fieldPolarS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolarS.z*0x100000000)));
-#endif
+
         if (x != y) {
             offset = y*TILE_SIZE + tgx;
             atomicAdd(&field[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].field.x*0x100000000)));
@@ -306,14 +204,7 @@ extern "C" __global__ void computeInducedField(
             atomicAdd(&fieldPolar[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolar.x*0x100000000)));
             atomicAdd(&fieldPolar[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolar.y*0x100000000)));
             atomicAdd(&fieldPolar[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolar.z*0x100000000)));
-#ifdef USE_GK
-            atomicAdd(&fieldS[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldS.x*0x100000000)));
-            atomicAdd(&fieldS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldS.y*0x100000000)));
-            atomicAdd(&fieldS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldS.z*0x100000000)));
-            atomicAdd(&fieldPolarS[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolarS.x*0x100000000)));
-            atomicAdd(&fieldPolarS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolarS.y*0x100000000)));
-            atomicAdd(&fieldPolarS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolarS.z*0x100000000)));
-#endif
+
         }
     }
 
@@ -377,22 +268,18 @@ extern "C" __global__ void computeInducedField(
 
             AtomData data;
             zeroAtomData(data);
-#ifdef USE_GK
-            loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, dampingAndThole, inducedDipoleS, inducedDipolePolarS, bornRadii);
-#else
-            loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, dampingAndThole);
-#endif
+
+            loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping);
+
 #ifdef USE_CUTOFF
             unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
 #else
             unsigned int j = y*TILE_SIZE + tgx;
 #endif
             atomIndices[threadIdx.x] = j;
-#ifdef USE_GK
-            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, dampingAndThole, inducedDipoleS, inducedDipolePolarS, bornRadii);
-#else
-            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, dampingAndThole);
-#endif
+
+            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping);
+
             zeroAtomData(localData[threadIdx.x]);
 
             // Compute the full set of interactions in this tile.
@@ -418,14 +305,7 @@ extern "C" __global__ void computeInducedField(
             atomicAdd(&fieldPolar[offset], static_cast<unsigned long long>((long long) (data.fieldPolar.x*0x100000000)));
             atomicAdd(&fieldPolar[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolar.y*0x100000000)));
             atomicAdd(&fieldPolar[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolar.z*0x100000000)));
-#ifdef USE_GK
-            atomicAdd(&fieldS[offset], static_cast<unsigned long long>((long long) (data.fieldS.x*0x100000000)));
-            atomicAdd(&fieldS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldS.y*0x100000000)));
-            atomicAdd(&fieldS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldS.z*0x100000000)));
-            atomicAdd(&fieldPolarS[offset], static_cast<unsigned long long>((long long) (data.fieldPolarS.x*0x100000000)));
-            atomicAdd(&fieldPolarS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolarS.y*0x100000000)));
-            atomicAdd(&fieldPolarS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.fieldPolarS.z*0x100000000)));
-#endif
+
 #ifdef USE_CUTOFF
             offset = atomIndices[threadIdx.x];
 #else
@@ -437,14 +317,7 @@ extern "C" __global__ void computeInducedField(
             atomicAdd(&fieldPolar[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolar.x*0x100000000)));
             atomicAdd(&fieldPolar[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolar.y*0x100000000)));
             atomicAdd(&fieldPolar[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolar.z*0x100000000)));
-#ifdef USE_GK
-            atomicAdd(&fieldS[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldS.x*0x100000000)));
-            atomicAdd(&fieldS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldS.y*0x100000000)));
-            atomicAdd(&fieldS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldS.z*0x100000000)));
-            atomicAdd(&fieldPolarS[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolarS.x*0x100000000)));
-            atomicAdd(&fieldPolarS[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolarS.y*0x100000000)));
-            atomicAdd(&fieldPolarS[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].fieldPolarS.z*0x100000000)));
-#endif
+
         }
         pos++;
     }
