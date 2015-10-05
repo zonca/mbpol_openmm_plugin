@@ -49,7 +49,9 @@ __device__ void computeOneInteractionT3(AtomData& atom1, volatile AtomData& atom
     if (pdamp != 0) {
    
         real ratio = r/pdamp;
-        float pGamma = atom2.thole > atom1.thole ? atom1.thole : atom2.thole;
+        //FIXME: 
+        float thole = 0.4;
+        float pGamma = thole;
 
         real damp = ratio*ratio*ratio*pGamma;
         real dampExp = EXP(-damp);
