@@ -52,6 +52,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         if (damp != 0) {
             real ratio = (r/damp);
             ratio = ratio*ratio*ratio;
+            //FIXME: 
             float thole = 0.4;
         	real pgamma = thole;
             damp = -pgamma*ratio;

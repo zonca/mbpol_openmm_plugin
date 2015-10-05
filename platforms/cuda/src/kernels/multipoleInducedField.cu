@@ -64,6 +64,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         real damp = atom1.damp*atom2.damp;
         real ratio = (r/damp);
         ratio = ratio*ratio*ratio;           
+        //FIXME: 
         float thole = 0.4;
         float pgamma = thole;
         damp = damp == 0 ? 0 : -pgamma*ratio;
@@ -104,8 +105,10 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real rr5 = -3*rr3*r2I;
     real dampProd = atom1.damp*atom2.damp;
     real ratio = (dampProd != 0 ? r/dampProd : 1);
+	//FIXME: 
 	float thole = 0.4;
-    float pGamma = thole;     real damp = ratio*ratio*ratio*pGamma;
+    float pGamma = thole;     
+    real damp = ratio*ratio*ratio*pGamma;
     real dampExp = (dampProd != 0 ? EXP(-damp) : 0); 
     rr3 *= 1 - dampExp;
     rr5 *= 1 - (1+damp)*dampExp;
