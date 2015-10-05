@@ -3,33 +3,19 @@
 typedef struct {
     real4 posq;
     real3 field, fieldPolar, dipole;
-#ifdef INCLUDE_QUADRUPOLES
-    real quadrupoleXX, quadrupoleXY, quadrupoleXZ;
-    real quadrupoleYY, quadrupoleYZ, quadrupoleZZ;
-#endif
-    float thole, damp;
+    float damp;
 #ifdef USE_GK
     real3 gkField;
     real bornRadius;
 #endif
 } AtomData;
 
-inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole, const real* __restrict__ labFrameQuadrupole, const float2* __restrict__ dampingAndThole) {
+inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole, const float* __restrict__ damping) {
     data.posq = posq[atom];
     data.dipole.x = labFrameDipole[atom*3];
     data.dipole.y = labFrameDipole[atom*3+1];
     data.dipole.z = labFrameDipole[atom*3+2];
-#ifdef INCLUDE_QUADRUPOLES
-    data.quadrupoleXX = labFrameQuadrupole[atom*5];
-    data.quadrupoleXY = labFrameQuadrupole[atom*5+1];
-    data.quadrupoleXZ = labFrameQuadrupole[atom*5+2];
-    data.quadrupoleYY = labFrameQuadrupole[atom*5+3];
-    data.quadrupoleYZ = labFrameQuadrupole[atom*5+4];
-    data.quadrupoleZZ = -(data.quadrupoleXX+data.quadrupoleYY);
-#endif
-    float2 temp = dampingAndThole[atom];
-    data.damp = temp.x;
-    data.thole = temp.y;
+    data.damp = damping[atom];
 }
 
 #ifdef USE_EWALD
@@ -70,7 +56,8 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         if (damp != 0) {
             real ratio = (r/damp);
             ratio = ratio*ratio*ratio;
-            real pgamma = (atom1.thole < atom2.thole ? atom1.thole : atom2.thole);
+            float thole = 0.4;
+        	real pgamma = thole;
             damp = -pgamma*ratio;
             if (damp > -50) {
                 real expdamp = EXP(damp);
@@ -101,33 +88,13 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         real dir = dot(atom1.dipole, deltaR);
         real dkr = dot(atom2.dipole, deltaR);
 
-#ifdef INCLUDE_QUADRUPOLES
-        real3 qi;
-        qi.x = atom1.quadrupoleXX*deltaR.x + atom1.quadrupoleXY*deltaR.y + atom1.quadrupoleXZ*deltaR.z;
-        qi.y = atom1.quadrupoleXY*deltaR.x + atom1.quadrupoleYY*deltaR.y + atom1.quadrupoleYZ*deltaR.z;
-        qi.z = atom1.quadrupoleXZ*deltaR.x + atom1.quadrupoleYZ*deltaR.y + atom1.quadrupoleZZ*deltaR.z;
-        real qir = dot(qi, deltaR);
-
-        real3 qk;
-        qk.x = atom2.quadrupoleXX*deltaR.x + atom2.quadrupoleXY*deltaR.y + atom2.quadrupoleXZ*deltaR.z;
-        qk.y = atom2.quadrupoleXY*deltaR.x + atom2.quadrupoleYY*deltaR.y + atom2.quadrupoleYZ*deltaR.z;
-        qk.z = atom2.quadrupoleXZ*deltaR.x + atom2.quadrupoleYZ*deltaR.y + atom2.quadrupoleZZ*deltaR.z;
-        real qkr = dot(qk, deltaR);
-
-        real3 fim = -deltaR*(bn1*atom2.posq.w-bn2*dkr+bn3*qkr) - bn1*atom2.dipole + 2*bn2*qk;
-        real3 fkm = deltaR*(bn1*atom1.posq.w+bn2*dir+bn3*qir) - bn1*atom1.dipole - 2*bn2*qi;
-        real3 fid = -deltaR*(drr3*atom2.posq.w-drr5*dkr+drr7*qkr) - drr3*atom2.dipole + 2*drr5*qk;
-        real3 fkd = deltaR*(drr3*atom1.posq.w+drr5*dir+drr7*qir) - drr3*atom1.dipole - 2*drr5*qi;
-        real3 fip = -deltaR*(prr3*atom2.posq.w-prr5*dkr+prr7*qkr) - prr3*atom2.dipole + 2*prr5*qk;
-        real3 fkp = deltaR*(prr3*atom1.posq.w+prr5*dir+prr7*qir) - prr3*atom1.dipole - 2*prr5*qi;
-#else
         real3 fim = -deltaR*(bn1*atom2.posq.w-bn2*dkr) - bn1*atom2.dipole;
         real3 fkm = deltaR*(bn1*atom1.posq.w+bn2*dir) - bn1*atom1.dipole;
         real3 fid = -deltaR*(drr3*atom2.posq.w-drr5*dkr) - drr3*atom2.dipole;
         real3 fkd = deltaR*(drr3*atom1.posq.w+drr5*dir) - drr3*atom1.dipole;
         real3 fip = -deltaR*(prr3*atom2.posq.w-prr5*dkr) - prr3*atom2.dipole;
         real3 fkp = deltaR*(prr3*atom1.posq.w+prr5*dir) - prr3*atom1.dipole;
-#endif
+
         // increment the field at each site due to this interaction
 
         fields[0] = fim-fid;
@@ -161,7 +128,9 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         // get scaling factors
       
         real ratio = r/damp;
-        float pGamma = atom2.thole > atom1.thole ? atom1.thole : atom2.thole; 
+        //FIXME: 
+        float thole = 0.4;
+        float pGamma = thole; 
         damp = ratio*ratio*ratio*pGamma;
         dampExp = EXP(-damp);
     }
@@ -171,35 +140,15 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     rr3 *= 1 - dampExp;
     rr5 *= 1 - (1+damp)*dampExp;
     rr7 *= 1 - (1+damp+(0.6f*damp*damp))*dampExp;
-      
-    real rr5_2 = 2*rr5;
- 
+       
     real dir = dot(atom1.dipole, deltaR);
     real dkr = dot(atom2.dipole, deltaR);
 
-#ifdef INCLUDE_QUADRUPOLES
-    real3 qi;
-    qi.x = atom1.quadrupoleXX*deltaR.x + atom1.quadrupoleXY*deltaR.y + atom1.quadrupoleXZ*deltaR.z;
-    qi.y = atom1.quadrupoleXY*deltaR.x + atom1.quadrupoleYY*deltaR.y + atom1.quadrupoleYZ*deltaR.z;
-    qi.z = atom1.quadrupoleXZ*deltaR.x + atom1.quadrupoleYZ*deltaR.y + atom1.quadrupoleZZ*deltaR.z;
-    real qir = dot(qi, deltaR);
-
-    real3 qk;
-    qk.x = atom2.quadrupoleXX*deltaR.x + atom2.quadrupoleXY*deltaR.y + atom2.quadrupoleXZ*deltaR.z;
-    qk.y = atom2.quadrupoleXY*deltaR.x + atom2.quadrupoleYY*deltaR.y + atom2.quadrupoleYZ*deltaR.z;
-    qk.z = atom2.quadrupoleXZ*deltaR.x + atom2.quadrupoleYZ*deltaR.y + atom2.quadrupoleZZ*deltaR.z;
-    real qkr = dot(qk, deltaR);
-
-    real factor = -rr3*atom2.posq.w + rr5*dkr - rr7*qkr;
-    real3 field1 = deltaR*factor - rr3*atom2.dipole + rr5_2*qk;
-    factor = rr3*atom1.posq.w + rr5*dir + rr7*qir;
-    real3 field2 = deltaR*factor - rr3*atom1.dipole - rr5_2*qi;
-#else
     real factor = -rr3*atom2.posq.w + rr5*dkr;
     real3 field1 = deltaR*factor - rr3*atom2.dipole;
     factor = rr3*atom1.posq.w + rr5*dir;
     real3 field2 = deltaR*factor - rr3*atom1.dipole;
-#endif
+
     fields[0] = dScale*field1;
     fields[1] = pScale*field1;
     fields[2] = dScale*field2;
@@ -226,20 +175,6 @@ __device__ void computeOneGkInteraction(AtomData& atom1, AtomData& atom2, real3 
     real uyk = atom2.dipole.y;
     real uzk = atom2.dipole.z;
 
-#ifdef INCLUDE_QUADRUPOLES
-    real qxxi = atom1.quadrupoleXX;
-    real qxyi = atom1.quadrupoleXY;
-    real qxzi = atom1.quadrupoleXZ;
-    real qyyi = atom1.quadrupoleYY;
-    real qyzi = atom1.quadrupoleYZ;
-    real qzzi = atom1.quadrupoleZZ;
-    real qxxk = atom2.quadrupoleXX;
-    real qxyk = atom2.quadrupoleXY;
-    real qxzk = atom2.quadrupoleXZ;
-    real qyyk = atom2.quadrupoleYY;
-    real qyzk = atom2.quadrupoleYZ;
-    real qzzk = atom2.quadrupoleZZ;
-#else
     real qxxi = 0;
     real qxyi = 0;
     real qxzi = 0;
@@ -252,7 +187,7 @@ __device__ void computeOneGkInteraction(AtomData& atom1, AtomData& atom2, real3 
     real qyyk = 0;
     real qyzk = 0;
     real qzzk = 0;
-#endif
+
     real xr2 = delta.x*delta.x;
     real yr2 = delta.y*delta.y;
     real zr2 = delta.z*delta.z;
@@ -446,7 +381,7 @@ extern "C" __global__ void computeFixedField(
 #elif defined USE_GK
         const real* __restrict__ bornRadii, unsigned long long* __restrict__ gkFieldBuffers,
 #endif
-        const real* __restrict__ labFrameDipole, const real* __restrict__ labFrameQuadrupole, const float2* __restrict__ dampingAndThole) {
+        const real* __restrict__ labFrameDipole, const float* __restrict__ damping) {
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1);
@@ -468,7 +403,7 @@ extern "C" __global__ void computeFixedField(
         data.gkField = make_real3(0);
 #endif
         unsigned int atom1 = x*TILE_SIZE + tgx;
-        loadAtomData(data, atom1, posq, labFrameDipole, labFrameQuadrupole, dampingAndThole);
+        loadAtomData(data, atom1, posq, labFrameDipole, damping);
 #ifdef USE_GK
         data.bornRadius = bornRadii[atom1];
 #endif
@@ -480,15 +415,6 @@ extern "C" __global__ void computeFixedField(
             const unsigned int localAtomIndex = threadIdx.x;
             localData[localAtomIndex].posq = data.posq;
             localData[localAtomIndex].dipole = data.dipole;
-#ifdef INCLUDE_QUADRUPOLES
-            localData[localAtomIndex].quadrupoleXX = data.quadrupoleXX;
-            localData[localAtomIndex].quadrupoleXY = data.quadrupoleXY;
-            localData[localAtomIndex].quadrupoleXZ = data.quadrupoleXZ;
-            localData[localAtomIndex].quadrupoleYY = data.quadrupoleYY;
-            localData[localAtomIndex].quadrupoleYZ = data.quadrupoleYZ;
-            localData[localAtomIndex].quadrupoleZZ = data.quadrupoleZZ;
-#endif
-            localData[localAtomIndex].thole = data.thole;
             localData[localAtomIndex].damp = data.damp;
 #ifdef USE_GK
             localData[localAtomIndex].bornRadius = data.bornRadius;
@@ -521,7 +447,7 @@ extern "C" __global__ void computeFixedField(
 
             const unsigned int localAtomIndex = threadIdx.x;
             unsigned int j = y*TILE_SIZE + tgx;
-            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, labFrameQuadrupole, dampingAndThole);
+            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, damping);
             localData[localAtomIndex].field = make_real3(0);
             localData[localAtomIndex].fieldPolar = make_real3(0);
 #ifdef USE_GK
@@ -648,7 +574,7 @@ extern "C" __global__ void computeFixedField(
 #ifdef USE_GK
             data.gkField = make_real3(0);
 #endif
-            loadAtomData(data, atom1, posq, labFrameDipole, labFrameQuadrupole, dampingAndThole);
+            loadAtomData(data, atom1, posq, labFrameDipole, damping);
 #ifdef USE_GK
             data.bornRadius = bornRadii[atom1];
 #endif
@@ -659,7 +585,7 @@ extern "C" __global__ void computeFixedField(
 #endif
             atomIndices[threadIdx.x] = j;
             const unsigned int localAtomIndex = threadIdx.x;
-            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, labFrameQuadrupole, dampingAndThole);
+            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, damping);
             localData[localAtomIndex].field = make_real3(0);
             localData[localAtomIndex].fieldPolar = make_real3(0);
 #ifdef USE_GK

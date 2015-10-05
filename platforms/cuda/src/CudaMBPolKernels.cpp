@@ -505,7 +505,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			"polarizability");
 	multipoleParticles = CudaArray::create<int4>(cu, paddedNumAtoms,
 			"multipoleParticles");
-	molecularDipoles = CudaArray::create<float>(cu, 3 * paddedNumAtoms,
+	molecularDipoles = CudaArray::create<float>(cu, 3 * (paddedNumAtoms-numMultipoles),
 			"molecularDipoles");
 	lastPositions = new CudaArray(cu, cu.getPosq().getSize(),
 			cu.getPosq().getElementSize(), "lastPositions");
