@@ -362,8 +362,8 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(
 				system), hasInitializedScaleFactors(false), hasInitializedFFT(
 				false), multipolesAreValid(false), multipoleParticles(NULL), molecularDipoles(
 		NULL), labFrameDipoles(NULL), fracDipoles(NULL), field(NULL), fieldPolar(
-		NULL), inducedField(NULL), inducedFieldPolar(NULL), torque(
-		NULL), damping(NULL), inducedDipole(NULL), inducedDipolePolar(
+		NULL), inducedField(NULL), inducedFieldPolar(NULL), damping(NULL), inducedDipole(
+		NULL), inducedDipolePolar(
 		NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(
 		NULL), prevErrors(NULL), polarizability(NULL), covalentFlags(
 		NULL), polarizationGroupFlags(NULL), pmeGrid(NULL), pmeBsplineModuliX(
@@ -391,8 +391,6 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
 		delete inducedField;
 	if (inducedFieldPolar != NULL)
 		delete inducedFieldPolar;
-	if (torque != NULL)
-		delete torque;
 	if (damping != NULL)
 		delete damping;
 	if (inducedDipole != NULL)
@@ -527,7 +525,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	field = new CudaArray(cu, 3 * paddedNumAtoms, sizeof(long long), "field");
 	fieldPolar = new CudaArray(cu, 3 * paddedNumAtoms, sizeof(long long),
 			"fieldPolar");
-	torque = new CudaArray(cu, 3 * paddedNumAtoms, sizeof(long long), "torque");
 	inducedDipole = new CudaArray(cu, 3 * paddedNumAtoms, elementSize,
 			"inducedDipole");
 	inducedDipolePolar = new CudaArray(cu, 3 * paddedNumAtoms, elementSize,
@@ -536,7 +533,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			sizeof(float2), "inducedDipoleErrors");
 	cu.addAutoclearBuffer(*field);
 	cu.addAutoclearBuffer(*fieldPolar);
-	cu.addAutoclearBuffer(*torque);
 
 	// Record which atoms should be flagged as exclusions based on covalent groups, and determine
 	// the values for the covalent group flags.
@@ -665,7 +661,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			defines);
 	computeMomentsKernel = cu.getKernel(module, "computeLabFrameMoments");
 	recordInducedDipolesKernel = cu.getKernel(module, "recordInducedDipoles");
-	mapTorqueKernel = cu.getKernel(module, "mapTorqueToForce");
 	computePotentialKernel = cu.getKernel(module, "computePotentialAtPoints");
 	defines["THREAD_BLOCK_SIZE"] = cu.intToString(fixedFieldThreads);
 	module = cu.createModule(
@@ -701,13 +696,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		electrostaticsSource
 				<< (CudaMBPolKernelSources::electrostaticPairForceNoQuadrupoles);
 		electrostaticsSource << "#undef F1\n";
-		electrostaticsSource << "#define T1\n";
-		electrostaticsSource
-				<< (CudaMBPolKernelSources::electrostaticPairForceNoQuadrupoles);
-		electrostaticsSource << "#undef T1\n";
-		electrostaticsSource << "#define T3\n";
-		electrostaticsSource
-				<< (CudaMBPolKernelSources::electrostaticPairForceNoQuadrupoles);
 		electrostaticsThreadMemory = 21 * elementSize + 2 * sizeof(float)
 				+ 3 * sizeof(int) / (double) cu.TileSize;
 		if (!useShuffle)
@@ -1056,7 +1044,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		// Compute electrostatic force.
 
 		void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
-				&torque->getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
 				&covalentFlags->getDevicePointer(),
@@ -1073,10 +1060,10 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		std::vector<float> energy_buffer;
 		cu.getEnergyBuffer().download(energy_buffer);
 		std::cout << energy_buffer.size() << std::endl;
-		for (int i = 0; i <energy_buffer.size(); i++) {
+		for (int i = 0; i < energy_buffer.size(); i++) {
 			std::cout << energy_buffer[i] << " ";
-			if ((i+1)%100 == 0)
-				std::cout<<std::endl;
+			if ((i + 1) % 100 == 0)
+				std::cout << std::endl;
 		}
 
 	} else {
@@ -1184,7 +1171,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		cu.executeKernel(pmeTransformPotentialKernel,
 				pmeTransformFixedPotentialArgs, cu.getNumAtoms());
 		void* pmeFixedForceArgs[] = { &cu.getPosq().getDevicePointer(),
-				&cu.getForce().getDevicePointer(), &torque->getDevicePointer(),
+				&cu.getForce().getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&labFrameDipoles->getDevicePointer(),
 				&fracDipoles->getDevicePointer(), &pmePhi->getDevicePointer(),
@@ -1324,7 +1311,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		// Compute electrostatic force.
 
 		void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
-				&torque->getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
 				&covalentFlags->getDevicePointer(),
@@ -1352,7 +1338,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		cu.executeKernel(pmeTransformPotentialKernel,
 				pmeTransformInducedPotentialArgs, cu.getNumAtoms());
 		void* pmeInducedForceArgs[] = { &cu.getPosq().getDevicePointer(),
-				&cu.getForce().getDevicePointer(), &torque->getDevicePointer(),
+				&cu.getForce().getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&labFrameDipoles->getDevicePointer(),
 				&fracDipoles->getDevicePointer(),
@@ -1366,12 +1352,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				cu.getNumAtoms());
 	}
 
-	// Map torques to force.
-
-	void* mapTorqueArgs[] = { &cu.getForce().getDevicePointer(),
-			&torque->getDevicePointer(), &cu.getPosq().getDevicePointer(),
-			&multipoleParticles->getDevicePointer() };
-	cu.executeKernel(mapTorqueKernel, mapTorqueArgs, cu.getNumAtoms());
 
 	// Record the current atom positions so we can tell later if they have changed.
 

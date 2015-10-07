@@ -7,8 +7,6 @@ typedef struct {
 } AtomData;
 
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce);
-__device__ void computeOneInteractionT1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real3& outputForce);
-__device__ void computeOneInteractionT3(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real3& outputForce);
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole,
 const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping) {
@@ -49,7 +47,7 @@ __device__ float computePScaleFactor(uint2 covalent, unsigned int polarizationGr
  * Compute electrostatic interactions.
  */
 extern "C" __global__ void computeElectrostatics(
-        unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ torqueBuffers, real* __restrict__ energyBuffer,
+        unsigned long long* __restrict__ forceBuffers, real* __restrict__ energyBuffer,
         const real4* __restrict__ posq, const uint2* __restrict__ covalentFlags, const unsigned int* __restrict__ polarizationGroupFlags,
         const ushort2* __restrict__ exclusionTiles, unsigned int startTileIndex, unsigned int numTileIndices,
 #ifdef USE_CUTOFF
@@ -110,23 +108,6 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
 
-            // Compute torques.
-
-            data.force = make_real3(0);
-            for (unsigned int j = 0; j < TILE_SIZE; j++) {
-                int atom2 = y*TILE_SIZE+j;
-                if (atom1 != atom2 && atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
-                    real3 tempForce;
-                    float d = computeDScaleFactor(polarizationGroup, j);
-                    float p = computePScaleFactor(covalent, polarizationGroup, j);
-                    float m = computeMScaleFactor(covalent, j);
-                    computeOneInteractionT1(data, localData[tbx+j], d, p, m, tempForce);
-                    data.force += tempForce;
-                }
-            }
-            atomicAdd(&torqueBuffers[atom1], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
-            atomicAdd(&torqueBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
-            atomicAdd(&torqueBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
         }
         else {
             // This is an off-diagonal tile.
@@ -159,32 +140,6 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
 
-            // Compute torques.
-
-            data.force = make_real3(0);
-            localData[threadIdx.x].force = make_real3(0);
-            for (j = 0; j < TILE_SIZE; j++) {
-                int atom2 = y*TILE_SIZE+tj;
-                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
-                    real3 tempForce;
-                    float d = computeDScaleFactor(polarizationGroup, tj);
-                    float p = computePScaleFactor(covalent, polarizationGroup, tj);
-                    float m = computeMScaleFactor(covalent, tj);
-                    computeOneInteractionT1(data, localData[tbx+tj], d, p, m, tempForce);
-                    data.force += tempForce;
-                    computeOneInteractionT3(data, localData[tbx+tj], d, p, m, tempForce);
-                    localData[tbx+tj].force += tempForce;
-                }
-                tj = (tj + 1) & (TILE_SIZE - 1);
-            }
-            offset = x*TILE_SIZE + tgx;
-            atomicAdd(&torqueBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
-            offset = y*TILE_SIZE + tgx;
-            atomicAdd(&torqueBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.x*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
         }
     }
 
@@ -286,33 +241,11 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
 
-            // Compute torques.
-
-            data.force = make_real3(0);
-            localData[threadIdx.x].force = make_real3(0);
-            for (j = 0; j < TILE_SIZE; j++) {
-                int atom2 = y*TILE_SIZE+tj;
-                if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
-                    real3 tempForce;
-                    computeOneInteractionT1(data, localData[tbx+tj], 1, 1, 1, tempForce);
-                    data.force += tempForce;
-                    computeOneInteractionT3(data, localData[tbx+tj], 1, 1, 1, tempForce);
-                    localData[tbx+tj].force += tempForce;
-                }
-                tj = (tj + 1) & (TILE_SIZE - 1);
-            }
-            offset = x*TILE_SIZE + tgx;
-            atomicAdd(&torqueBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
 #ifdef USE_CUTOFF
             offset = atomIndices[threadIdx.x];
 #else
             offset = y*TILE_SIZE + tgx;
 #endif
-            atomicAdd(&torqueBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.x*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
-            atomicAdd(&torqueBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
         }
         pos++;
     }
