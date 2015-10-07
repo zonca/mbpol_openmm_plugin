@@ -13,7 +13,8 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real ddsc7_0 = 0;
     real ddsc7_1 = 0;
     real ddsc7_2 = 0;
-
+    
+	// deltas 
     real xr = atom2.posq.x - atom1.posq.x;
     real yr = atom2.posq.y - atom1.posq.y;
     real zr = atom2.posq.z - atom1.posq.z;
@@ -25,10 +26,6 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real rr3 = rr1*rr2;
     real rr5 = 3*rr3*rr2;
     real rr7 = 5*rr5*rr2;
-    real rr9 = 7*rr7*rr2;
-
-    real rr11 = 9*rr9*rr2;
-
 
     real scale3 = 1;
     real scale5 = 1;
@@ -123,6 +120,12 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real gl2 = -sc3*sc4;
     real gl6 = sc2;
     
+    bool isSameWater = (atom1.posq.x == atom2.posq.x && atom1.posq.y == atom2.posq.y && atom1.posq.z == atom2.posq.z && atom1.posq.w == atom2.posq.w);
+    if (isSameWater) {
+    	gl0 = 0;
+    	//gli0 = 0;
+    	//glip0 = 0;
+    }
     real gf1 = rr3*gl0 + rr5*(gl1+gl6) + rr7*gl2;
 
     real gf2 = -atom2.posq.w*rr3 + sc4*rr5;
