@@ -77,7 +77,7 @@ extern "C" __global__ void computeElectrostatics(
         const unsigned int y = tileIndices.y;
         AtomData data;
         unsigned int atom1 = x*TILE_SIZE + tgx;
-        loadAtomData(data, atom1, posq, labFrameDipole, inducedDipole, inducedDipolePolar, damping);
+        loadAtomData(data, atom1, posq, labFrameDipole, inducedDipole, inducedDipolePolar, damping);        
         data.force = make_real3(0);
         uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
         unsigned int polarizationGroup = polarizationGroupFlags[pos*TILE_SIZE+tgx];
@@ -106,7 +106,6 @@ extern "C" __global__ void computeElectrostatics(
                     energy += 0.5f*tempEnergy;
                 }
             }
-            data.force *= ENERGY_SCALE_FACTOR;
             atomicAdd(&forceBuffers[atom1], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
@@ -125,7 +124,6 @@ extern "C" __global__ void computeElectrostatics(
                     data.force += tempForce;
                 }
             }
-            data.force *= ENERGY_SCALE_FACTOR;
             atomicAdd(&torqueBuffers[atom1], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&torqueBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&torqueBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
@@ -152,8 +150,6 @@ extern "C" __global__ void computeElectrostatics(
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
-            data.force *= ENERGY_SCALE_FACTOR;
-            localData[threadIdx.x].force *= ENERGY_SCALE_FACTOR;
             unsigned int offset = x*TILE_SIZE + tgx;
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
@@ -181,8 +177,6 @@ extern "C" __global__ void computeElectrostatics(
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
-            data.force *= ENERGY_SCALE_FACTOR;
-            localData[threadIdx.x].force *= ENERGY_SCALE_FACTOR;
             offset = x*TILE_SIZE + tgx;
             atomicAdd(&torqueBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&torqueBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
@@ -279,8 +273,6 @@ extern "C" __global__ void computeElectrostatics(
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
-            data.force *= ENERGY_SCALE_FACTOR;
-            localData[threadIdx.x].force *= ENERGY_SCALE_FACTOR;
             unsigned int offset = x*TILE_SIZE + tgx;
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
@@ -309,8 +301,6 @@ extern "C" __global__ void computeElectrostatics(
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
-            data.force *= ENERGY_SCALE_FACTOR;
-            localData[threadIdx.x].force *= ENERGY_SCALE_FACTOR;
             offset = x*TILE_SIZE + tgx;
             atomicAdd(&torqueBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&torqueBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
@@ -326,5 +316,8 @@ extern "C" __global__ void computeElectrostatics(
         }
         pos++;
     }
-    energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy*ENERGY_SCALE_FACTOR;
+    energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
+    
+    //printf("energy = %d\n", energy);
+   	//printf("%lf\n", energyBuffer[blockIdx.x*blockDim.x+threadIdx.x]);
 }

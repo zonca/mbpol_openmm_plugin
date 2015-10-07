@@ -450,6 +450,6 @@ extern "C" __global__ void computePotentialAtPoints(const real4* __restrict__ po
 			}
 			__syncthreads();
 		}
-		potential[point] = p*ENERGY_SCALE_FACTOR;
+		potential[point] = p;
 	}
 }

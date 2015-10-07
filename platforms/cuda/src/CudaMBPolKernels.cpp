@@ -614,7 +614,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	defines["NUM_ATOMS"] = cu.intToString(numMultipoles);
 	defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
 	defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
-	defines["ENERGY_SCALE_FACTOR"] = "0";
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
 		defines["DIRECT_POLARIZATION"] = "";
 	if (useShuffle)
@@ -1052,7 +1051,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		std::cout << "GOT HERE after dipoles converge\n";
 		std::vector<Vec3> dipoles;
 		getInducedDipoles(context, dipoles);
-		std::cout << dipoles[0] << "here" << std::endl;
+		std::cout << "first dipole" << dipoles[0] << std::endl;
 
 		// Compute electrostatic force.
 
@@ -1070,10 +1069,15 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
 				numForceThreadBlocks * electrostaticsThreads,
 				electrostaticsThreads);
+
 		std::vector<float> energy_buffer;
 		cu.getEnergyBuffer().download(energy_buffer);
-		for (int i = 0; i <50; i++)
-			std::cout << energy_buffer[i] << std::endl;
+		std::cout << energy_buffer.size() << std::endl;
+		for (int i = 0; i <energy_buffer.size(); i++) {
+			std::cout << energy_buffer[i] << " ";
+			if ((i+1)%100 == 0)
+				std::cout<<std::endl;
+		}
 
 	} else {
 		// Compute reciprocal box vectors.
