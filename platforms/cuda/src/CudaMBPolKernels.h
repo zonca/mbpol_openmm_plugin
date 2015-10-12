@@ -247,6 +247,8 @@ private:
     CudaArray* pmeAtomRange;
     CudaArray* pmeAtomGridIndex;
     CudaArray* lastPositions;
+    CudaArray* waterMoleculeIndices;
+    CudaArray* atomTypes;
     CudaSort* sort;
     cufftHandle fft;
     CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;

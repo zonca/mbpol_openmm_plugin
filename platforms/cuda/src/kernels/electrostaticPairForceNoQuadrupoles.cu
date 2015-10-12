@@ -1,4 +1,77 @@
 
+__device__ real getAndScaleInverseRs(AtomData& atom1, volatile AtomData& atom2, real r, bool justScale, int interactionOrder, int interactionType)
+{	
+	// a way to see if they are the same molecule
+	float thole[] = {0.4, 0.4, 0.055, 0.626, 0.055};
+	enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
+	
+	real rrI;
+    if (justScale) {
+        rrI         = 1.;
+    } else {
+        real rI             =  1.0/r;
+        real r2I            =  rI*rI;
+        rrI                    = rI;
+        for( unsigned int ii  = 3; ii <= interactionOrder; ii=ii+2 ){
+           rrI *= (ii-2)*r2I;
+        }
+    }
+	
+	float thole = 0.4;
+	real pGamma = thole;
+    
+    if (interactionType == TDD) {
+    	 bool oneIsOxygen = ;
+    	 if (oneIsOxygen) {
+                pgamma = thole[TDDOH];
+            } 
+            else {
+                pgamma = thole[TDDHH];
+            }
+            else {
+            pgamma = thole[TDD];
+            }
+        }
+    }
+        
+	// get and scale move to diffrent kernel func
+    real pdamp = atom1.damp*atom2.damp;
+    if (pdamp != 0) {
+   
+        real ratio = r/pdamp;
+        //FIXME: 
+        float thole = 0.4;
+        float pGamma = thole;
+
+        real damp = ratio*ratio*ratio*pGamma;
+        real dampExp = EXP(-damp);
+        real damp1 = damp + 1;
+        real damp2 = damp*damp;
+
+        scale3 = 1 - dampExp;
+        scale5 = 1 - damp1*dampExp;
+        scale7 = 1 - (damp1 + 0.6f*damp2)*dampExp;
+
+        real factor = 3*damp*dampExp*rr2;
+        real factor7 = -0.2f + 0.6f*damp;
+        
+        ddsc3_0 = factor*xr;
+        ddsc5_0 = ddsc3_0*damp;
+        ddsc7_0 = ddsc5_0*factor7;
+
+        ddsc3_1 = factor*yr;
+        ddsc5_1 = ddsc3_1*damp;
+        ddsc7_1 = ddsc5_1*factor7;
+
+        ddsc3_2 = factor*zr;
+        ddsc5_2 = ddsc3_2*damp;
+        ddsc7_2 = ddsc5_2*factor7;
+
+
+    }
+	return 0;
+}
+
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce) {    
 
     const float uScale = 1;
@@ -30,7 +103,8 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real scale3 = 1;
     real scale5 = 1;
     real scale7 = 1;
-
+    
+	// get and scale move to diffrent kernel func
     real pdamp = atom1.damp*atom2.damp;
     if (pdamp != 0) {
    

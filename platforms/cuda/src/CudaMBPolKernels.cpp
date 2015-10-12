@@ -472,6 +472,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	vector<double4> temp(posq.getSize());
 	float4* posqf = (float4*) &temp[0];
 	double4* posqd = (double4*) &temp[0];
+	vector<int> waterMoleculeIndices;
+	vector<int> atomTypes;
 	vector<float> dampingVec;
 	vector<float> polarizabilityVec;
 	vector<float> molecularDipolesVec;

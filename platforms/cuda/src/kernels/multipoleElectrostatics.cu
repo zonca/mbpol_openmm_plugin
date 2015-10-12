@@ -4,6 +4,8 @@ typedef struct {
     real4 posq;
     real3 force, dipole, inducedDipole, inducedDipolePolar;
     float damp;
+    int waterMoleculeIndex;
+    int atomType;
 } AtomData;
 
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce);
@@ -22,6 +24,9 @@ const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePo
     data.inducedDipolePolar.y = inducedDipolePolar[atom*3+1];
     data.inducedDipolePolar.z = inducedDipolePolar[atom*3+2];
     data.damp = damping[atom];
+    
+    data.waterMoleculeIndex = waterMoleculeIndices[atom];
+    data.atomType = atomTypes[atom];
 }
 
 __device__ real computeDScaleFactor(unsigned int polarizationGroup, int index) {
