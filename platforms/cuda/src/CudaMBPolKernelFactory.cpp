@@ -71,5 +71,7 @@ KernelImpl* CudaMBPolKernelFactory::createKernelImpl(std::string name, const Pla
         return new CudaCalcMBPolOneBodyForceKernel(name, platform, cu, context.getSystem());
     if (name == CalcMBPolTwoBodyForceKernel::Name())
         return new CudaCalcMBPolTwoBodyForceKernel(name, platform, cu, context.getSystem());
+    if (name == CalcMBPolThreeBodyForceKernel::Name())
+            return new CudaCalcMBPolThreeBodyForceKernel(name, platform, cu, context.getSystem());
     throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
 }
