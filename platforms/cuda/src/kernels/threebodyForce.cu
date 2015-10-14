@@ -78,3 +78,127 @@ extern "C" __device__ void evaluateSwitchFunc(real r, real g, real * s)
         *s = 1.0;
     }
 }
+
+extern "C" __device__ real computeInteraction(
+		const unsigned int atom1,
+        const unsigned int atom2,
+        const unsigned int atom3,
+        const real4* __restrict__ posq,
+        const real4* periodicBoxSize,
+        real3 * forces) {
+        
+        			real tempEnergy = 0.0f;
+        			// 3 water
+      				real3 positions[9];
+   			     	// first water
+    			    for (int i = 0; i < 3; i++) {
+     			       	positions[Oa + i] = make_real3( posq[atom1+i].x * NM_TO_A,
+                       	                   			   	posq[atom1+i].y * NM_TO_A,
+                             		               	   	posq[atom1+i].z * NM_TO_A);
+    			      	positions[Ob + i] = make_real3( posq[atom2+i].x * NM_TO_A,
+                       			                       	posq[atom2+i].y * NM_TO_A,
+                                                       	posq[atom2+i].z * NM_TO_A);
+     			   	   	positions[Oc + i] = make_real3( posq[atom3+i].x * NM_TO_A,
+                       			                       	posq[atom3+i].y * NM_TO_A,
+                                			           	posq[atom3+i].z * NM_TO_A);
+      				}
+#if USE_PERIODIC
+         			imageMolecules(periodicBoxSize, positions);
+#endif
+		real3 rab, rac, rbc;
+		real drab(0), drac(0), drbc(0);
+		
+		rab = (positions[Oa] - positions[Ob])*nm_to_A;
+		drab += dot(rab, rab);
+			
+		rac = (positions[Oa] - positions[Oc])*nm_to_A;
+		drac += dot(rac, rac);
+		
+		rab = (positions[Ob] - positions[Oc])*nm_to_A;
+		drbc += dot(drbc, drdc);
+		
+		drab = SQRT(drab);
+		drac = SQRT(drac);
+		drbc = SQRT(drbc);
+		
+		if ((drab < 2) or (drac < 2) or (drbc < 2))
+             tempEnergy = 0.;
+        else {
+        	real x[36];
+        	int i = 0;
+        	computeVar(kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, x+i); ++i;
+        	computeVar(kHH_intra, dHH_intra, positions +Hb1, positions +Hb2, x+i); ++i;
+        	computeVar(kHH_intra, dHH_intra, positions +Hc1, positions +Hc2, x+i); ++i;
+        	computeVar(kOH_intra, dOH_intra, positions +Oa,	 positions +Ha1, x+i); ++i;
+        	computeVar(kOH_intra, dOH_intra, positions +Oa,	 positions +Ha2, x+i); ++i;
+        	computeVar(kOH_intra, dOH_intra, positions +Ob,	 positions +Hb1, x+i); ++i; //5
+        	computeVar(kOH_intra, dOH_intra, positions +Ob,	 positions +Hb2, x+i); ++i;
+        	computeVar(kOH_intra, dOH_intra, positions +Oc,	 positions +Hc1, x+i); ++i;
+        	computeVar(kOH_intra, dOH_intra, positions +Oc,	 positions +Hc2, x+i); ++i;
+        	
+        	computeVar(kHH, dHH, positions +Ha1, positions +Hb1, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Ha1, positions +Hb2, x+i); ++i; //10
+        	computeVar(kHH, dHH, positions +Ha1, positions +Hc1, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Ha1, positions +Hc2, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Ha2, positions +Hb1, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Ha2, positions +Hb2, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Ha2, positions +Hc1, x+i); ++i; //15
+        	computeVar(kHH, dHH, positions +Ha2, positions +Hc2, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Hb1, positions +Hc1, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Hb1, positions +Hc2, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Hb2, positions +Hc1, x+i); ++i;
+        	computeVar(kHH, dHH, positions +Hb2, positions +Hc2, x+i); ++i; //20
+        	computeVar(kOH, dOH, positions +Oa, positions +Hb1, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Oa, positions +Hb2, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Oa, positions +Hc1, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Oa, positions +Hc2, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Ob, positions +Ha1, x+i); ++i; //25
+        	computeVar(kOH, dOH, positions +Ob, positions +Ha2, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Ob, positions +Hc1, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Ob, positions +Hc2, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Oc, positions +Ha1, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Oc, positions +Ha2, x+i); ++i; //30
+        	computeVar(kOH, dOH, positions +Oc, positions +Hb1, x+i); ++i;
+        	computeVar(kOH, dOH, positions +Oc, positions +Hb2, x+i); ++i;
+        	computeVar(kOO, dOO, positions +Oa, positions +Ob, x+i); ++i;
+        	computeVar(kOO, dOO, positions +Oa, positions +Oc, x+i); ++i;
+        	computeVar(kOO, dOO, positions +Ob, positions +Oc, x+i); ++i; //35
+        	
+        	real g[36];
+            tempEnergy = poly-3b-v2x_eval(exp, g);
+			
+			real gab, gac, gbc;
+			real sab, sac, sbc;
+			evaluateSwitchFunc(drab, gab, &sab);
+			evaluateSwitchFunc(drac, gac, &sac);
+			evaluateSwitchFunc(drbc, gbc, &sbc);
+			
+			real s = sab*sac + sab*sbc + sac*sbc;
+				
+			for (int j = 0; j < 36; ++j)
+				g[n] *= s;
+				
+        	i = 0;
+        	computeGVar(g +i, kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, forces +Ha1, forces +Ha2); ++i;
+        	computeGVar(g +i, kHH_intra, dHH_intra, positions +Hb1, positions +Hb2, forces +Hb1, forces +Hb2); ++i;
+        	computeGVar(g +i, kHH_intra, dHH_intra, positions +Hc1, positions +Hc2, forces +Hc1, forces +Hc2); ++i;
+        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oa, positions +Ha1, forces +Oa, forces +Ha1); ++i;
+        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oa, positions +Ha2, forces +Oa, forces +Ha1); ++i;
+        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Ob, positions +Hb1, forces +Ob, forces +Hb1); ++i;
+        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Ob, positions +Hb2, forces +Ob, forces +Hb2); ++i;
+        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oc, positions +Hc1, forces +Oc, forces +Hc1); ++i;
+        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oc, positions +Hc2, forces +Oc, forces +Hc2); ++i;
+        	
+			// @ line 233 in reference three body			
+        }
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
+       
