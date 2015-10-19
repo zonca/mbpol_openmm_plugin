@@ -177,19 +177,69 @@ extern "C" __device__ real computeInteraction(
 				
 			for (int j = 0; j < 36; ++j)
 				g[n] *= s;
+			
+			
 				
         	i = 0;
-        	computeGVar(g +i, kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, forces +Ha1, forces +Ha2); ++i;
-        	computeGVar(g +i, kHH_intra, dHH_intra, positions +Hb1, positions +Hb2, forces +Hb1, forces +Hb2); ++i;
-        	computeGVar(g +i, kHH_intra, dHH_intra, positions +Hc1, positions +Hc2, forces +Hc1, forces +Hc2); ++i;
-        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oa, positions +Ha1, forces +Oa, forces +Ha1); ++i;
-        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oa, positions +Ha2, forces +Oa, forces +Ha1); ++i;
-        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Ob, positions +Hb1, forces +Ob, forces +Hb1); ++i;
-        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Ob, positions +Hb2, forces +Ob, forces +Hb2); ++i;
-        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oc, positions +Hc1, forces +Oc, forces +Hc1); ++i;
-        	computeGVar(g +i, kOH_intra, dOH_intra, positions +Oc, positions +Hc2, forces +Oc, forces +Hc2); ++i;
+        	computeGVar(g+i, kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, forces +Ha1, forces +Ha2); ++i; //0
+        	computeGVar(g+i, kHH_intra, dHH_intra, positions +Hb1, positions +Hb2, forces +Hb1, forces +Hb2); ++i;
+        	computeGVar(g+i, kHH_intra, dHH_intra, positions +Hc1, positions +Hc2, forces +Hc1, forces +Hc2); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oa, positions +Ha1, forces +Oa, forces +Ha1); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oa, positions +Ha2, forces +Oa, forces +Ha1); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Ob, positions +Hb1, forces +Ob, forces +Hb1); ++i; //5
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Ob, positions +Hb2, forces +Ob, forces +Hb2); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oc, positions +Hc1, forces +Oc, forces +Hc1); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oc, positions +Hc2, forces +Oc, forces +Hc2); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hb1, forces +Ha1, forces +Hb1); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hb2, forces +Ha1, forces +Hb2); ++i; //10
+        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hc1, forces +Ha1, forces +Hc1); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hc2, forces +Ha1, forces +Hc2); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hb1, forces +Ha2, forces +Hb1); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hb2, forces +Ha2, forces +Hb2); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hc1, forces +Ha2, forces +Hc1); ++i; //15
+        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hc2, forces +Ha2, forces +Hc2); ++i;
+			computeGVar(g+i, kHH, dHH, positions +Hb1, positions +Hc1, forces +Hb1, forces +Hc1); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Hb1, positions +Hc2, forces +Hb1, forces +Hc2); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Hb2, positions +Hc1, forces +Hb2, forces +Hc1); ++i;
+        	computeGVar(g+i, kHH, dHH, positions +Hb2, positions +Hc2, forces +Hb2, forces +Hc2); ++i; //20
+        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hb1, forces +Oa, forces +Hb1); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hb2, forces +Oa, forces +Hb2); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hc1, forces +Oa, forces +Hc1); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hc2, forces +Oa, forces +Hc2); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Ha1, forces +Ob, forces +Ha1); ++i; //25
+        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Ha2, forces +Ob, forces +Ha2); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Hc1, forces +Ob, forces +Hc1); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Hc2, forces +Ob, forces +Hc2); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Ha1, forces +Oc, forces +Ha1); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Ha2, forces +Oc, forces +Ha2); ++i; //30
+        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Hb1, forces +Oc, forces +Hb1); ++i;
+        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Hb2, forces +Oc, forces +Hb2); ++i;
+        	computeGVar(g+i, kOO, dOO, positions +Oa, positions +Ob, forces +Oa, forces +Ob); ++i;
+        	computeGVar(g+i, kOO, dOO, positions +Oa, positions +Oc, forces +Oa, forces +Oc); ++i;
+        	computeGVar(g+i, kOO, dOO, positions +Ob, positions +Oc, forces +Ob, forces +Oc); ++i; //35
         	
-			// @ line 233 in reference three body			
+        	gab *= (sac + sbc)*tempEnergy/drab;
+            gac *= (sab + sbc)*tempEnergy/drac;
+            gbc *= (sab + sac)*tempEnergy/drbc;
+			
+			tempEnergy *= s;
+			
+			real cal2joule = 4.184;
+			
+			for (int n = 0; n < 3; ++n) {
+              	forces[Oa][n] += (gab*rab[n] + gac*rac[n]) * cal2joule * -nm_to_A;
+              	forces[Ob][n] += (gbc*rbc[n] - gab*rab[n]) * cal2joule * -nm_to_A;
+              	forces[Oc][n] -= (gac*rac[n] + gbc*rbc[n]) * cal2joule * -nm_to_A;
+          	 }
+          	 
+// Is it okay to calculate the force in the shared variable like in cuda 2body
+// or should we calculate in a seperate variable and add to the actual at one 
+// time at the end like in refrence code ??
+
+          	 real energy = tempEnergy * cal2joule;
+          	 
+          	 return energy;
+          	 
         }
        
        
