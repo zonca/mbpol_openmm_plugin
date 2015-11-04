@@ -49,6 +49,8 @@ extern "C" OPENMM_EXPORT void registerKernelFactories() {
         CudaMBPolKernelFactory* factory = new CudaMBPolKernelFactory();
         platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(), factory);
         platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(), factory);
+        platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(), factory);
+
     }
     catch (std::exception ex) {
         // Ignore
