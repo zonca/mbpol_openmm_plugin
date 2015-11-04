@@ -1,6 +1,6 @@
 // #define DEBUG
 
-__device__ real poly-3b-v2x_eval(
+__device__ real poly_3b_v2x_eval(
 							const real x[36],
 								  real g[36])
 {

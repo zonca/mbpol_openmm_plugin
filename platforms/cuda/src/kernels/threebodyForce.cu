@@ -9,32 +9,28 @@ typedef struct {
 #define Ob  3
 #define Hb1 4
 #define Hb2 5
-#define Ob  6
-#define Hb1 7
-#define Hb2 8
+#define Oc  6
+#define Hc1 7
+#define Hc2 8
 
-real r3i =  0.000000000000000e+00; // A
-real r3f =  4.500000000000000e+00; // A
-
-real kHH_intra = -2.254303257872797e+00; // A^(-1)
-real kOH_intra = -2.564771901404151e-01; // A^(-1)
-
-real kHH =  4.247920544074333e-01; // A^(-1)
-real kOH =  8.128985941165371e-01; // A^(-1)
-real kOO =  3.749457984616480e-02; // A^(-1)
-
-real dHH_intra =  1.690594510379166e+00; // A
-real dOH_intra = -2.999999868517452e+00; // A
-
-real dHH =  3.499031358429095e+00; // A
-real dOH =  4.854042963514281e+00; // A
-real dOO =  4.816312044947604e-08; // A
+#define r3i 0.000000000000000e+00 // A
+#define r3f 4.500000000000000e+00 // A
+#define kHH_intra -2.254303257872797e+00 // A^(-1)
+#define kOH_intra -2.564771901404151e-01 // A^(-1)
+#define kHH  4.247920544074333e-01 // A^(-1)
+#define kOH  8.128985941165371e-01 // A^(-1)
+#define kOO  3.749457984616480e-02 // A^(-1)
+#define dHH_intra  1.690594510379166e+00 // A
+#define dOH_intra -2.999999868517452e+00 // A
+#define dHH  3.499031358429095e+00 // A
+#define dOH  4.854042963514281e+00 // A
+#define dOO  4.816312044947604e-08 // A
 
 extern "C" __device__ void computeVar(real k, real r0, real3 * a1, real3 * a2, real * var)
 {
-    real3 dx = {(a1[0] - a2[0])*nm_to_A,
-                (a1[1] - a2[1])*nm_to_A,
-                (a1[2] - a2[2])*nm_to_A};
+    real3 dx = {(a1[0] - a2[0])*NM_TO_A,
+                (a1[1] - a2[1])*NM_TO_A,
+                (a1[2] - a2[2])*NM_TO_A};
 
     real dsq = dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2];
     real d = SQRT(dsq);
@@ -44,9 +40,9 @@ extern "C" __device__ void computeVar(real k, real r0, real3 * a1, real3 * a2, r
 
 extern "C" __device__ void computeGVar(real g, real k, real r0, real3 * a1, real3 * a2, real3 * g1, real3 * g2)
 {
-    real3 dx = {(a1[0] - a2[0])*nm_to_A,
-                (a1[1] - a2[1])*nm_to_A,
-                (a1[2] - a2[2])*nm_to_A};
+    real3 dx = {(a1[0] - a2[0])*NM_TO_A,
+                (a1[1] - a2[1])*NM_TO_A,
+                (a1[2] - a2[2])*NM_TO_A};
 
     real dsq = dx[0]*dx[0] + dx[1]*dx[1] + dx[2]*dx[2];
     real d = SQRT(dsq);
@@ -63,22 +59,21 @@ extern "C" __device__ void computeGVar(real g, real k, real r0, real3 * a1, real
     }
 }
 
-extern "C" __device__ void evaluateSwitchFunc(real r, real g, real * s)
+extern "C" __device__ void evaluateSwitchFunc(real r, real * s, real * g)
 {
     if (r > r3f) {
-        g = 0.0;
+        *g = 0.0;
         *s = 0.0;
     } else if (r > r3i) {
         real t1 = M_PI/(r3f - r3i);
         real x = (r - r3i)*t1;
-        g = - SIN(x)*t1/2.0;
+        *g = - SIN(x)*t1/2.0;
         *s = (1.0 + COS(x))/2.0;
     } else {
-        g = 0.0;
+        *g = 0.0;
         *s = 1.0;
     }
 }
-
 extern "C" __device__ real computeInteraction(
 		const unsigned int atom1,
         const unsigned int atom2,
@@ -86,7 +81,6 @@ extern "C" __device__ real computeInteraction(
         const real4* __restrict__ posq,
         const real4* periodicBoxSize,
         real3 * forces) {
-        
         			real tempEnergy = 0.0f;
         			// 3 water
       				real3 positions[9];
@@ -108,19 +102,19 @@ extern "C" __device__ real computeInteraction(
 		real3 rab, rac, rbc;
 		real drab(0), drac(0), drbc(0);
 		
-		rab = (positions[Oa] - positions[Ob])*nm_to_A;
+		rab = (positions[Oa] - positions[Ob])*NM_TO_A;
 		drab += dot(rab, rab);
 			
-		rac = (positions[Oa] - positions[Oc])*nm_to_A;
+		rac = (positions[Oa] - positions[Oc])*NM_TO_A;
 		drac += dot(rac, rac);
 		
-		rab = (positions[Ob] - positions[Oc])*nm_to_A;
-		drbc += dot(drbc, drdc);
+		rbc = (positions[Ob] - positions[Oc])*NM_TO_A;
+		drbc += dot(rbc, rbc);
 		
 		drab = SQRT(drab);
 		drac = SQRT(drac);
 		drbc = SQRT(drbc);
-		
+				
 		if ((drab < 2) or (drac < 2) or (drbc < 2))
              tempEnergy = 0.;
         else {
@@ -165,7 +159,7 @@ extern "C" __device__ real computeInteraction(
         	computeVar(kOO, dOO, positions +Ob, positions +Oc, x+i); ++i; //35
         	
         	real g[36];
-            tempEnergy = poly-3b-v2x_eval(exp, g);
+            tempEnergy = poly_3b_v2x_eval(exp, g);
 			
 			real gab, gac, gbc;
 			real sab, sac, sbc;
@@ -227,9 +221,9 @@ extern "C" __device__ real computeInteraction(
 			real cal2joule = 4.184;
 			
 			for (int n = 0; n < 3; ++n) {
-              	forces[Oa][n] += (gab*rab[n] + gac*rac[n]) * cal2joule * -nm_to_A;
-              	forces[Ob][n] += (gbc*rbc[n] - gab*rab[n]) * cal2joule * -nm_to_A;
-              	forces[Oc][n] -= (gac*rac[n] + gbc*rbc[n]) * cal2joule * -nm_to_A;
+              	forces[Oa][n] += (gab*rab[n] + gac*rac[n]) * cal2joule * -NM_TO_A;
+              	forces[Ob][n] += (gbc*rbc[n] - gab*rab[n]) * cal2joule * -NM_TO_A;
+              	forces[Oc][n] -= (gac*rac[n] + gbc*rbc[n]) * cal2joule * -NM_TO_A;
           	 }
           	 
 // Is it okay to calculate the force in the shared variable like in cuda 2body
@@ -249,7 +243,7 @@ extern "C" __global__ void computeThreeBodyForce(
         unsigned long long* __restrict__ forceBuffers,
         real* __restrict__ energyBuffer,
         const real4* __restrict__ posq,
-        const ushort2* __restrict__ exclusionTiles,
+        const ushort3* __restrict__ exclusionTiles,
         unsigned int startTileIndex,
         unsigned int numTileIndices
 #ifdef USE_CUTOFF
@@ -276,7 +270,7 @@ extern "C" __global__ void computeThreeBodyForce(
     const unsigned int firstExclusionTile = FIRST_EXCLUSION_TILE+warp*(LAST_EXCLUSION_TILE-FIRST_EXCLUSION_TILE)/totalWarps;
     const unsigned int lastExclusionTile = FIRST_EXCLUSION_TILE+(warp+1)*(LAST_EXCLUSION_TILE-FIRST_EXCLUSION_TILE)/totalWarps;
     for (int pos = firstExclusionTile; pos < lastExclusionTile; pos++) {
-        const short3 tileIndices = exclusionTiles[pos];
+        const ushort3 tileIndices = exclusionTiles[pos];
         const unsigned int x = tileIndices.x;
         const unsigned int y = tileIndices.y;
         
@@ -307,6 +301,8 @@ extern "C" __global__ void computeThreeBodyForce(
                    forces[i] = make_real3(0);
                 }
                 int atom2 = tbx+j;
+                int atom3 = 0; //TODO: determine the actual value of atom3
+                
                 real3 posq2;
                 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
                 atom2 = y*TILE_SIZE+j;
@@ -315,7 +311,7 @@ extern "C" __global__ void computeThreeBodyForce(
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (NUM_ATOMS > atom2) && (atom1 < NUM_ATOMS) && (atom1 != atom2)) {
                     // this computes both atom0-atom3 and atom3-atom0
                     // COMPUTE_INTERACTION exclusions diagonal tile
-                    energy += computeInteraction(atom1, atom2, posq, &periodicBoxSize, forces)/2.;
+                    energy += computeInteraction(atom1, atom2, atom3, posq, &periodicBoxSize, forces)/2.;
                 }
             }
         }
@@ -332,6 +328,8 @@ extern "C" __global__ void computeThreeBodyForce(
             unsigned int tj = tgx;
             for (j = 0; j < TILE_SIZE; j++) {
                 int atom2 = tbx+tj;
+                int atom3 = 0; //TODO: determine the actual value of atom3
+                
                 real3 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
                 atom2 = y*TILE_SIZE+tj;
                 real dEdR = 0.0f;
@@ -339,7 +337,7 @@ extern "C" __global__ void computeThreeBodyForce(
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
                     // COMPUTE_INTERACTION exclusions off diagonal tile
                     // this computes only atom3-atom0
-                    energy += computeInteraction(atom1, atom2, posq, &periodicBoxSize, forces);
+                    energy += computeInteraction(atom1, atom2, atom3, posq, &periodicBoxSize, forces);
                 }
                 for (int i=0; i<3; i++) {
                     localData[tbx+tj+i].fx += forces[Ob + i].x;
@@ -430,7 +428,7 @@ extern "C" __global__ void computeThreeBodyForce(
 
             while (skipTiles[tbx+TILE_SIZE-1] < pos) {
                 if (skipBase+tgx < NUM_TILES_WITH_EXCLUSIONS) {
-                    ushort2 tile = exclusionTiles[skipBase+tgx];
+                    ushort3 tile = exclusionTiles[skipBase+tgx];
                     skipTiles[threadIdx.x] = tile.x + tile.y*NUM_BLOCKS - tile.y*(tile.y+1)/2;
                 }
                 else
@@ -477,6 +475,8 @@ extern "C" __global__ void computeThreeBodyForce(
                    forces[i] = make_real3(0);
                 }
                 unsigned int atom2 = tbx+tj;
+                int atom3 = 0; //TODO: determine the actual value of atom3
+                
                 real3 posq2 = make_real3(localData[atom2].x, localData[atom2].y, localData[atom2].z);
                 // LOAD_ATOM2_PARAMETERS
                 atom2 = atomIndices[tbx+tj];
@@ -493,7 +493,7 @@ extern "C" __global__ void computeThreeBodyForce(
                 if ((atom1 % 3 == 0) && (atom2 % 3 == 0) && (atom1 > atom2) && (atom1 < NUM_ATOMS)) {
                     // COMPUTE_INTERACTION no exclusions
                     // this computes only atom3-atom0
-                    energy += computeInteraction(atom1, atom2, posq, &periodicBoxSize, forces);
+                    energy += computeInteraction(atom1, atom2, atom3, posq, &periodicBoxSize, forces);
 
                     // write forces of second molecule to shared memory
 
