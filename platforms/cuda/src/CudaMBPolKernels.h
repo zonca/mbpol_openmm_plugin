@@ -146,41 +146,25 @@ public:
      */
     void copyParametersToContext(OpenMM::ContextImpl& context, const MBPolThreeBodyForce& force);
 private:
-//    int numMolecules;
+    int numMolecules;
     CudaArray* particleIndices;
-//    bool hasInitializedKernel;
-//    OpenMM::CudaContext& cu;
-//    const OpenMM::System& system;
+    bool hasInitializedKernel;
+    OpenMM::CudaContext& cu;
+    const OpenMM::System& system;
     OpenMM::CudaArray* params;
     CUfunction computeThreeBodyForceKernel;
 
-    CudaContext& cu;
-    bool hasInitializedKernel;
-    //NonbondedMethod nonbondedMethod;
-    int maxNeighborPairs, forceWorkgroupSize, findNeighborsWorkgroupSize;
-    //CudaParameterSet* params;
-    CudaArray* particleTypes;
-    CudaArray* orderIndex;
-    CudaArray* particleOrder;
-    CudaArray* exclusions;
-    CudaArray* exclusionStartIndex;
-    CudaArray* blockCenter;
-    CudaArray* blockBoundingBox;
-    CudaArray* neighborPairs;
-    CudaArray* numNeighborPairs;
-    CudaArray* neighborStartIndex;
-    CudaArray* numNeighborsForAtom;
-    CudaArray* neighbors;
-    std::vector<std::string> globalParamNames;
-    std::vector<float> globalParamValues;
-    std::vector<CudaArray*> tabulatedFunctions;
-    std::vector<void*> forceArgs, blockBoundsArgs, neighborsArgs, startIndicesArgs, copyPairsArgs;
-    const System& system;
-    CUfunction forceKernel, blockBoundsKernel, neighborsKernel, startIndicesKernel, copyPairsKernel;
-    CUdeviceptr globalsPtr;
-    CUevent event;
+
 
 //    ///////////// things added for neighbor list //////////////////////////
+	CudaArray* blockCenter;
+	CudaArray* blockBoundingBox;
+	CudaArray* neighborPairs;
+	CudaArray* numNeighborPairs;
+	CudaArray* neighborStartIndex;
+	CudaArray* numNeighborsForAtom;
+	CudaArray* neighbors;
+	int maxNeighborPairs;
 //    CUfunction copyPairsKernel, startIndicesKernel, neighborsKernel;
 //    std::vector<void*> forceArgs, blockBoundsArgs, neighborsArgs, startIndicesArgs, copyPairsArgs;
 //    OpenMM::CudaArray* neighbors, *neighborStartIndex;

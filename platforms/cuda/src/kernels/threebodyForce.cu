@@ -301,7 +301,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         , int* __restrict__ exclusions, int* __restrict__ exclusionStartIndex
 #endif
         ) {
-    __shared__ real3 positionCache[FIND_NEIGHBORS_WORKGROUP_SIZE];
+    __shared__ real3 positionCache[/*FIND_NEIGHBORS_WORKGROUP_SIZE = 128*/ 128];
     int indexInWarp = threadIdx.x%32;
     for (int atom1 = blockIdx.x*blockDim.x+threadIdx.x; atom1 < PADDED_NUM_ATOMS; atom1 += blockDim.x*gridDim.x) {
         // Load data for this atom.  Note that all threads in a warp are processing atoms from the same block.
@@ -445,6 +445,40 @@ extern "C" __global__ void copyPairsToNeighborList(const int2* __restrict__ neig
         int offset = atomicAdd(numNeighborsForAtom+pair.x, 1);
         neighbors[startIndex+offset] = pair.y;
     }
+}
+
+/**
+ * Find a bounding box for the atoms in each block.
+ */
+extern "C" __global__ void findBlockBounds(real4 periodicBoxSize, real4 invPeriodicBoxSize, real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ,
+        const real4* __restrict__ posq, real4* __restrict__ blockCenter, real4* __restrict__ blockBoundingBox, int* __restrict__ numNeighborPairs) {
+	int index = blockIdx.x*blockDim.x+threadIdx.x;
+    int base = index*TILE_SIZE;
+    while (base < NUM_ATOMS) {
+        real4 pos = posq[base];
+#ifdef USE_PERIODIC
+        APPLY_PERIODIC_TO_POS(pos)
+#endif
+        real4 minPos = pos;
+        real4 maxPos = pos;
+        int last = min(base+TILE_SIZE, NUM_ATOMS);
+        for (int i = base+1; i < last; i++) {
+            pos = posq[i];
+#ifdef USE_PERIODIC
+            real4 center = 0.5f*(maxPos+minPos);
+            APPLY_PERIODIC_TO_POS_WITH_CENTER(pos, center)
+#endif
+            minPos = make_real4(min(minPos.x,pos.x), min(minPos.y,pos.y), min(minPos.z,pos.z), 0);
+            maxPos = make_real4(max(maxPos.x,pos.x), max(maxPos.y,pos.y), max(maxPos.z,pos.z), 0);
+        }
+        real4 blockSize = 0.5f*(maxPos-minPos);
+        blockBoundingBox[index] = blockSize;
+        blockCenter[index] = 0.5f*(maxPos+minPos);
+        index += blockDim.x*gridDim.x;
+        base = index*TILE_SIZE;
+    }
+    if (blockIdx.x == 0 && threadIdx.x == 0)
+        *numNeighborPairs = 0;
 }
 
     
