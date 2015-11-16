@@ -288,7 +288,6 @@ CudaCalcMBPolThreeBodyForceKernel::~CudaCalcMBPolThreeBodyForceKernel() {
 
 void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const MBPolThreeBodyForce& force) {
     cu.setAsCurrent();
-
     // device array
     particleIndices = CudaArray::create<float4>(cu, cu.getPaddedNumAtoms(), "particleIndices");
 
@@ -362,11 +361,22 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
     if (usePeriodic)
         defines["USE_PERIODIC"] = "1";
 
+    ///////////// things added for neighbor list //////////////////////////
+    defines["FIND_NEIGHBORS_WORKGROUP_SIZE"] = cu.intToString(128);
+    ///////////////////////////////////////////////////////////////////////
+
+
     CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multibodyLibrary + CudaMBPolKernelSources::threebodyForcePolynomial + CudaMBPolKernelSources::threebodyForce, defines);
     computeThreeBodyForceKernel = cu.getKernel(module, "computeThreeBodyForce");
 
     // Add an interaction to the default nonbonded kernel.  This doesn't actually do any calculations.  It's
     // just so that CudaNonbondedUtilities will build the exclusion flags and maintain the neighbor list.
+
+    ///////////// things added for neighbor list //////////////////////////
+    neighborsKernel = cu.getKernel(module, "findNeighbors");
+    startIndicesKernel = cu.getKernel(module, "computeNeighborStartIndices");
+    copyPairsKernel = cu.getKernel(module, "copyPairsToNeighborList");
+    ///////////////////////////////////////////////////////////////////////
 
     cu.getNonbondedUtilities().addInteraction(useCutoff, usePeriodic, false, force.getCutoff(), exclusions, "", force.getForceGroup());
     // cu.getNonbondedUtilities().setUsePadding(false);
@@ -375,32 +385,161 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 }
 
 double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
-
     CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
 
-    int startTileIndex = nb.getStartTileIndex();
-    int numTileIndices = nb.getNumTiles();
-    unsigned int maxTiles;
-    if (nb.getUseCutoff()) {
-        maxTiles = nb.getInteractingTiles().getSize();
-    }
+	if (!hasInitializedKernel) {
 
-    void* args[] = {&cu.getForce().getDevicePointer(),
-        &cu.getEnergyBuffer().getDevicePointer(),
-        &cu.getPosq().getDevicePointer(),
-        &nb.getExclusionTiles().getDevicePointer(),
-        &startTileIndex,
-        &numTileIndices,
-        &cu.getNonbondedUtilities().getInteractingTiles().getDevicePointer(),
-        &cu.getNonbondedUtilities().getInteractionCount().getDevicePointer(),
-        cu.getPeriodicBoxSizePointer(),
-        cu.getInvPeriodicBoxSizePointer(),
-        &maxTiles,
-       // &cu.getNonbondedUtilities().getBlock().getDevicePointer(),
-        &cu.getNonbondedUtilities().getInteractingAtoms().getDevicePointer()
-    };
-    cu.executeKernel(computeThreeBodyForceKernel, args, cu.getPaddedNumAtoms());
-    return 0.0;
+	        hasInitializedKernel = true;
+	        // Set arguments for the force kernel.
+
+	        forceArgs.push_back(&cu.getForce().getDevicePointer());
+	        forceArgs.push_back(&cu.getEnergyBuffer().getDevicePointer());
+	        forceArgs.push_back(&cu.getPosq().getDevicePointer());
+	        forceArgs.push_back(cu.getPeriodicBoxSizePointer());
+	        forceArgs.push_back(cu.getInvPeriodicBoxSizePointer());
+	        forceArgs.push_back(cu.getPeriodicBoxVecXPointer());
+	        forceArgs.push_back(cu.getPeriodicBoxVecYPointer());
+	        forceArgs.push_back(cu.getPeriodicBoxVecZPointer());
+	        if (nb.getUseCutoff()) {
+	            forceArgs.push_back(&neighbors->getDevicePointer());
+	            forceArgs.push_back(&neighborStartIndex->getDevicePointer());
+	        }
+//	        for (int i = 0; i < (int) params->getBuffers().size(); i++) {
+//	            CudaNonbondedUtilities::ParameterInfo& buffer = params->getBuffers()[i];
+//	            forceArgs.push_back(&buffer.getMemory());
+//	        }
+	        for (int i = 0; i < (int) tabulatedFunctions.size(); i++)
+	            forceArgs.push_back(&tabulatedFunctions[i]->getDevicePointer());
+
+	        if (nb.getUseCutoff()) {
+	            // Set arguments for the block bounds kernel.
+
+	            blockBoundsArgs.push_back(cu.getPeriodicBoxSizePointer());
+	            blockBoundsArgs.push_back(cu.getInvPeriodicBoxSizePointer());
+	            blockBoundsArgs.push_back(cu.getPeriodicBoxVecXPointer());
+	            blockBoundsArgs.push_back(cu.getPeriodicBoxVecYPointer());
+	            blockBoundsArgs.push_back(cu.getPeriodicBoxVecZPointer());
+	            blockBoundsArgs.push_back(&cu.getPosq().getDevicePointer());
+	            blockBoundsArgs.push_back(&blockCenter->getDevicePointer());
+	            blockBoundsArgs.push_back(&blockBoundingBox->getDevicePointer());
+	            blockBoundsArgs.push_back(&numNeighborPairs->getDevicePointer());
+
+	            // Set arguments for the neighbor list kernel.
+
+	            neighborsArgs.push_back(cu.getPeriodicBoxSizePointer());
+	            neighborsArgs.push_back(cu.getInvPeriodicBoxSizePointer());
+	            neighborsArgs.push_back(cu.getPeriodicBoxVecXPointer());
+	            neighborsArgs.push_back(cu.getPeriodicBoxVecYPointer());
+	            neighborsArgs.push_back(cu.getPeriodicBoxVecZPointer());
+	            neighborsArgs.push_back(&cu.getPosq().getDevicePointer());
+	            neighborsArgs.push_back(&blockCenter->getDevicePointer());
+	            neighborsArgs.push_back(&blockBoundingBox->getDevicePointer());
+	            neighborsArgs.push_back(&neighborPairs->getDevicePointer());
+	            neighborsArgs.push_back(&numNeighborPairs->getDevicePointer());
+	            neighborsArgs.push_back(&numNeighborsForAtom->getDevicePointer());
+	            neighborsArgs.push_back(&maxNeighborPairs);
+	            if (exclusions != NULL) {
+	                neighborsArgs.push_back(&exclusions->getDevicePointer());
+	                neighborsArgs.push_back(&exclusionStartIndex->getDevicePointer());
+	            }
+
+	            // Set arguments for the kernel to find neighbor list start indices.
+
+	            startIndicesArgs.push_back(&numNeighborsForAtom->getDevicePointer());
+	            startIndicesArgs.push_back(&neighborStartIndex->getDevicePointer());
+	            startIndicesArgs.push_back(&numNeighborPairs->getDevicePointer());
+	            startIndicesArgs.push_back(&maxNeighborPairs);
+
+	            // Set arguments for the kernel to assemble the final neighbor list.
+
+	            copyPairsArgs.push_back(&neighborPairs->getDevicePointer());
+	            copyPairsArgs.push_back(&neighbors->getDevicePointer());
+	            copyPairsArgs.push_back(&numNeighborPairs->getDevicePointer());
+	            copyPairsArgs.push_back(&maxNeighborPairs);
+	            copyPairsArgs.push_back(&numNeighborsForAtom->getDevicePointer());
+	            copyPairsArgs.push_back(&neighborStartIndex->getDevicePointer());
+	       }
+	    }
+	    if (globalParamValues.size() > 0) {
+	        bool changed = false;
+	        for (int i = 0; i < (int) globalParamNames.size(); i++) {
+	            float value = (float) context.getParameter(globalParamNames[i]);
+	            if (value != globalParamValues[i])
+	                changed = true;
+	            globalParamValues[i] = value;
+	        }
+	        if (changed)
+	            cuMemcpyHtoD(globalsPtr, &globalParamValues[0], globalParamValues.size()*sizeof(float));
+	    }
+	    while (true) {
+	        int* numPairs = (int*) cu.getPinnedBuffer();
+	        if (nb.getUseCutoff()) {
+	            cu.executeKernel(blockBoundsKernel, &blockBoundsArgs[0], cu.getNumAtomBlocks());
+	            cu.executeKernel(neighborsKernel, &neighborsArgs[0], cu.getNumAtoms(), findNeighborsWorkgroupSize);
+
+	            // We need to make sure there was enough memory for the neighbor list.  Download the
+	            // information asynchronously so kernels can be running at the same time.
+
+	            numNeighborPairs->download(numPairs, false);
+	            //CHECK_RESULT(cuEventRecord(event, 0), "Error recording event for CustomManyParticleForce");
+	            cu.executeKernel(startIndicesKernel, &startIndicesArgs[0], 256, 256, 256*sizeof(int));
+	            cu.executeKernel(copyPairsKernel, &copyPairsArgs[0], maxNeighborPairs);
+	        }
+	        int maxThreads = min(cu.getNumAtoms()*forceWorkgroupSize, cu.getEnergyBuffer().getSize());
+	        cu.executeKernel(forceKernel, &forceArgs[0], maxThreads, forceWorkgroupSize);
+	        if (nb.getUseCutoff()) {
+	            // Make sure there was enough memory for the neighbor list.
+
+	           // CHECK_RESULT(cuEventSynchronize(event), "Error synchronizing on event for CustomManyParticleForce");
+	            if (*numPairs > maxNeighborPairs) {
+	                // Resize the arrays and run the calculation again.
+
+	                delete neighborPairs;
+	                neighborPairs = NULL;
+	                delete neighbors;
+	                neighbors = NULL;
+	                maxNeighborPairs = (int) (1.1*(*numPairs));
+	                neighborPairs = CudaArray::create<int2>(cu, maxNeighborPairs, "customManyParticleNeighborPairs");
+	                neighbors = CudaArray::create<int>(cu, maxNeighborPairs, "customManyParticleNeighbors");
+	                forceArgs[5] = &neighbors->getDevicePointer();
+	                neighborsArgs[5] = &neighborPairs->getDevicePointer();
+	                copyPairsArgs[0] = &neighborPairs->getDevicePointer();
+	                copyPairsArgs[1] = &neighbors->getDevicePointer();
+	                continue;
+	            }
+	        }
+	        break;
+	    }
+	    return 0.0;
+
+//
+//    CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
+//
+//    int startTileIndex = nb.getStartTileIndex();
+//    int numTileIndices = nb.getNumTiles();
+//    unsigned int maxTiles;
+//    if (nb.getUseCutoff()) {
+//        maxTiles = nb.getInteractingTiles().getSize();
+//    }
+//
+//    void* args[] = {&cu.getForce().getDevicePointer(),
+//        &cu.getEnergyBuffer().getDevicePointer(),
+//        &cu.getPosq().getDevicePointer(),
+//        &nb.getExclusionTiles().getDevicePointer(),
+//        &startTileIndex,
+//        &numTileIndices,
+//        &cu.getNonbondedUtilities().getInteractingTiles().getDevicePointer(),
+//        &cu.getNonbondedUtilities().getInteractionCount().getDevicePointer(),
+//        cu.getPeriodicBoxSizePointer(),
+//        cu.getInvPeriodicBoxSizePointer(),
+//        &maxTiles,
+//       // &cu.getNonbondedUtilities().getBlock().getDevicePointer(),
+//        &cu.getNonbondedUtilities().getInteractingAtoms().getDevicePointer()
+//    };
+//    cu.executeKernel(computeThreeBodyForceKernel, args, cu.getPaddedNumAtoms());
+//    return 0.0;
+
+
 }
 
 void CudaCalcMBPolThreeBodyForceKernel::copyParametersToContext(ContextImpl& context, const MBPolThreeBodyForce& force) {
