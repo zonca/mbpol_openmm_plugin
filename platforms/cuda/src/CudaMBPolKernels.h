@@ -164,7 +164,8 @@ private:
 	CudaArray* neighborStartIndex;
 	CudaArray* numNeighborsForAtom;
 	CudaArray* neighbors;
-	int maxNeighborPairs;
+	int maxNeighborPairs, findNeighborsWorkgroupSize;
+	CUfunction blockBoundsKernel, neighborsKernel, startIndicesKernel, copyPairsKernel;
 //    CUfunction copyPairsKernel, startIndicesKernel, neighborsKernel;
 //    std::vector<void*> forceArgs, blockBoundsArgs, neighborsArgs, startIndicesArgs, copyPairsArgs;
 //    OpenMM::CudaArray* neighbors, *neighborStartIndex;

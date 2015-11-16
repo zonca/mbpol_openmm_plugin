@@ -301,7 +301,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         , int* __restrict__ exclusions, int* __restrict__ exclusionStartIndex
 #endif
         ) {
-    __shared__ real3 positionCache[/*FIND_NEIGHBORS_WORKGROUP_SIZE = 128*/ 128];
+    __shared__ real3 positionCache[FIND_NEIGHBORS_WORKGROUP_SIZE];
     int indexInWarp = threadIdx.x%32;
     for (int atom1 = blockIdx.x*blockDim.x+threadIdx.x; atom1 < PADDED_NUM_ATOMS; atom1 += blockDim.x*gridDim.x) {
         // Load data for this atom.  Note that all threads in a warp are processing atoms from the same block.

@@ -386,10 +386,15 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 
 	    if (usePeriodic)
 	        defines["USE_PERIODIC"] = "1";
+	    findNeighborsWorkgroupSize = 128;
+	    defines["FIND_NEIGHBORS_WORKGROUP_SIZE"] = cu.intToString(findNeighborsWorkgroupSize);
 
 	    CUmodule module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multibodyLibrary + CudaMBPolKernelSources::threebodyForcePolynomial + CudaMBPolKernelSources::threebodyForce, defines);
 	    computeThreeBodyForceKernel = cu.getKernel(module, "computeThreeBodyForce");
-
+	    blockBoundsKernel = cu.getKernel(module, "findBlockBounds");
+		neighborsKernel = cu.getKernel(module, "findNeighbors");
+		startIndicesKernel = cu.getKernel(module, "computeNeighborStartIndices");
+		copyPairsKernel = cu.getKernel(module, "copyPairsToNeighborList");
 	    // Add an interaction to the default nonbonded kernel.  This doesn't actually do any calculations.  It's
 	    // just so that CudaNonbondedUtilities will build the exclusion flags and maintain the neighbor list.
 
