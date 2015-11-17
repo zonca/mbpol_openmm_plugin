@@ -497,6 +497,7 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 			cu.executeKernel(copyPairsKernel, &copyPairsArgs[0], maxNeighborPairs);
 		}
 		int maxThreads = min(cu.getNumAtoms()*forceWorkgroupSize, cu.getEnergyBuffer().getSize());
+		//TODO: implement the computation of the three body kernels
 		//cu.executeKernel(forceKernel, &forceArgs[0], maxThreads, forceWorkgroupSize);
 	    cu.executeKernel(computeThreeBodyForceKernel, args, cu.getPaddedNumAtoms());
 		if (nb.getUseCutoff()) {
