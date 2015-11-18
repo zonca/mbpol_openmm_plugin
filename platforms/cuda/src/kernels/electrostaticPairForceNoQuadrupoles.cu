@@ -1,4 +1,4 @@
-
+/*
 __device__ real getAndScaleInverseRs(AtomData& atom1, volatile AtomData& atom2, real r, bool justScale, int interactionOrder, int interactionType)
 {	
 	// a way to see if they are the same molecule
@@ -71,7 +71,7 @@ __device__ real getAndScaleInverseRs(AtomData& atom1, volatile AtomData& atom2, 
     }
 	return 0;
 }
-
+*/
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce) {    
 
     const float uScale = 1;

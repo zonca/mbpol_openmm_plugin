@@ -25,8 +25,8 @@ const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePo
     data.inducedDipolePolar.z = inducedDipolePolar[atom*3+2];
     data.damp = damping[atom];
     
-    data.waterMoleculeIndex = waterMoleculeIndices[atom];
-    data.atomType = atomTypes[atom];
+    // data.waterMoleculeIndex = waterMoleculeIndices[atom];
+    // data.atomType = atomTypes[atom];
 }
 
 __device__ real computeDScaleFactor(unsigned int polarizationGroup, int index) {
