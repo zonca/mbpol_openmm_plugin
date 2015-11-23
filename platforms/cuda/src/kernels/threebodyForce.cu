@@ -56,25 +56,42 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         , int* __restrict__ exclusions, int* __restrict__ exclusionStartIndex
 #endif
         ) {
+//	printf("threadIdx.x = %d\n", threadIdx.x);
+	if (threadIdx.x == 3) {
+		printf("FIND_NEIGHBORS_WORKGROUP_SIZE = %d\n", FIND_NEIGHBORS_WORKGROUP_SIZE);
+		printf("PADDED_NUM_ATOMS = %d\n", PADDED_NUM_ATOMS);
+		printf("NUM_BLOCKS = %d\n", NUM_BLOCKS);
+		printf("TILE_SIZE = %d\n", TILE_SIZE);
+		printf("CUTOFF_SQUARED = %d\n", CUTOFF_SQUARED);
+		printf("NUM_ATOMS = %d\n",NUM_ATOMS);
+		for (int i = 0; i<NUM_BLOCKS; i++) {
+			printf("blockCenter[%d] = {%lf, %lf, %lf, %lf}\n", i, blockCenter[i].x, blockCenter[i].y, blockCenter[i].z, blockCenter[i].w);
+			printf("blockBoundingBox[%d] = {%lf, %lf, %lf, %lf}\n", i, blockBoundingBox[i].x, blockBoundingBox[i].y, blockBoundingBox[i].z, blockBoundingBox[i].w);
+		}
+		printf("blockDim.x*gridDim.x = %d\n", blockDim.x*gridDim.x);
+		printf("blockIdx.x*blockDim.x+threadIdx.x = %d\n",blockIdx.x*blockDim.x+threadIdx.x);
+	}
     __shared__ real3 positionCache[FIND_NEIGHBORS_WORKGROUP_SIZE];
     int indexInWarp = threadIdx.x%32;
     for (int atom1 = blockIdx.x*blockDim.x+threadIdx.x; atom1 < PADDED_NUM_ATOMS; atom1 += blockDim.x*gridDim.x) {
         // Load data for this atom.  Note that all threads in a warp are processing atoms from the same block.
-
+    	
+    	//FIXME: temporary fix to num neigbors for atom is not paddded so the size is 9
+    	// but needs to be executed for paddedNumAtoms which is 32
+    	if (atom1 >= NUM_ATOMS)
+        	continue;
+        
         real3 pos1 = trim(posq[atom1]);
         int block1 = atom1/TILE_SIZE;
         real4 blockCenter1 = blockCenter[block1];
         real4 blockSize1 = blockBoundingBox[block1];
         int totalNeighborsForAtom1 = 0;
-
+        
         // Loop over atom blocks to search for neighbors.  The threads in a warp compare block1 against 32
         // other blocks in parallel.
 
-#ifdef USE_CENTRAL_PARTICLE
-        int startBlock = 0;
-#else
         int startBlock = block1;
-#endif
+
         for (int block2Base = startBlock; block2Base < NUM_BLOCKS; block2Base += 32) {
             int block2 = block2Base+indexInWarp;
             bool includeBlock2 = (block2 < NUM_BLOCKS);
@@ -90,9 +107,9 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
                 blockDelta.z = max(0.0f, fabs(blockDelta.z)-blockSize1.z-blockSize2.z);
                 includeBlock2 &= (blockDelta.x*blockDelta.x+blockDelta.y*blockDelta.y+blockDelta.z*blockDelta.z < CUTOFF_SQUARED);
             }
-
+            
             // Loop over any blocks we identified as potentially containing neighbors.
-
+            
             int includeBlockFlags = __ballot(includeBlock2);
             while (includeBlockFlags != 0) {
                 int i = __ffs(includeBlockFlags)-1;
@@ -109,21 +126,17 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
                     for (int j = 0; j < 32; j++) {
                         int atom2 = start+j;
                         real3 pos2 = positionCache[threadIdx.x-indexInWarp+j];
-
+//                        printf("threadIdx.x-indexInWarp+j = %d\n", threadIdx.x-indexInWarp+j);
                         // Decide whether to include this atom pair in the neighbor list.
 
                         real4 atomDelta = delta(pos1, pos2, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
-#ifdef USE_CENTRAL_PARTICLE
-                        bool includeAtom = (atom2 != atom1 && atom2 < NUM_ATOMS && atomDelta.w < CUTOFF_SQUARED);
-#else
+
                         bool includeAtom = (atom2 > atom1 && atom2 < NUM_ATOMS && atomDelta.w < CUTOFF_SQUARED);
-#endif
-#ifdef USE_EXCLUSIONS
-                        if (includeAtom)
-                            includeAtom &= !isInteractionExcluded(atom1, atom2, exclusions, exclusionStartIndex);
-#endif
-                        if (includeAtom)
+
+                        if (includeAtom) {
                             included[numIncluded++] = atom2;
+                            printf("pair found: %d, %d\n", atom1, atom2);
+                        }
                     }
                 }
 
@@ -140,6 +153,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         }
         numNeighborsForAtom[atom1] = totalNeighborsForAtom1;
     }
+    printf("completed call of findNeighbors: %d\n", threadIdx.x);
 }
 
 /**
@@ -501,46 +515,46 @@ extern "C" __global__ void computeThreeBodyForce(
 #endif
         int numCombinations = numNeighbors*numNeighbors;
         for (int index = threadIdx.x; index < numCombinations; index += blockDim.x) {
-
-
-        	// looks like it is getting messy here,
-
-
-        	#ifdef USE_CUTOFF
-        	//FIND_ATOMS_FOR_COMBINATION_INDEX;
-			int tempIndex = index;
-			int a2 = 1+tempIndex%numNeighbors;
-			tempIndex /= numNeighbors;
-			int a3 = 1+tempIndex%numNeighbors;
-			a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
-			int p2 = neighbors[firstNeighbor-1+a2];
-			int p3 = neighbors[firstNeighbor-1+a3];
-#else
-			//FIND_ATOMS_FOR_COMBINATION_INDEX;
-        	int tempIndex = index;
-        	int a2 = 1+tempIndex%numNeighbors;
-        	tempIndex /= numNeighbors;
-        	int a3 = 1+tempIndex%numNeighbors;
-        	a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
-        	int p2 = p1+a2;
-        	int p3 = p1+a3;
-#endif
-        	printf("523\n");
-			//bool includeInteraction = IS_VALID_COMBINATION;
-            bool includeInteraction = (a3>a2);
-#ifdef USE_CUTOFF
-            if (includeInteraction) {
-                //VERIFY_CUTOFF;
-            	real3 pos2 = trim(posq[p2]);
-            	real3 pos3 = trim(posq[p3]);
-            	includeInteraction &= (delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w < CUTOFF_SQUARED);
-            }
-#endif
-            if (includeInteraction) {
-//                PERMUTE_ATOMS;
-//                LOAD_PARTICLE_DATA;
-//                COMPUTE_INTERACTION;
-            }
+//
+//
+//        	// looks like it is getting messy here,
+//
+//
+//        	#ifdef USE_CUTOFF
+//        	//FIND_ATOMS_FOR_COMBINATION_INDEX;
+//			int tempIndex = index;
+//			int a2 = 1+tempIndex%numNeighbors;
+//			tempIndex /= numNeighbors;
+//			int a3 = 1+tempIndex%numNeighbors;
+//			a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
+//			int p2 = neighbors[firstNeighbor-1+a2];
+//			int p3 = neighbors[firstNeighbor-1+a3];
+//#else
+//			//FIND_ATOMS_FOR_COMBINATION_INDEX;
+//        	int tempIndex = index;
+//        	int a2 = 1+tempIndex%numNeighbors;
+//        	tempIndex /= numNeighbors;
+//        	int a3 = 1+tempIndex%numNeighbors;
+//        	a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
+//        	int p2 = p1+a2;
+//        	int p3 = p1+a3;
+//#endif
+//        	printf("523\n");
+//			//bool includeInteraction = IS_VALID_COMBINATION;
+//            bool includeInteraction = (a3>a2);
+//#ifdef USE_CUTOFF
+//            if (includeInteraction) {
+//                //VERIFY_CUTOFF;
+//            	real3 pos2 = trim(posq[p2]);
+//            	real3 pos3 = trim(posq[p3]);
+//            	includeInteraction &= (delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w < CUTOFF_SQUARED);
+//            }
+//#endif
+//            if (includeInteraction) {
+////                PERMUTE_ATOMS;
+////                LOAD_PARTICLE_DATA;
+////                COMPUTE_INTERACTION;
+//            }
         }
     }
     energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
