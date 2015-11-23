@@ -46,51 +46,35 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         // compute the error function scaled and unscaled terms
 
         real scale3 = 1;
-        real scale5 = 1;
-        real scale7 = 1;
         real damp = atom1.damp*atom2.damp;
         if (damp != 0) {
             real ratio = (r/damp);
             ratio = ratio*ratio*ratio;
             //FIXME: 
+            // use minimum TCC (charge-charge) thole factor
             float thole = 0.4;
         	real pgamma = thole;
             damp = -pgamma*ratio;
             if (damp > -50) {
                 real expdamp = EXP(damp);
                 scale3 = 1 - expdamp;
-                scale5 = 1 - expdamp*(1-damp);
-                scale7 = 1 - expdamp*(1-damp+(0.6f*damp*damp));
             }
         }
         real dsc3 = dScale*scale3;
-        real dsc5 = dScale*scale5;
-        real dsc7 = dScale*scale7;
 
         real psc3 = pScale*scale3;
-        real psc5 = pScale*scale5;
-        real psc7 = pScale*scale7;
 
         real r3 = r*r2;
-        real r5 = r3*r2;
-        real r7 = r5*r2;
         real drr3 = (1-dsc3)/r3;
-        real drr5 = 3*(1-dsc5)/r5;
-        real drr7 = 15*(1-dsc7)/r7;
 
         real prr3 = (1-psc3)/r3;
-        real prr5 = 3*(1-psc5)/r5;
-        real prr7 = 15*(1-psc7)/r7;
 
-        real dir = dot(atom1.dipole, deltaR);
-        real dkr = dot(atom2.dipole, deltaR);
-
-        real3 fim = -deltaR*(bn1*atom2.posq.w-bn2*dkr) - bn1*atom2.dipole;
-        real3 fkm = deltaR*(bn1*atom1.posq.w+bn2*dir) - bn1*atom1.dipole;
-        real3 fid = -deltaR*(drr3*atom2.posq.w-drr5*dkr) - drr3*atom2.dipole;
-        real3 fkd = deltaR*(drr3*atom1.posq.w+drr5*dir) - drr3*atom1.dipole;
-        real3 fip = -deltaR*(prr3*atom2.posq.w-prr5*dkr) - prr3*atom2.dipole;
-        real3 fkp = deltaR*(prr3*atom1.posq.w+prr5*dir) - prr3*atom1.dipole;
+        real3 fim = -deltaR*(bn1*atom2.posq.w);
+        real3 fkm = deltaR*(bn1*atom1.posq.w);
+        real3 fid = -deltaR*(drr3*atom2.posq.w);
+        real3 fkd = deltaR*(drr3*atom1.posq.w);
+        real3 fip = -deltaR*(prr3*atom2.posq.w);
+        real3 fkp = deltaR*(prr3*atom1.posq.w);
 
         // increment the field at each site due to this interaction
 
