@@ -501,7 +501,9 @@ extern "C" __global__ void computeThreeBodyForce(
         , const int* __restrict__ neighbors, const int* __restrict__ neighborStartIndex
 #endif
         /*PARAMETER_ARGUMENTS*/) {
-    mixed energy = 0;
+    real energy = 0;
+    real3 forces[9];
+
 
     // Loop over particles to be the first one in the set.
 
@@ -515,46 +517,55 @@ extern "C" __global__ void computeThreeBodyForce(
 #endif
         int numCombinations = numNeighbors*numNeighbors;
         for (int index = threadIdx.x; index < numCombinations; index += blockDim.x) {
-//
-//
-//        	// looks like it is getting messy here,
-//
-//
-//        	#ifdef USE_CUTOFF
-//        	//FIND_ATOMS_FOR_COMBINATION_INDEX;
-//			int tempIndex = index;
-//			int a2 = 1+tempIndex%numNeighbors;
-//			tempIndex /= numNeighbors;
-//			int a3 = 1+tempIndex%numNeighbors;
-//			a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
-//			int p2 = neighbors[firstNeighbor-1+a2];
-//			int p3 = neighbors[firstNeighbor-1+a3];
-//#else
-//			//FIND_ATOMS_FOR_COMBINATION_INDEX;
-//        	int tempIndex = index;
-//        	int a2 = 1+tempIndex%numNeighbors;
-//        	tempIndex /= numNeighbors;
-//        	int a3 = 1+tempIndex%numNeighbors;
-//        	a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
-//        	int p2 = p1+a2;
-//        	int p3 = p1+a3;
-//#endif
-//        	printf("523\n");
-//			//bool includeInteraction = IS_VALID_COMBINATION;
-//            bool includeInteraction = (a3>a2);
-//#ifdef USE_CUTOFF
-//            if (includeInteraction) {
-//                //VERIFY_CUTOFF;
-//            	real3 pos2 = trim(posq[p2]);
-//            	real3 pos3 = trim(posq[p3]);
-//            	includeInteraction &= (delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w < CUTOFF_SQUARED);
-//            }
-//#endif
-//            if (includeInteraction) {
-////                PERMUTE_ATOMS;
-////                LOAD_PARTICLE_DATA;
-////                COMPUTE_INTERACTION;
-//            }
+
+#ifdef USE_CUTOFF
+        	//FIND_ATOMS_FOR_COMBINATION_INDEX;
+			int tempIndex = index;
+			int a2 = 1+tempIndex%numNeighbors;
+			tempIndex /= numNeighbors;
+			int a3 = 1+tempIndex%numNeighbors;
+			a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
+			int p2 = neighbors[firstNeighbor-1+a2];
+			int p3 = neighbors[firstNeighbor-1+a3];
+#else
+			//FIND_ATOMS_FOR_COMBINATION_INDEX;
+        	int tempIndex = index;
+        	int a2 = 1+tempIndex%numNeighbors;
+        	tempIndex /= numNeighbors;
+        	int a3 = 1+tempIndex%numNeighbors;
+        	a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
+        	int p2 = p1+a2;
+        	int p3 = p1+a3;
+#endif
+			//bool includeInteraction = IS_VALID_COMBINATION;
+            bool includeInteraction = (a3>a2);
+#ifdef USE_CUTOFF
+            if (includeInteraction) {
+                //VERIFY_CUTOFF;
+            	real3 pos2 = trim(posq[p2]);
+            	real3 pos3 = trim(posq[p3]);
+            	includeInteraction &= (delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w < CUTOFF_SQUARED);
+            }
+#endif
+           if (includeInteraction) {
+//             PERMUTE_ATOMS;
+        	   int atom1 = p1;
+        	   int atom2 = p2;
+        	   int atom3 = p3;
+
+//             LOAD_PARTICLE_DATA;
+//             COMPUTE_INTERACTION;
+        	   /* real computeInteraction(
+        	   		const unsigned int atom1,
+        	           const unsigned int atom2,
+        	           const unsigned int atom3,
+        	           const real4* __restrict__ posq,
+        	           const real4* periodicBoxSize,
+        	           real3 * forces) */
+        	   real computed_energy = computeInteraction(atom1, atom2, atom3, posq, &periodicBoxSize, forces);
+        	   printf("computed energy = %lf for atoms { %d, %d, %d } in thread: %d\n", computed_energy, atom1, atom2, atom3, threadIdx.x);
+        	   energy += computed_energy;
+            }
         }
     }
     energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
