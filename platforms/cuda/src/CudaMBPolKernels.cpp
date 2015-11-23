@@ -410,33 +410,51 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 
 double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
 
-
+	///////////////////////////From Two Body/////////////////////////////////////
 
     CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
 
-    int startTileIndex = nb.getStartTileIndex();
-    int numTileIndices = nb.getNumTiles();
-    unsigned int maxTiles;
-    if (nb.getUseCutoff()) {
-        maxTiles = nb.getInteractingTiles().getSize();
-    }
+//    int startTileIndex = nb.getStartTileIndex();
+//    int numTileIndices = nb.getNumTiles();
+//    unsigned int maxTiles;
+//    if (nb.getUseCutoff()) {
+//        maxTiles = nb.getInteractingTiles().getSize();
+//    }
+//
+//    void* args[] = {&cu.getForce().getDevicePointer(),
+//        &cu.getEnergyBuffer().getDevicePointer(),
+//        &cu.getPosq().getDevicePointer(),
+//        &nb.getExclusionTiles().getDevicePointer(),
+//        &startTileIndex,
+//        &numTileIndices,
+//        &cu.getNonbondedUtilities().getInteractingTiles().getDevicePointer(),
+//        &cu.getNonbondedUtilities().getInteractionCount().getDevicePointer(),
+//        cu.getPeriodicBoxSizePointer(),
+//        cu.getInvPeriodicBoxSizePointer(),
+//        &maxTiles,
+//       // &cu.getNonbondedUtilities().getBlock().getDevicePointer(),
+//        &cu.getNonbondedUtilities().getInteractingAtoms().getDevicePointer()
+//    };
+    ////////////////////////////////////////////////////////////////////////////////////////
 
-    void* args[] = {&cu.getForce().getDevicePointer(),
-        &cu.getEnergyBuffer().getDevicePointer(),
-        &cu.getPosq().getDevicePointer(),
-        &nb.getExclusionTiles().getDevicePointer(),
-        &startTileIndex,
-        &numTileIndices,
-        &cu.getNonbondedUtilities().getInteractingTiles().getDevicePointer(),
-        &cu.getNonbondedUtilities().getInteractionCount().getDevicePointer(),
-        cu.getPeriodicBoxSizePointer(),
-        cu.getInvPeriodicBoxSizePointer(),
-        &maxTiles,
-       // &cu.getNonbondedUtilities().getBlock().getDevicePointer(),
-        &cu.getNonbondedUtilities().getInteractingAtoms().getDevicePointer()
-    };
+
     if (!hasInitializedKernel) {
         hasInitializedKernel = true;
+
+        forceArgs.push_back(&cu.getForce().getDevicePointer());
+		forceArgs.push_back(&cu.getEnergyBuffer().getDevicePointer());
+		forceArgs.push_back(&cu.getPosq().getDevicePointer());
+		forceArgs.push_back(cu.getPeriodicBoxSizePointer());
+		forceArgs.push_back(cu.getInvPeriodicBoxSizePointer());
+		forceArgs.push_back(cu.getPeriodicBoxVecXPointer());
+		forceArgs.push_back(cu.getPeriodicBoxVecYPointer());
+		forceArgs.push_back(cu.getPeriodicBoxVecZPointer());
+		if (nb.getUseCutoff()) {
+			forceArgs.push_back(&neighbors->getDevicePointer());
+			forceArgs.push_back(&neighborStartIndex->getDevicePointer());
+		}
+
+
 		if (nb.getUseCutoff()) {
 			// Set arguments for the block bounds kernel.
 
@@ -497,13 +515,13 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 			// download originally was set false,
 			numNeighborPairs->download(numPairs, true);
 			//CHECK_RESULT(cuEventRecord(event, 0), "Error recording event for CustomManyParticleForce");
-//			cu.executeKernel(startIndicesKernel, &startIndicesArgs[0], 256, 256, 256*sizeof(int));
-//			cu.executeKernel(copyPairsKernel, &copyPairsArgs[0], maxNeighborPairs);
+			cu.executeKernel(startIndicesKernel, &startIndicesArgs[0], 256, 256, 256*sizeof(int));
+			cu.executeKernel(copyPairsKernel, &copyPairsArgs[0], maxNeighborPairs);
 		}
 		int maxThreads = min(cu.getNumAtoms()*forceWorkgroupSize, cu.getEnergyBuffer().getSize());
 		std::cout << "Max threads: " << maxThreads << std::endl;
 		//TODO: implement the computation of the three body kernels
-		//cu.executeKernel(forceKernel, &forceArgs[0], maxThreads, forceWorkgroupSize);
+		cu.executeKernel(computeThreeBodyForceKernel, &forceArgs[0], maxThreads, forceWorkgroupSize);
 //	    cu.executeKernel(computeThreeBodyForceKernel, args, cu.getPaddedNumAtoms());
 		if (nb.getUseCutoff()) {
 			// Make sure there was enough memory for the neighbor list.
@@ -532,9 +550,6 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 		break;
 	}
 	return 0.0;
-//    cu.executeKernel(computeThreeBodyForceKernel, args, cu.getPaddedNumAtoms());
-//    return 0.0;
-
 
 }
 
