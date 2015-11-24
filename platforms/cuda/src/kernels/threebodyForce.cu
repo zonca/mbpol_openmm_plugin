@@ -57,20 +57,20 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
 #endif
         ) {
 //	printf("threadIdx.x = %d\n", threadIdx.x);
-	if (threadIdx.x == 3) {
-		printf("FIND_NEIGHBORS_WORKGROUP_SIZE = %d\n", FIND_NEIGHBORS_WORKGROUP_SIZE);
-		printf("PADDED_NUM_ATOMS = %d\n", PADDED_NUM_ATOMS);
-		printf("NUM_BLOCKS = %d\n", NUM_BLOCKS);
-		printf("TILE_SIZE = %d\n", TILE_SIZE);
-		printf("CUTOFF_SQUARED = %d\n", CUTOFF_SQUARED);
-		printf("NUM_ATOMS = %d\n",NUM_ATOMS);
-		for (int i = 0; i<NUM_BLOCKS; i++) {
-			printf("blockCenter[%d] = {%lf, %lf, %lf, %lf}\n", i, blockCenter[i].x, blockCenter[i].y, blockCenter[i].z, blockCenter[i].w);
-			printf("blockBoundingBox[%d] = {%lf, %lf, %lf, %lf}\n", i, blockBoundingBox[i].x, blockBoundingBox[i].y, blockBoundingBox[i].z, blockBoundingBox[i].w);
-		}
-		printf("blockDim.x*gridDim.x = %d\n", blockDim.x*gridDim.x);
-		printf("blockIdx.x*blockDim.x+threadIdx.x = %d\n",blockIdx.x*blockDim.x+threadIdx.x);
-	}
+//	if (threadIdx.x == 3) {
+//		printf("FIND_NEIGHBORS_WORKGROUP_SIZE = %d\n", FIND_NEIGHBORS_WORKGROUP_SIZE);
+//		printf("PADDED_NUM_ATOMS = %d\n", PADDED_NUM_ATOMS);
+//		printf("NUM_BLOCKS = %d\n", NUM_BLOCKS);
+//		printf("TILE_SIZE = %d\n", TILE_SIZE);
+//		printf("CUTOFF_SQUARED = %d\n", CUTOFF_SQUARED);
+//		printf("NUM_ATOMS = %d\n",NUM_ATOMS);
+//		for (int i = 0; i<NUM_BLOCKS; i++) {
+//			printf("blockCenter[%d] = {%lf, %lf, %lf, %lf}\n", i, blockCenter[i].x, blockCenter[i].y, blockCenter[i].z, blockCenter[i].w);
+//			printf("blockBoundingBox[%d] = {%lf, %lf, %lf, %lf}\n", i, blockBoundingBox[i].x, blockBoundingBox[i].y, blockBoundingBox[i].z, blockBoundingBox[i].w);
+//		}
+//		printf("blockDim.x*gridDim.x = %d\n", blockDim.x*gridDim.x);
+//		printf("blockIdx.x*blockDim.x+threadIdx.x = %d\n",blockIdx.x*blockDim.x+threadIdx.x);
+//	}
     __shared__ real3 positionCache[FIND_NEIGHBORS_WORKGROUP_SIZE];
     int indexInWarp = threadIdx.x%32;
     for (int atom1 = blockIdx.x*blockDim.x+threadIdx.x; atom1 < PADDED_NUM_ATOMS; atom1 += blockDim.x*gridDim.x) {
@@ -135,7 +135,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
 
                         if (includeAtom) {
                             included[numIncluded++] = atom2;
-                            printf("pair found: %d, %d\n", atom1, atom2);
+//                            printf("pair found: %d, %d\n", atom1, atom2);
                         }
                     }
                 }
@@ -153,7 +153,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         }
         numNeighborsForAtom[atom1] = totalNeighborsForAtom1;
     }
-    printf("completed call of findNeighbors: %d\n", threadIdx.x);
+//    printf("completed call of findNeighbors: %d\n", threadIdx.x);
 }
 
 /**
@@ -348,6 +348,7 @@ extern "C" __device__ real computeInteraction(
 		if ((drab < 2) or (drac < 2) or (drbc < 2))
              tempEnergy = 0.;
         else {
+        	printf("did not intentionally return 0\n");
         	real x[36];
         	int i = 0;
         	computeVar(kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, x+i); ++i;
@@ -387,10 +388,15 @@ extern "C" __device__ real computeInteraction(
         	computeVar(kOO, dOO, positions +Oa, positions +Ob, x+i); ++i;
         	computeVar(kOO, dOO, positions +Oa, positions +Oc, x+i); ++i;
         	computeVar(kOO, dOO, positions +Ob, positions +Oc, x+i); ++i; //35
-
+        	
         	real g[36];
             tempEnergy = poly_3b_v2x_eval(x, g);
-
+            if (threadIdx.x == 2) {
+				printf("\n");
+				for(int j = 0; j<36; j++)
+					printf("x[%d] = %lf\n", j, x[j]);
+				printf("TempEnergy = %lf\n", tempEnergy);
+			}
 			real gab, gac, gbc;
 			real sab, sac, sbc;
 			evaluateSwitchFunc(drab, &gab, &sab);

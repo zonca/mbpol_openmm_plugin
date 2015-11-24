@@ -338,7 +338,7 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 
 	    // Build data structures for the neighbor list.
 	    int numParticles = force.getNumParticles();
-	    std::cout << "NumParticles = " << numParticles << std::endl;
+//	    std::cout << "NumParticles = " << numParticles << std::endl;
 		if (useCutoff) {
 			int numAtomBlocks = cu.getNumAtomBlocks();
 			int elementSize = (cu.getUseDoublePrecision() ? sizeof(double) : sizeof(float));
@@ -384,8 +384,8 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 	        defines["USE_CUTOFF"] = "1";
 	    double cutoff = force.getCutoff();
 	    defines["CUTOFF_SQUARED"] = cu.doubleToString(cutoff*cutoff);
-	    cout << "CUTOFF_SQUARED = " << cu.doubleToString(cutoff*cutoff) << std::endl;
-	    std::cout << "usePeriodic = " << usePeriodic << std::endl;
+//	    cout << "CUTOFF_SQUARED = " << cu.doubleToString(cutoff*cutoff) << std::endl;
+//	    std::cout << "usePeriodic = " << usePeriodic << std::endl;
 	    if (usePeriodic) //usePeriodic not being set
 	        defines["USE_PERIODIC"] = "1";
 
@@ -519,7 +519,7 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 			cu.executeKernel(copyPairsKernel, &copyPairsArgs[0], maxNeighborPairs);
 		}
 		int maxThreads = min(cu.getNumAtoms()*forceWorkgroupSize, cu.getEnergyBuffer().getSize());
-		std::cout << "Max threads: " << maxThreads << std::endl;
+//		std::cout << "Max threads: " << maxThreads << std::endl;
 		//TODO: implement the computation of the three body kernels
 		cu.executeKernel(computeThreeBodyForceKernel, &forceArgs[0], maxThreads, forceWorkgroupSize);
 //	    cu.executeKernel(computeThreeBodyForceKernel, args, cu.getPaddedNumAtoms());
@@ -544,8 +544,8 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 				continue;
 			}
 		}
-		std::cout << "Number of Neighbor Pairs: " << *numPairs << std::endl;
-		std::cout<< "cutoff = " << nb.getCutoffDistance() << std::endl;
+//		std::cout << "Number of Neighbor Pairs: " << *numPairs << std::endl;
+//		std::cout<< "cutoff = " << nb.getCutoffDistance() << std::endl;
 
 		break;
 	}

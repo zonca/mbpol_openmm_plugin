@@ -62,7 +62,7 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
     std::string testName      = "testMBPolThreeBodyInteraction";
 
     System system;
-    int numberOfParticles          = 12;
+    int numberOfParticles          = 9;
     MBPolThreeBodyForce* mbpolThreeBodyForce = new MBPolThreeBodyForce();
     double cutoff = 10;
     mbpolThreeBodyForce->setCutoff( cutoff );
@@ -108,10 +108,6 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
     positions[6]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
     positions[7]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
     positions[8]             = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
-
-    positions[9]             = Vec3( 5.588472140e-01,  -2.006699172e+00, 1.392786582e-01  );
-	positions[10]             = Vec3( 9.411558180e-01,  -1.541226676e+00,  -6.163293071e-01  );
-	positions[11]             = Vec3( 9.858551734e-01,  -1.567124294e+00, 8.830970941e-01  );
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
@@ -187,6 +183,7 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
        ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
    }
    std::cout << "Test Successful: " << testName << std::endl << std::endl;
+
 }
 
 //void testImageMolecules( bool runTestWithAtomImaging, bool addPositionOffset) {
