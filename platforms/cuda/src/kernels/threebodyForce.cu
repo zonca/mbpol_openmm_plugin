@@ -80,6 +80,9 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
     	// but needs to be executed for paddedNumAtoms which is 32
     	if (atom1 >= NUM_ATOMS)
         	continue;
+    	//FIXME: temp fix to building neighborlist to include only oxygen particles
+    	if (atom1%3 != 0)
+    		continue;
         
         real3 pos1 = trim(posq[atom1]);
         int block1 = atom1/TILE_SIZE;
@@ -125,6 +128,9 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
                 if (atom1 < NUM_ATOMS) {
                     for (int j = 0; j < 32; j++) {
                         int atom2 = start+j;
+                    	//FIXME: temp fix to building neighborlist to include only oxygen particles
+                    	if (atom2%3 != 0)
+                    		continue;
                         real3 pos2 = positionCache[threadIdx.x-indexInWarp+j];
 //                        printf("threadIdx.x-indexInWarp+j = %d\n", threadIdx.x-indexInWarp+j);
                         // Decide whether to include this atom pair in the neighbor list.
@@ -329,26 +335,25 @@ extern "C" __device__ real computeInteraction(
 		real3 rab, rac, rbc;
 		real drab(0), drac(0), drbc(0);
 
-		rab = (positions[Oa] - positions[Ob])*NM_TO_A;
+		rab = (positions[Oa] - positions[Ob]);
 		drab += dot(rab, rab);
 
-		rac = (positions[Oa] - positions[Oc])*NM_TO_A;
+		rac = (positions[Oa] - positions[Oc]);
 		drac += dot(rac, rac);
 
-		rbc = (positions[Ob] - positions[Oc])*NM_TO_A;
+		rbc = (positions[Ob] - positions[Oc]);
 		drbc += dot(rbc, rbc);
 
 		drab = SQRT(drab);
 		drac = SQRT(drac);
 		drbc = SQRT(drbc);
-		
 		real cal2joule = 4.184;	
 
 
-		if ((drab < 2) or (drac < 2) or (drbc < 2))
+		if ((drab < 2) or (drac < 2) or (drbc < 2)) {
              tempEnergy = 0.;
+		}
         else {
-        	printf("did not intentionally return 0\n");
         	real x[36];
         	int i = 0;
         	computeVar(kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, x+i); ++i;
@@ -391,12 +396,7 @@ extern "C" __device__ real computeInteraction(
         	
         	real g[36];
             tempEnergy = poly_3b_v2x_eval(x, g);
-            if (threadIdx.x == 2) {
-				printf("\n");
-				for(int j = 0; j<36; j++)
-					printf("x[%d] = %lf\n", j, x[j]);
-				printf("TempEnergy = %lf\n", tempEnergy);
-			}
+
 			real gab, gac, gbc;
 			real sab, sac, sbc;
 			evaluateSwitchFunc(drab, &gab, &sab);
@@ -404,7 +404,6 @@ extern "C" __device__ real computeInteraction(
 			evaluateSwitchFunc(drbc, &gbc, &sbc);
 
 			real s = sab*sac + sab*sbc + sac*sbc;
-
 			for (int n = 0; n < 36; ++n)
 				g[n] *= s;
 
@@ -470,7 +469,9 @@ extern "C" __device__ real computeInteraction(
 // time at the end like in refrence code ??
         }
         real energy = tempEnergy * cal2joule;
-
+		
+		printf("TempEnergy (before return) = %lf\n", energy);
+		
         return energy;
 
 }
@@ -523,7 +524,6 @@ extern "C" __global__ void computeThreeBodyForce(
 #endif
         int numCombinations = numNeighbors*numNeighbors;
         for (int index = threadIdx.x; index < numCombinations; index += blockDim.x) {
-
 #ifdef USE_CUTOFF
         	//FIND_ATOMS_FOR_COMBINATION_INDEX;
 			int tempIndex = index;
@@ -548,8 +548,19 @@ extern "C" __global__ void computeThreeBodyForce(
 #ifdef USE_CUTOFF
             if (includeInteraction) {
                 //VERIFY_CUTOFF;
+            	// to remove 
+//            	real3 pos1 = trim(posq[p1]);
+//            	printf("pos1 = <%lf, %lf, %lf>\n", pos1.x, pos1.y, pos1.z);
+//            	
             	real3 pos2 = trim(posq[p2]);
             	real3 pos3 = trim(posq[p3]);
+            	
+            	//to remove
+////            	printf("delta12 = %lf\n", delta(pos1, pos2, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w);
+////            	printf("delta13 = %lf\n", delta(pos1, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w);
+//            	printf("delta23 = %lf\n", delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w);
+//            	// cut off needs to be multiplied by 10^-2 because each of the pos were 10^-1 
+            	//pos is in nm
             	includeInteraction &= (delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w < CUTOFF_SQUARED);
             }
 #endif
