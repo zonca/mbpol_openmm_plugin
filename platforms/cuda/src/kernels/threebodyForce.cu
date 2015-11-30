@@ -291,7 +291,7 @@ extern "C" __device__ void computeGVar(real * g, real k, real r0, real3 * a1, re
     g2->z -= gg*dx.z;
 }
 
-extern "C" __device__ void evaluateSwitchFunc(real r, real * s, real * g)
+extern "C" __device__ void evaluateSwitchFunc(real r, real * g, real * s)
 {
     if (r > r3f) {
         *g = 0.0;
@@ -399,11 +399,13 @@ extern "C" __device__ real computeInteraction(
 
 			real gab, gac, gbc;
 			real sab, sac, sbc;
+
 			evaluateSwitchFunc(drab, &gab, &sab);
 			evaluateSwitchFunc(drac, &gac, &sac);
 			evaluateSwitchFunc(drbc, &gbc, &sbc);
-
+			
 			real s = sab*sac + sab*sbc + sac*sbc;
+
 			for (int n = 0; n < 36; ++n)
 				g[n] *= s;
 
@@ -548,19 +550,8 @@ extern "C" __global__ void computeThreeBodyForce(
 #ifdef USE_CUTOFF
             if (includeInteraction) {
                 //VERIFY_CUTOFF;
-            	// to remove 
-//            	real3 pos1 = trim(posq[p1]);
-//            	printf("pos1 = <%lf, %lf, %lf>\n", pos1.x, pos1.y, pos1.z);
-//            	
             	real3 pos2 = trim(posq[p2]);
             	real3 pos3 = trim(posq[p3]);
-            	
-            	//to remove
-////            	printf("delta12 = %lf\n", delta(pos1, pos2, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w);
-////            	printf("delta13 = %lf\n", delta(pos1, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w);
-//            	printf("delta23 = %lf\n", delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w);
-//            	// cut off needs to be multiplied by 10^-2 because each of the pos were 10^-1 
-            	//pos is in nm
             	includeInteraction &= (delta(pos2, pos3, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ).w < CUTOFF_SQUARED);
             }
 #endif
