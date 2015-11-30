@@ -343,11 +343,27 @@ extern "C" __device__ real computeInteraction(
 
 		rbc = (positions[Ob] - positions[Oc]);
 		drbc += dot(rbc, rbc);
+		printf("rab = <%lf, %lf, %lf>\n",rab.x, rab.y, rab.z);
+		printf("rac = <%lf, %lf, %lf>\n",rac.x, rac.y, rac.z);
+		printf("rbc = <%lf, %lf, %lf>\n",rbc.x, rbc.y, rbc.z);
+		/*
+		 ref
+		 rab = <1.204804, 2.388359, 1.161075>
+		 rac = <0.957227, 2.209016, -1.593952>
+		 rbc = <-0.247577, -0.179343, -2.755027>
+		 cuda
+		rab = <0.247577, 0.179343, 2.755027>
+		rac = <-0.957227, -2.209016, 1.593952>
+		rbc = <-1.204804, -2.388359, -1.161075>
+		 */
 
 		drab = SQRT(drab);
 		drac = SQRT(drac);
 		drbc = SQRT(drbc);
 		real cal2joule = 4.184;	
+		printf("drab = %lf, drac = %lf, drbc = %lf\n", drab, drac, drbc);
+		//ref drab = 2.91615, drac = 2.88734, drbc = 2.77194
+		//cuda drab = 2.771936, drac = 2.887337, drbc = 2.916146
 
 
 		if ((drab < 2) or (drac < 2) or (drbc < 2)) {
@@ -451,24 +467,52 @@ extern "C" __device__ real computeInteraction(
         	gab *= (sac + sbc)*tempEnergy/drab;
             gac *= (sab + sbc)*tempEnergy/drac;
             gbc *= (sab + sac)*tempEnergy/drbc;
+            
+            printf("gab = %lf\n", gab);
+            printf("gac = %lf\n", gac);
+            printf("gbc = %lf\n", gbc);
+            
+            /* ref
+            gab = -0.0390668
+			gac = -0.0392534
+			gbc = -0.0397021
+            
+             cuda
+            gab = -0.039702
+			gac = -0.039253
+			gbc = -0.039067
+            
+             */
 
 			tempEnergy *= s;
 			
-			forces[Oa].x += (gab*rab.x + gac*rac.x) * cal2joule * -NM_TO_A;
-			forces[Ob].x += (gbc*rbc.x - gab*rab.x) * cal2joule * -NM_TO_A;
-			forces[Oc].x -= (gac*rac.x + gbc*rbc.x) * cal2joule * -NM_TO_A;
+			forces[Oa].x += (gab*rab.x + gac*rac.x) * cal2joule;
+			forces[Ob].x += (gbc*rbc.x - gab*rab.x) * cal2joule;
+			forces[Oc].x -= (gac*rac.x + gbc*rbc.x) * cal2joule;
 
-            forces[Oa].y += (gab*rab.y + gac*rac.y) * cal2joule * -NM_TO_A;            
-            forces[Ob].y += (gbc*rbc.y - gab*rab.y) * cal2joule * -NM_TO_A;
-            forces[Oc].y -= (gac*rac.y + gbc*rbc.y) * cal2joule * -NM_TO_A;
+            forces[Oa].y += (gab*rab.y + gac*rac.y) * cal2joule;            
+            forces[Ob].y += (gbc*rbc.y - gab*rab.y) * cal2joule;
+            forces[Oc].y -= (gac*rac.y + gbc*rbc.y) * cal2joule;
 
-            forces[Oa].z += (gab*rab.z + gac*rac.z) * cal2joule * -NM_TO_A;
-            forces[Ob].z += (gbc*rbc.z - gab*rab.z) * cal2joule * -NM_TO_A;
-            forces[Oc].z -= (gac*rac.z + gbc*rbc.z) * cal2joule * -NM_TO_A;
+            forces[Oa].z += (gab*rab.z + gac*rac.z) * cal2joule;
+            forces[Ob].z += (gbc*rbc.z - gab*rab.z) * cal2joule;
+            forces[Oc].z -= (gac*rac.z + gbc*rbc.z) * cal2joule;
 
-// Is it okay to calculate the force in the shared variable like in cuda 2body
-// or should we calculate in a seperate variable and add to the actual at one
-// time at the end like in refrence code ??
+            printf("forces[Oa] = <%lf, %lf, %lf>\n",forces[Oa].x ,forces[Oa].y, forces[Oa].z);
+            printf("forces[Ob] = <%lf, %lf, %lf>\n",forces[Ob].x ,forces[Ob].y, forces[Ob].z);
+            printf("forces[Oc] = <%lf, %lf, %lf>\n",forces[Oc].x ,forces[Oc].y, forces[Oc].z);
+            
+            /* ref
+            allForces[Oa] = <-23.7328, -19.2615, 16.736>
+			allForces[Ob] = <0.457798, 15.1341, 2.14656>
+			allForces[Oc] = <-12.5181, 14.6274, 6.79418>
+             
+             cuda
+            forces[Oa] = <47.869808, -32.322479, 27.491468>
+			forces[Ob] = <1.017803, -3.009752, -70.136742>
+			forces[Oc] = <-21.231544, -14.584190, -29.175079>
+             */
+
         }
         real energy = tempEnergy * cal2joule;
 		
@@ -563,13 +607,6 @@ extern "C" __global__ void computeThreeBodyForce(
 
 //             LOAD_PARTICLE_DATA;
 //             COMPUTE_INTERACTION;
-        	   /* real computeInteraction(
-        	   		const unsigned int atom1,
-        	           const unsigned int atom2,
-        	           const unsigned int atom3,
-        	           const real4* __restrict__ posq,
-        	           const real4* periodicBoxSize,
-        	           real3 * forces) */
         	   real computed_energy = computeInteraction(atom1, atom2, atom3, posq, &periodicBoxSize, forces);
         	   printf("computed energy = %lf for atoms { %d, %d, %d } in thread: %d\n", computed_energy, atom1, atom2, atom3, threadIdx.x);
         	   energy += computed_energy;
