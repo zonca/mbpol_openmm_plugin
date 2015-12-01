@@ -1,77 +1,3 @@
-/*
-__device__ real getAndScaleInverseRs(AtomData& atom1, volatile AtomData& atom2, real r, bool justScale, int interactionOrder, int interactionType)
-{	
-	// a way to see if they are the same molecule
-	float thole[] = {0.4, 0.4, 0.055, 0.626, 0.055};
-	enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-	
-	real rrI;
-    if (justScale) {
-        rrI         = 1.;
-    } else {
-        real rI             =  1.0/r;
-        real r2I            =  rI*rI;
-        rrI                    = rI;
-        for( unsigned int ii  = 3; ii <= interactionOrder; ii=ii+2 ){
-           rrI *= (ii-2)*r2I;
-        }
-    }
-	
-	float thole = 0.4;
-	real pGamma = thole;
-    
-    if (interactionType == TDD) {
-    	 bool oneIsOxygen = ;
-    	 if (oneIsOxygen) {
-                pgamma = thole[TDDOH];
-            } 
-            else {
-                pgamma = thole[TDDHH];
-            }
-            else {
-            pgamma = thole[TDD];
-            }
-        }
-    }
-        
-	// get and scale move to diffrent kernel func
-    real pdamp = atom1.damp*atom2.damp;
-    if (pdamp != 0) {
-   
-        real ratio = r/pdamp;
-        //FIXME: 
-        float thole = 0.4;
-        float pGamma = thole;
-
-        real damp = ratio*ratio*ratio*pGamma;
-        real dampExp = EXP(-damp);
-        real damp1 = damp + 1;
-        real damp2 = damp*damp;
-
-        scale3 = 1 - dampExp;
-        scale5 = 1 - damp1*dampExp;
-        scale7 = 1 - (damp1 + 0.6f*damp2)*dampExp;
-
-        real factor = 3*damp*dampExp*rr2;
-        real factor7 = -0.2f + 0.6f*damp;
-        
-        ddsc3_0 = factor*xr;
-        ddsc5_0 = ddsc3_0*damp;
-        ddsc7_0 = ddsc5_0*factor7;
-
-        ddsc3_1 = factor*yr;
-        ddsc5_1 = ddsc3_1*damp;
-        ddsc7_1 = ddsc5_1*factor7;
-
-        ddsc3_2 = factor*zr;
-        ddsc5_2 = ddsc3_2*damp;
-        ddsc7_2 = ddsc5_2*factor7;
-
-
-    }
-	return 0;
-}
-*/
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce) {    
 
     const float uScale = 1;
@@ -158,9 +84,6 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     real sc3 = atom1.dipole.x*xr + atom1.dipole.y*yr + atom1.dipole.z*zr;
     
-    real sci1 = atom1.inducedDipole.x*atom2.dipole.x + atom1.inducedDipole.y*atom2.dipole.y + atom1.inducedDipole.z*atom2.dipole.z +
-                atom2.inducedDipole.x*atom1.dipole.x + atom2.inducedDipole.y*atom1.dipole.y + atom2.inducedDipole.z*atom1.dipole.z;
-        
     real sci3 = atom1.inducedDipole.x*xr + atom1.inducedDipole.y*yr + atom1.inducedDipole.z*zr;
     real sci4 = atom2.inducedDipole.x*xr + atom2.inducedDipole.y*yr + atom2.inducedDipole.z*zr;
     
@@ -176,13 +99,12 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     real gli1 = atom2.posq.w*sci3 - atom1.posq.w*sci4;
     
-    real gli6 = sci1;
     real glip1 = atom2.posq.w*scip3 - atom1.posq.w*scip4;
     real glip6 = scip1;
     real gli2 = -sc3*sci4 - sci3*sc4;
     
     real glip2 = -sc3*scip4 - scip3*sc4;
-    real factor3 = rr3*((gli1  +  gli6)*pScale + (glip1  + glip6)*dScale);
+    real factor3 = rr3*((gli1)*pScale + (glip1  + glip6)*dScale);
     real factor5 = rr5*(gli2*pScale + glip2*dScale);
     
     real ftm2i_0 = -0.5f*(factor3*ddsc3_0 + factor5*ddsc5_0);
@@ -194,12 +116,9 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real gl2 = -sc3*sc4;
     real gl6 = sc2;
     
-    bool isSameWater = (atom1.posq.x == atom2.posq.x && atom1.posq.y == atom2.posq.y && atom1.posq.z == atom2.posq.z && atom1.posq.w == atom2.posq.w);
-    if (isSameWater) {
-    	gl0 = 0;
-    	//gli0 = 0;
-    	//glip0 = 0;
-    }
+    // if isSameWater set gl0 to zero
+    bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
+    gl0 *= !isSameWater;
     real gf1 = rr3*gl0 + rr5*(gl1+gl6) + rr7*gl2;
 
     real gf2 = -atom2.posq.w*rr3 + sc4*rr5;
@@ -208,15 +127,15 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real gf3 =  atom1.posq.w*rr3 + sc3*rr5;
     real gf6 = 2*(-atom1.posq.w*rr5-sc3*rr7);
 
-    real em = mScale*(rr1*gl0 + rr3*(gl1+gl6) + rr5*gl2);
-    real ei = 0.5f*((gli1+gli6)*psc3 + gli2*psc5);
+    real em = rr1*gl0;
+    real ei = 0.5f*(gli1)*psc3;
     energy = em+ei;
     
     real ftm2_0 = mScale*(gf1*xr + gf2*atom1.dipole.x + gf3*atom2.dipole.x);
     real ftm2_1 = mScale*(gf1*yr + gf2*atom1.dipole.y + gf3*atom2.dipole.y);
     real ftm2_2 = mScale*(gf1*zr + gf2*atom1.dipole.z + gf3*atom2.dipole.z);
 
-    real gfi1 = rr2*(1.5f*((gli1+gli6)*psc3 + (glip1+glip6)*dsc3 + scip2*scale3i) + 2.5f*(gli2*psc5 + glip2*dsc5 - (sci3*scip4+scip3*sci4)*scale5i));
+    real gfi1 = rr2*(1.5f*((gli1)*psc3 + (glip1+glip6)*dsc3 + scip2*scale3i) + 2.5f*(gli2*psc5 + glip2*dsc5 - (sci3*scip4+scip3*sci4)*scale5i));
     ftm2i_0 += gfi1*xr;
     ftm2i_1 += gfi1*yr;
     ftm2i_2 += gfi1*zr;
