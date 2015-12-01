@@ -515,7 +515,13 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			3 * (paddedNumAtoms - numMultipoles), "molecularDipoles");
 	lastPositions = new CudaArray(cu, cu.getPosq().getSize(),
 			cu.getPosq().getElementSize(), "lastPositions");
+	moleculeIndex = CudaArray::create<int>(cu, paddedNumAtoms,
+			"moleculeIndex");
+	atomType = CudaArray::create<int>(cu, paddedNumAtoms,
+			"atomType");
 	damping->upload(dampingVec);
+	moleculeIndex->upload(moleculeIndicesVec);
+	atomType->upload(atomTypesVec);
 	polarizability->upload(polarizabilityVec);
 	multipoleParticles->upload(multipoleParticlesVec);
 	molecularDipoles->upload(molecularDipolesVec);
@@ -1059,7 +1065,10 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&numTileIndices, &labFrameDipoles->getDevicePointer(),
 				&inducedDipole->getDevicePointer(),
 				&inducedDipolePolar->getDevicePointer(),
-				&damping->getDevicePointer() };
+				&damping->getDevicePointer(),
+				&moleculeIndex->getDevicePointer(),
+				&atomType->getDevicePointer()
+        };
 		cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
 				numForceThreadBlocks * electrostaticsThreads,
 				electrostaticsThreads);

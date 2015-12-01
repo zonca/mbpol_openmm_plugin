@@ -61,7 +61,7 @@ extern "C" __global__ void computeElectrostatics(
         const unsigned int* __restrict__ interactingAtoms,
 #endif
         const real* __restrict__ labFrameDipole, const real* __restrict__ inducedDipole,
-        const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping) {
+        const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1);

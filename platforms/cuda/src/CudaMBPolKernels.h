@@ -225,6 +225,8 @@ private:
     CudaArray* inducedFieldPolar;
     CudaArray* torque;
     CudaArray* damping;
+    CudaArray* moleculeIndex;
+    CudaArray* atomType;
     CudaArray* inducedDipole;
     CudaArray* inducedDipolePolar;
     CudaArray* inducedDipoleErrors;
