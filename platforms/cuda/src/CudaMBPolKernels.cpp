@@ -321,14 +321,15 @@ public:
 		double charge1, charge2, damping1, damping2, polarity1, polarity2;
 		int axis1, axis2, multipole11, multipole12, multipole21, multipole22,
 				multipole31, multipole32;
-		vector<double> thole1, thole2, dipole1, dipole2;
+        int moleculeIndex1, moleculeIndex2, atomType1, atomType2;
+		vector<double> dipole1, dipole2;
 		force.getElectrostaticsParameters(particle1, charge1, axis1,
-				multipole11, multipole21, multipole31, thole1, damping1,
+				multipole11, multipole21, multipole31, moleculeIndex1, atomType1, damping1,
 				polarity1);
 		force.getElectrostaticsParameters(particle2, charge2, axis2,
-				multipole12, multipole22, multipole32, thole2, damping2,
+				multipole12, multipole22, multipole32, moleculeIndex2, atomType2, damping2,
 				polarity2);
-		if (charge1 != charge2 || thole1 != thole2 || damping1 != damping2
+		if (charge1 != charge2 || damping1 != damping2
 				|| polarity1 != polarity2 || axis1 != axis2) {
 			return false;
 		}
@@ -472,8 +473,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	vector<double4> temp(posq.getSize());
 	float4* posqf = (float4*) &temp[0];
 	double4* posqd = (double4*) &temp[0];
-	vector<int> waterMoleculeIndices;
-	vector<int> atomTypes;
+	vector<int> moleculeIndicesVec;
+	vector<int> atomTypesVec;
 	vector<float> dampingVec;
 	vector<float> polarizabilityVec;
 	vector<float> molecularDipolesVec;
@@ -481,9 +482,9 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	for (int i = 0; i < numMultipoles; i++) {
 		double charge, damping, polarity;
 		int axisType, atomX, atomY, atomZ;
-		vector<double> thole;
+        int moleculeIndex, atomType;
 		force.getElectrostaticsParameters(i, charge, axisType, atomZ, atomX,
-				atomY, thole, damping, polarity);
+				atomY, moleculeIndex, atomType, damping, polarity);
 		if (cu.getUseDoublePrecision())
 			posqd[i] = make_double4(0, 0, 0, charge);
 		else
@@ -492,6 +493,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		polarizabilityVec.push_back((float) polarity);
 		multipoleParticlesVec.push_back(
 				make_int4(atomX, atomY, atomZ, axisType));
+        moleculeIndicesVec.push_back(moleculeIndex);
+        atomTypesVec.push_back(atomType);
 	}
 	int paddedNumAtoms = cu.getPaddedNumAtoms();
 	for (int i = numMultipoles; i < paddedNumAtoms; i++) {
@@ -500,6 +503,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		multipoleParticlesVec.push_back(make_int4(0, 0, 0, 0));
 		for (int j = 0; j < 3; j++)
 			molecularDipolesVec.push_back(0);
+        moleculeIndicesVec.push_back(-1);
+        atomTypesVec.push_back(-1);
 	}
 	damping = CudaArray::create<float>(cu, paddedNumAtoms, "damping");
 	polarizability = CudaArray::create<float>(cu, paddedNumAtoms,
@@ -1616,21 +1621,23 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 	vector<float> polarizabilityVec;
 	vector<float> molecularDipolesVec;
 	vector<int4> multipoleParticlesVec;
+	vector<int> moleculeIndicesVec;
+	vector<int> atomTypesVec;
 	for (int i = 0; i < force.getNumElectrostatics(); i++) {
 		double charge, damping, polarity;
 		int axisType, atomX, atomY, atomZ;
-		vector<double> thole;
+        int moleculeIndex, atomType;
 		force.getElectrostaticsParameters(i, charge, axisType, atomZ, atomX,
-				atomY, thole, damping, polarity);
+				atomY, moleculeIndex, atomType, damping, polarity);
 		if (cu.getUseDoublePrecision())
 			posqd[i].w = charge;
 		else
 			posqf[i].w = (float) charge;
-//		dampingAndTholeVec.push_back(
-//				make_float2((float) damping, (float) thole));
 		polarizabilityVec.push_back((float) polarity);
 		multipoleParticlesVec.push_back(
 				make_int4(atomX, atomY, atomZ, axisType));
+        moleculeIndicesVec.push_back(moleculeIndex);
+        atomTypesVec.push_back(atomType);
 	}
 	for (int i = force.getNumElectrostatics(); i < cu.getPaddedNumAtoms();
 			i++) {
@@ -1639,6 +1646,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 		multipoleParticlesVec.push_back(make_int4(0, 0, 0, 0));
 		for (int j = 0; j < 3; j++)
 			molecularDipolesVec.push_back(0);
+        moleculeIndicesVec.push_back(-1);
+        atomTypesVec.push_back(-1);
 	}
 	damping->upload(dampingVec);
 	polarizability->upload(polarizabilityVec);

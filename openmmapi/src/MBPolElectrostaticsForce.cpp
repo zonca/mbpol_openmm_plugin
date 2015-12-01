@@ -137,13 +137,13 @@ void MBPolElectrostaticsForce::setEwaldErrorTolerance(double tol) {
 }
 
 int MBPolElectrostaticsForce::addElectrostatics( double charge, 
-                                       int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& thole, double dampingFactor, double polarity) {
-    multipoles.push_back(ElectrostaticsInfo( charge, 0, multipoleAtomZ,  multipoleAtomX, multipoleAtomY, thole, dampingFactor, polarity));
+                                       int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity) {
+    multipoles.push_back(ElectrostaticsInfo( charge, 0, multipoleAtomZ,  multipoleAtomX, multipoleAtomY, moleculeIndex, atomType, dampingFactor, polarity));
     return multipoles.size()-1;
 }
 
 void MBPolElectrostaticsForce::getElectrostaticsParameters(int index, double& charge,
-                                                  int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, std::vector<double>& thole, double& dampingFactor, double& polarity ) const {
+                                                  int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, int& moleculeIndex, int& atomType, double& dampingFactor, double& polarity ) const {
     charge                      = multipoles[index].charge;
 
     axisType                    = multipoles[index].axisType;
@@ -151,15 +151,14 @@ void MBPolElectrostaticsForce::getElectrostaticsParameters(int index, double& ch
     multipoleAtomX              = multipoles[index].multipoleAtomX;
     multipoleAtomY              = multipoles[index].multipoleAtomY;
 
-    thole.resize( 5 );
-    for (int i=0; i<5;i++)
-    thole[i] = multipoles[index].thole[i];
+    moleculeIndex               = multipoles[index].moleculeIndex;
+    atomType                    = multipoles[index].atomType;
     dampingFactor               = multipoles[index].dampingFactor;
     polarity                    = multipoles[index].polarity;
 }
 
 void MBPolElectrostaticsForce::setElectrostaticsParameters(int index, double charge,
-                                                  int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>&  thole, double dampingFactor, double polarity ) {
+                                                  int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity ) {
 
     multipoles[index].charge                      = charge;
 
@@ -167,10 +166,10 @@ void MBPolElectrostaticsForce::setElectrostaticsParameters(int index, double cha
     multipoles[index].multipoleAtomZ              = multipoleAtomZ;
     multipoles[index].multipoleAtomX              = multipoleAtomX;
     multipoles[index].multipoleAtomY              = multipoleAtomY;
-    for (int i; i<5;i++)
-        multipoles[index].thole [i]                      = thole[i];
     multipoles[index].dampingFactor               = dampingFactor;
     multipoles[index].polarity                    = polarity;
+    multipoles[index].moleculeIndex = moleculeIndex;
+    multipoles[index].atomType = atomType;
 
 }
 

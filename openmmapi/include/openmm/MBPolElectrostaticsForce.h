@@ -188,14 +188,13 @@ public:
      * @param multipoleAtomZ       index of first atom used in constructing lab<->molecular frames
      * @param multipoleAtomX       index of second atom used in constructing lab<->molecular frames
      * @param multipoleAtomY       index of second atom used in constructing lab<->molecular frames
-     * @param thole                Thole parameter
      * @param dampingFactor        dampingFactor parameter
      * @param polarity             polarity parameter
      *
      * @return the index of the particle that was added
      */
     int addElectrostatics(double charge, 
-                     int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& thole, double dampingFactor, double polarity);
+                     int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity);
 
     /**
      * Get the multipole parameters for a particle.
@@ -208,13 +207,11 @@ public:
      * @param multipoleAtomZ       index of first atom used in constructing lab<->molecular frames
      * @param multipoleAtomX       index of second atom used in constructing lab<->molecular frames
      * @param multipoleAtomY       index of second atom used in constructing lab<->molecular frames
-     * @param thole                Thole parameter
      * @param dampingFactor        dampingFactor parameter
      * @param polarity             polarity parameter
      */
-    void getElectrostaticsParameters(int index, double& charge,
-                                int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, std::vector<double>& thole, double& dampingFactor, double& polarity) const;
-
+void getElectrostaticsParameters(int index, double& charge,
+                     int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, int& moleculeIndex, int& atomType, double& dampingFactor, double& polarity ) const;
     /**
      * Set the multipole parameters for a particle.
      *
@@ -228,8 +225,10 @@ public:
      * @param multipoleAtomY       index of second atom used in constructing lab<->molecular frames
      * @param polarity             polarity parameter
      */
+
     void setElectrostaticsParameters(int index, double charge,
-                                int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& thole, double dampingFactor, double polarity);
+                     int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity );
+
 
     /**
      * Set the CovalentMap for an atom
@@ -368,30 +367,24 @@ class MBPolElectrostaticsForce::ElectrostaticsInfo {
 public:
 
     int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
+    int moleculeIndex, atomType;
     double charge, dampingFactor, polarity;
 
     std::vector< std::vector<int> > covalentInfo;
-    std::vector<double> thole;
 
     ElectrostaticsInfo() {
-        axisType = multipoleAtomZ = multipoleAtomX = multipoleAtomY = -1;
+        atomType = moleculeIndex = multipoleAtomZ = multipoleAtomX = multipoleAtomY = -1;
         charge = dampingFactor = polarity = 0.0;
 
-        thole.resize(5);
 
     }
 
     ElectrostaticsInfo(double charge,
-                   int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, const std::vector<double>& inputThole, double dampingFactor, double polarity) :
-        charge(charge), axisType(axisType), multipoleAtomZ(multipoleAtomZ), multipoleAtomX(multipoleAtomX), multipoleAtomY(multipoleAtomY),
+                   int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity) :
+        charge(charge), axisType(axisType), multipoleAtomZ(multipoleAtomZ), multipoleAtomX(multipoleAtomX), multipoleAtomY(multipoleAtomY), moleculeIndex(moleculeIndex), atomType(atomType),
         dampingFactor(dampingFactor), polarity(polarity) {
 
        covalentInfo.resize(CovalentEnd);
-
-       thole.resize(5);
-       for (int i=0; i<5; i++){
-           thole[i] = inputThole[i];
-       }
     }
 };
 
