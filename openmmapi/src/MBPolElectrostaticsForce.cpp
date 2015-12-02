@@ -44,6 +44,8 @@ MBPolElectrostaticsForce::MBPolElectrostaticsForce() : nonbondedMethod(NoCutoff)
                                                mutualInducedTargetEpsilon(1.0e-07), scalingDistanceCutoff(100.0), electricConstant(138.9354558456), aewald(0.0), includeChargeRedistribution(true) {
     pmeGridDimension.resize(3);
     pmeGridDimension[0] = pmeGridDimension[1] = pmeGridDimension[2];
+    const double defaultTholeParameters[5] = { 0.4, 0.4, 0.055, 0.626, 0.055 };
+    tholeParameters.assign(&defaultTholeParameters[0], &defaultTholeParameters[0]+5);
 }
 
 MBPolElectrostaticsForce::NonbondedMethod MBPolElectrostaticsForce::getNonbondedMethod( void ) const {
@@ -81,7 +83,6 @@ void MBPolElectrostaticsForce::setIncludeChargeRedistribution( bool chargeRedist
 bool MBPolElectrostaticsForce::getIncludeChargeRedistribution( void ) const {
     return includeChargeRedistribution;
 }
-
 void MBPolElectrostaticsForce::setAEwald(double inputAewald ) { 
     aewald = inputAewald; 
 } 

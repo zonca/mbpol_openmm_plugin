@@ -165,6 +165,8 @@ class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferen
             intZeros.push_back(0);
         }
 
+        setTholeParameters(tholes);
+
         std::vector<ElectrostaticsParticleData> particleData;
         _numParticles = numberOfParticles;
         loadParticleData(positions, charges,
@@ -255,7 +257,7 @@ class WrappedMBPolReferenceElectrostaticsForceForPmeDipole: public MBPolReferenc
             polarity.push_back(0.001310);
             intZeros.push_back(0);
         }
-
+        setTholeParameters(tholes);
         std::vector<ElectrostaticsParticleData> particleData;
         _numParticles = numberOfParticles;
         loadParticleData(positions, charges,
@@ -477,15 +479,17 @@ static void testWater3VirtualSite() {
     thole[TDDOH]  = 0.626;
     thole[TDDHH] = 0.055;
 
+	int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += 4 ){
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                            thole, 0.001310, 0.001310 );
+                                            waterMoleculeIndex, 0, 0.001310, 0.001310 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
-                                                    thole,  0.001310,  0.);
+                                            waterMoleculeIndex, 2, 0.001310,  0.);
+		waterMoleculeIndex++;
     }
 
     system.addForce(mbpolElectrostaticsForce);
@@ -738,20 +742,15 @@ static void testWater3() {
         system.addParticle( 1.0080000e+00 );
     }
 
-    std::vector<double> zeroDipole(3);
-    std::vector<double> zeroQuadrupole(9);
-    std::vector<double> thole(5);
-    std::fill(zeroDipole.begin(), zeroDipole.end(), 0.);
-    std::fill(zeroQuadrupole.begin(), zeroQuadrupole.end(), 0.);
-    std::fill(thole.begin(), thole.end(), 0.4);
-
+	int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                            thole, 0.001310, 0.001310 );
+                                            waterMoleculeIndex, 0, 0.001310, 0.001310 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
+		waterMoleculeIndex++;
     }
 
     system.addForce(mbpolElectrostaticsForce);
@@ -955,18 +954,17 @@ static void testWater3VirtualSitePMEHugeBox() {
     thole[TDDOH]  = 0.626;
     thole[TDDHH] = 0.055;
 
+	int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += 4 ){
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                            thole, 0.001310, 0.000000 );
-                                            //thole, 0.001310, 0.001310 );
+                                            waterMoleculeIndex, 0, 0.001310, 0.0 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                            thole, 0.000294, 0.000000 );
-                                            //thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.0 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                            thole, 0.000294, 0.000000 );
-                                            //thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.0 );
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
-                                                    thole,  0.001310,  0.);
+                                            waterMoleculeIndex, 2, 0.001310,  0.);
+		waterMoleculeIndex++;
     }
 
     system.addForce(mbpolElectrostaticsForce);
@@ -1187,25 +1185,27 @@ static void testWater3VirtualSitePMESmallBox() {
     thole[TDDOH]  = 0.626;
     thole[TDDHH] = 0.055;
 
+	int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += 4 ){
         if (zeroPolarizability) {
-            mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                                thole, 0.001310, 0. );
-            mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                                thole, 0.000294, 0. );
-            mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                                thole, 0.000294, 0. );
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+                                            waterMoleculeIndex, 0, 0.001310, 0.0 );
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+                                            waterMoleculeIndex, 1, 0.000294, 0.0 );
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+                                            waterMoleculeIndex, 1, 0.000294, 0.0 );
             std::cout << "POLARIZABILITY SET TO ZERO"<< std::endl;
         } else {
         mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
-                                            thole, 0.001310, 0.001310 );
+                                            waterMoleculeIndex, 0, 0.001310, 0.001310 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
         mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
-                                            thole, 0.000294, 0.000294 );
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
         }
         mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
-                                                    thole,  0.001310,  0.);
+                                            waterMoleculeIndex, 2, 0.001310,  0.);
+		waterMoleculeIndex++;
     }
 
     system.addForce(mbpolElectrostaticsForce);

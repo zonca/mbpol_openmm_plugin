@@ -142,6 +142,15 @@ public:
     void setIncludeChargeRedistribution( bool chargeRedistribution );
 
     bool getIncludeChargeRedistribution( void ) const;
+
+    void setTholeParameters( std::vector<double> tholeP) {
+        tholeParameters=tholeP;
+    }
+
+    std::vector<double> getTholeParameters( void ) const {
+        return tholeParameters;
+    }
+
     /**
      * Get the Ewald alpha parameter.  If this is 0 (the default), a value is chosen automatically
      * based on the Ewald error tolerance.
@@ -359,6 +368,7 @@ private:
     double electricConstant;
     double ewaldErrorTol;
     bool includeChargeRedistribution;
+    std::vector<double> tholeParameters;
     class ElectrostaticsInfo;
     std::vector<ElectrostaticsInfo> multipoles;
 };
