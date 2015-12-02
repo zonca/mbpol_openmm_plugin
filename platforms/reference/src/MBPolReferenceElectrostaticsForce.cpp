@@ -849,6 +849,8 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
 
     calculateInducedDipoles( particleData );
 
+    std::cout << "First induced dipole " << _inducedDipole[0] << std::endl;
+
     if( !getMutualInducedDipoleConverged() ){
         std::stringstream message;
         message << "Induced dipoles did not converge: ";

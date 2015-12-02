@@ -4,14 +4,18 @@ typedef struct {
     real4 posq;
     real3 field, fieldPolar, dipole;
     float damp;
+    int moleculeIndex;
+    int atomType;
 } AtomData;
 
-inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole, const float* __restrict__ damping) {
+inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     data.posq = posq[atom];
     data.dipole.x = labFrameDipole[atom*3];
     data.dipole.y = labFrameDipole[atom*3+1];
     data.dipole.z = labFrameDipole[atom*3+2];
     data.damp = damping[atom];
+    data.moleculeIndex = moleculeIndex[atom];
+    data.atomType = atomType[atom];
 }
 
 #ifdef USE_EWALD
@@ -97,8 +101,8 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real r2I = rI*rI;
 
     real rr3 = rI*r2I;
-    real rr5 = 3*rr3*r2I;
-    real rr7 = 5*rr5*r2I;
+
+    bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
  
     // get scaling factors, if needed
     
@@ -119,21 +123,19 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         dampExp = 0;
       
     rr3 *= 1 - dampExp;
-    rr5 *= 1 - (1+damp)*dampExp;
-    rr7 *= 1 - (1+damp+(0.6f*damp*damp))*dampExp;
        
     real dir = dot(atom1.dipole, deltaR);
     real dkr = dot(atom2.dipole, deltaR);
 
-    real factor = -rr3*atom2.posq.w + rr5*dkr;
-    real3 field1 = deltaR*factor - rr3*atom2.dipole;
-    factor = rr3*atom1.posq.w + rr5*dir;
-    real3 field2 = deltaR*factor - rr3*atom1.dipole;
+    real factor = -rr3*atom2.posq.w;
+    real3 field1 = deltaR*factor;
+    factor = rr3*atom1.posq.w;
+    real3 field2 = deltaR*factor;
 
-    fields[0] = dScale*field1;
-    fields[1] = pScale*field1;
-    fields[2] = dScale*field2;
-    fields[3] = pScale*field2;
+    fields[0] = (!isSameWater)*dScale*field1;
+    fields[1] = (!isSameWater)*pScale*field1;
+    fields[2] = (!isSameWater)*dScale*field2;
+    fields[3] = (!isSameWater)*pScale*field2;
 }
 #endif
 
@@ -161,7 +163,7 @@ extern "C" __global__ void computeFixedField(
         real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, unsigned int maxTiles, const real4* __restrict__ blockCenter,
         const unsigned int* __restrict__ interactingAtoms,
 #endif
-        const real* __restrict__ labFrameDipole, const float* __restrict__ damping) {
+        const real* __restrict__ labFrameDipole, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1);
@@ -180,7 +182,7 @@ extern "C" __global__ void computeFixedField(
         data.field = make_real3(0);
         data.fieldPolar = make_real3(0);
         unsigned int atom1 = x*TILE_SIZE + tgx;
-        loadAtomData(data, atom1, posq, labFrameDipole, damping);
+        loadAtomData(data, atom1, posq, labFrameDipole, damping, moleculeIndex, atomType);
         uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
         unsigned int polarizationGroup = polarizationGroupFlags[pos*TILE_SIZE+tgx];
         if (x == y) {
@@ -211,7 +213,7 @@ extern "C" __global__ void computeFixedField(
 
             const unsigned int localAtomIndex = threadIdx.x;
             unsigned int j = y*TILE_SIZE + tgx;
-            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, damping);
+            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, damping, moleculeIndex, atomType);
             localData[localAtomIndex].field = make_real3(0);
             localData[localAtomIndex].fieldPolar = make_real3(0);
             unsigned int tj = tgx;
@@ -316,7 +318,7 @@ extern "C" __global__ void computeFixedField(
             AtomData data;
             data.field = make_real3(0);
             data.fieldPolar = make_real3(0);
-            loadAtomData(data, atom1, posq, labFrameDipole, damping);
+            loadAtomData(data, atom1, posq, labFrameDipole, damping, moleculeIndex, atomType);
 #ifdef USE_CUTOFF
             unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
 #else
@@ -324,7 +326,7 @@ extern "C" __global__ void computeFixedField(
 #endif
             atomIndices[threadIdx.x] = j;
             const unsigned int localAtomIndex = threadIdx.x;
-            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, damping);
+            loadAtomData(localData[localAtomIndex], j, posq, labFrameDipole, damping, moleculeIndex, atomType);
             localData[localAtomIndex].field = make_real3(0);
             localData[localAtomIndex].fieldPolar = make_real3(0);
 

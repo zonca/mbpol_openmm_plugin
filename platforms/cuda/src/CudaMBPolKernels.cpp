@@ -1019,7 +1019,9 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&polarizationGroupFlags->getDevicePointer(),
 				&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
 				&numTileIndices, &labFrameDipoles->getDevicePointer(),
-				&damping->getDevicePointer() };
+				&damping->getDevicePointer(),
+				&moleculeIndex->getDevicePointer(),
+				&atomType->getDevicePointer()  };
 		cu.executeKernel(computeFixedFieldKernel, computeFixedFieldArgs,
 				numForceThreadBlocks * fixedFieldThreads, fixedFieldThreads);
 		void* recordInducedDipolesArgs[] = { &field->getDevicePointer(),
