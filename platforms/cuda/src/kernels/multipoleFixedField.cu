@@ -96,6 +96,11 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 }
 #else
 __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 deltaR, float dScale, float pScale, real3* fields) {
+
+    // FIXME thole copy in unique location
+    const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
+    const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
+
     real rI = RSQRT(dot(deltaR, deltaR));
     real r = RECIP(rI);
     real r2I = rI*rI;
@@ -103,27 +108,19 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real rr3 = rI*r2I;
 
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
- 
     // get scaling factors, if needed
-    
-    float damp = atom1.damp*atom2.damp;
-    real dampExp;
-    if (damp != 0) {
+    // RealOpenMM rr3 = getAndScaleInverseRs( particleI, particleJ,r,false,3,TCC);
 
-        // get scaling factors
-      
-        real ratio = r/damp;
-        //FIXME: 
-        float thole = 0.4;
-        float pGamma = thole; 
-        damp = ratio*ratio*ratio*pGamma;
-        dampExp = EXP(-damp);
-    }
-    else
-        dampExp = 0;
-      
-    rr3 *= 1 - dampExp;
-       
+    real damp      = pow(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
+
+    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+
+    real ratio       = pow(r/damp, 4); // rA4 in MBPol
+    real pgamma = thole[TCC];
+    real dampForExp = -1 * pgamma * ratio;
+
+    rr3 *= ( 1.0 - do_scaling*EXP(dampForExp) );
+
     real dir = dot(atom1.dipole, deltaR);
     real dkr = dot(atom2.dipole, deltaR);
 

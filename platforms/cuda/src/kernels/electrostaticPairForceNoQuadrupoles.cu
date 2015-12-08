@@ -1,5 +1,6 @@
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce) {    
 
+    // FIXME thole copy in unique location 
     const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
     const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
 	// thole[TDD] = 0.055;
