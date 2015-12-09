@@ -1094,15 +1094,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				numForceThreadBlocks * electrostaticsThreads,
 				electrostaticsThreads);
 
-		std::vector<float> energy_buffer;
-		cu.getEnergyBuffer().download(energy_buffer);
-		// std::cout << energy_buffer.size() << std::endl;
-		// for (int i = 0; i < energy_buffer.size(); i++) {
-		// 	std::cout << energy_buffer[i] << " ";
-		// 	if ((i + 1) % 100 == 0)
-		// 		std::cout << std::endl;
-		// }
-
 	} else {
 		// Compute reciprocal box vectors.
 
