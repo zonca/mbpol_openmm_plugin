@@ -4,10 +4,12 @@ typedef struct {
     real3 pos;
     real3 field, fieldPolar, inducedDipole, inducedDipolePolar;
     float damp;
+    int moleculeIndex;
+    int atomType;
 } AtomData;
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ inducedDipole,
-        const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping) {
+        const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     real4 atomPosq = posq[atom];
     data.pos = make_real3(atomPosq.x, atomPosq.y, atomPosq.z);
     data.inducedDipole.x = inducedDipole[atom*3];
@@ -17,6 +19,8 @@ inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __res
     data.inducedDipolePolar.y = inducedDipolePolar[atom*3+1];
     data.inducedDipolePolar.z = inducedDipolePolar[atom*3+2];
     data.damp = damping[atom];
+    data.moleculeIndex = moleculeIndex[atom];
+    data.atomType = atomType[atom];
 }
 
 inline __device__ void zeroAtomData(AtomData& data) {
@@ -133,7 +137,7 @@ extern "C" __global__ void computeInducedField(
         const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize,
         real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, unsigned int maxTiles, const real4* __restrict__ blockCenter, const unsigned int* __restrict__ interactingAtoms,
 #endif
-        const float* __restrict__ damping) {
+        const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1);
@@ -151,7 +155,7 @@ extern "C" __global__ void computeInducedField(
         AtomData data;
         zeroAtomData(data);
         unsigned int atom1 = x*TILE_SIZE + tgx;
-        loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping);
+        loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
         if (x == y) {
             // This tile is on the diagonal.
 
@@ -159,6 +163,8 @@ extern "C" __global__ void computeInducedField(
             localData[threadIdx.x].inducedDipole = data.inducedDipole;
             localData[threadIdx.x].inducedDipolePolar = data.inducedDipolePolar;
             localData[threadIdx.x].damp = data.damp;
+            localData[threadIdx.x].moleculeIndex = data.moleculeIndex;
+            localData[threadIdx.x].atomType = data.atomType;
 
             for (unsigned int j = 0; j < TILE_SIZE; j++) {
                 real3 delta = localData[tbx+j].pos-data.pos;
@@ -173,7 +179,7 @@ extern "C" __global__ void computeInducedField(
         else {
             // This is an off-diagonal tile.
 
-            loadAtomData(localData[threadIdx.x], y*TILE_SIZE+tgx, posq, inducedDipole, inducedDipolePolar, damping);
+            loadAtomData(localData[threadIdx.x], y*TILE_SIZE+tgx, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
 
             zeroAtomData(localData[threadIdx.x]);
             unsigned int tj = tgx;
@@ -272,7 +278,7 @@ extern "C" __global__ void computeInducedField(
             AtomData data;
             zeroAtomData(data);
 
-            loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping);
+            loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
 
 #ifdef USE_CUTOFF
             unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
@@ -281,7 +287,7 @@ extern "C" __global__ void computeInducedField(
 #endif
             atomIndices[threadIdx.x] = j;
 
-            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping);
+            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
 
             zeroAtomData(localData[threadIdx.x]);
 

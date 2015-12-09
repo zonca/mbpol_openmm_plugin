@@ -121,9 +121,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
     rr3 *= ( 1.0 - do_scaling*EXP(dampForExp) );
 
-    real dir = dot(atom1.dipole, deltaR);
-    real dkr = dot(atom2.dipole, deltaR);
-
     real factor = -rr3*atom2.posq.w;
     real3 field1 = deltaR*factor;
     factor = rr3*atom1.posq.w;
@@ -189,6 +186,8 @@ extern "C" __global__ void computeFixedField(
             localData[localAtomIndex].posq = data.posq;
             localData[localAtomIndex].dipole = data.dipole;
             localData[localAtomIndex].damp = data.damp;
+            localData[localAtomIndex].moleculeIndex = data.moleculeIndex;
+            localData[localAtomIndex].atomType = data.atomType;
             for (unsigned int j = 0; j < TILE_SIZE; j++) {
                 real3 delta = trimTo3(localData[tbx+j].posq-data.posq);
 #ifdef USE_PERIODIC

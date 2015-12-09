@@ -733,6 +733,12 @@ static void testWater3() {
     MBPolElectrostaticsForce* mbpolElectrostaticsForce        = new MBPolElectrostaticsForce();;
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
+    std::vector<double> thole;
+
+    for( unsigned int jj = 0; jj < 5; jj++)
+        thole.push_back(0.4);
+
+    mbpolElectrostaticsForce->setTholeParameters(thole);
 
     unsigned int particlesPerMolecule = 3;
 
@@ -744,11 +750,11 @@ static void testWater3() {
 
 	int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, -1,
                                             waterMoleculeIndex, 0, 0.001310, 0.001310 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, -1,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, -1,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
 		waterMoleculeIndex++;
     }
