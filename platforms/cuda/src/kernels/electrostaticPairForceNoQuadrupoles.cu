@@ -141,13 +141,14 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real scale3CD = ( 1.0 - do_scaling*EXP(dampForExp) );
 
     // real scale1CC = scale3CD + do_scaling*(pow(pgamma, 1.0/4.0)*(r/damp)*EXP(ttm::gammln(3.0/4.0))*ttm::gammq(3.0/4.0, -      dampForExp));
-    real scale1CC = scale3CD;
-
+    real scale1CC = 1.;
     // end getAndScaleInverseRs
 
     real em = rr1 * gl0 * scale1CC;
     real ei = 0.5f * gli1 * rr3 * scale3CD;
     energy = em+ei;
+
+    energy *= 138.9354558456;
 
     real gf1 = rr3*gl0 + rr5*(gl1+gl6) + rr7*gl2;
     real gf2 = -atom2.posq.w*rr3 + sc4*rr5;

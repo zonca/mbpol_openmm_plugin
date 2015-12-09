@@ -92,6 +92,8 @@ extern "C" __global__ void computeElectrostatics(
             localData[threadIdx.x].inducedDipole = data.inducedDipole;
             localData[threadIdx.x].inducedDipolePolar = data.inducedDipolePolar;
             localData[threadIdx.x].damp = data.damp;
+            localData[threadIdx.x].moleculeIndex = data.moleculeIndex;
+            localData[threadIdx.x].atomType = data.atomType;
 
             // Compute forces.
 

@@ -330,6 +330,7 @@ static void testWater3() {
     std::string platformName;
     platformName = "CUDA";
     LangevinIntegrator integrator(0.0, 0.1, 0.01);
+    Platform::getPlatformByName("CUDA").setPropertyDefaultValue("CudaPrecision", "double");
     Context context(system, integrator, Platform::getPlatformByName( platformName ) );
 
     context.setPositions(positions);
