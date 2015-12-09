@@ -205,6 +205,7 @@ private:
         const char* getSortKey() const {return "value.y";}
     };
     void initializeScaleFactors();
+    bool iterateDipolesByDIIS(int iteration);
     void ensureMultipolesValid(ContextImpl& context);
     template <class T, class T4, class M4> void computeSystemMultipoleMoments(ContextImpl& context, std::vector<double>& outputMultipoleMoments);
     int numMultipoles, maxInducedIterations;
@@ -230,6 +231,8 @@ private:
     CudaArray* inducedDipole;
     CudaArray* inducedDipolePolar;
     CudaArray* inducedDipoleErrors;
+    CudaArray* diisMatrix;
+    CudaArray* diisCoefficients;
     CudaArray* prevDipoles;
     CudaArray* prevDipolesPolar;
     CudaArray* prevErrors;
@@ -257,7 +260,9 @@ private:
     CUfunction pmeGridIndexKernel, pmeSpreadFixedMultipolesKernel, pmeSpreadInducedDipolesKernel, pmeFinishSpreadChargeKernel, pmeConvolutionKernel;
     CUfunction pmeFixedPotentialKernel, pmeInducedPotentialKernel, pmeFixedForceKernel, pmeInducedForceKernel, pmeRecordInducedFieldDipolesKernel, computePotentialKernel;
     CUfunction pmeTransformMultipolesKernel, pmeTransformPotentialKernel;
+    CUfunction recordDIISDipolesKernel, buildMatrixKernel;
     static const int PmeOrder = 5;
+    static const int MaxPrevDIISDipoles = 20;
 };
 
 

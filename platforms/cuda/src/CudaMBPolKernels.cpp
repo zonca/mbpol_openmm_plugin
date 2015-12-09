@@ -36,6 +36,7 @@
 #include "openmm/cuda/CudaNonbondedUtilities.h"
 #include "openmm/cuda/CudaForceInfo.h"
 #include "CudaKernelSources.h"
+#include "jama_svd.h"
 
 #include <iostream>
 //////////////// for electrostatics///////////////////////
@@ -371,7 +372,8 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(
 		NULL), pmeBsplineModuliY(NULL), pmeBsplineModuliZ(NULL), pmeIgrid(
 		NULL), pmePhi(NULL), pmePhid(NULL), pmePhip(NULL), pmePhidp(
 		NULL), pmeCphi(NULL), pmeAtomGridIndex(NULL), lastPositions(
-		NULL), sort(NULL) {
+		NULL), sort(NULL),
+diisMatrix(NULL), diisCoefficients(NULL) {
 }
 
 CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel() {
@@ -438,6 +440,10 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
 		delete lastPositions;
 	if (sort != NULL)
 		delete sort;
+    if (diisMatrix != NULL)
+        delete diisMatrix;
+    if (diisCoefficients != NULL)
+        delete diisCoefficients;
 	if (hasInitializedFFT)
 		cufftDestroy(fft);
 }
@@ -544,6 +550,11 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			"inducedDipolePolar");
 	inducedDipoleErrors = new CudaArray(cu, cu.getNumThreadBlocks(),
 			sizeof(float2), "inducedDipoleErrors");
+    prevDipoles = new CudaArray(cu, 3*numMultipoles*MaxPrevDIISDipoles, elementSize, "prevDipoles");
+    prevDipolesPolar = new CudaArray(cu, 3*numMultipoles*MaxPrevDIISDipoles, elementSize, "prevDipolesPolar");
+    prevErrors = new CudaArray(cu, 3*numMultipoles*MaxPrevDIISDipoles, elementSize, "prevErrors");
+    diisMatrix = new CudaArray(cu, MaxPrevDIISDipoles*MaxPrevDIISDipoles, elementSize, "diisMatrix");
+    diisCoefficients = new CudaArray(cu, MaxPrevDIISDipoles+1, sizeof(float), "diisMatrix");
 	cu.addAutoclearBuffer(*field);
 	cu.addAutoclearBuffer(*fieldPolar);
 
@@ -681,12 +692,13 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 					+ CudaMBPolKernelSources::multipoleFixedField, defines);
 	computeFixedFieldKernel = cu.getKernel(module, "computeFixedField");
 	if (maxInducedIterations > 0) {
-		defines["THREAD_BLOCK_SIZE"] = cu.intToString(inducedFieldThreads);
-		module = cu.createModule(
-				CudaKernelSources::vectorOps
-						+ CudaMBPolKernelSources::multipoleInducedField,
-				defines);
-		computeInducedFieldKernel = cu.getKernel(module, "computeInducedField");
+        defines["THREAD_BLOCK_SIZE"] = cu.intToString(inducedFieldThreads);
+        defines["MAX_PREV_DIIS_DIPOLES"] = cu.intToString(MaxPrevDIISDipoles);
+        module = cu.createModule(CudaKernelSources::vectorOps+CudaMBPolKernelSources::multipoleInducedField, defines);
+        computeInducedFieldKernel = cu.getKernel(module, "computeInducedField");
+        updateInducedFieldKernel = cu.getKernel(module, "updateInducedFieldByDIIS");
+        recordDIISDipolesKernel = cu.getKernel(module, "recordInducedDipolesForDIIS");
+        buildMatrixKernel = cu.getKernel(module, "computeDIISMatrix");
 	}
 	stringstream electrostaticsSource;
 	if (usePME) {
@@ -1052,6 +1064,10 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 			cu.executeKernel(computeInducedFieldKernel, computeInducedFieldArgs,
 					numForceThreadBlocks * inducedFieldThreads,
 					inducedFieldThreads);
+
+            bool converged = iterateDipolesByDIIS(i);
+            if (converged)
+                break;
 		}
 
 		std::cout << "GOT HERE after dipoles converge\n";
@@ -1379,6 +1395,92 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 	cu.getPosq().copyTo(*lastPositions);
 	multipolesAreValid = true;
 	return 0.0;
+}
+
+bool CudaCalcMBPolElectrostaticsForceKernel::iterateDipolesByDIIS(int iteration) {
+    void* npt = NULL;
+    bool trueValue = true, falseValue = false;
+    int elementSize = (cu.getUseDoublePrecision() ? sizeof(double) : sizeof(float));
+    
+    // Record the dipoles and errors into the lists of previous dipoles.
+    
+    void* recordDIISDipolesArgs[] = {&field->getDevicePointer(), &fieldPolar->getDevicePointer(), &npt, &inducedField->getDevicePointer(),
+        &inducedFieldPolar->getDevicePointer(), &inducedDipole->getDevicePointer(), &inducedDipolePolar->getDevicePointer(),
+        &polarizability->getDevicePointer(), &inducedDipoleErrors->getDevicePointer(), &prevDipoles->getDevicePointer(),
+        &prevDipolesPolar->getDevicePointer(), &prevErrors->getDevicePointer(), &iteration, &trueValue, &diisMatrix->getDevicePointer()};
+    cu.executeKernel(recordDIISDipolesKernel, recordDIISDipolesArgs, cu.getNumThreadBlocks()*cu.ThreadBlockSize, cu.ThreadBlockSize, cu.ThreadBlockSize*elementSize*2);
+    float2* errors = (float2*) cu.getPinnedBuffer();
+    inducedDipoleErrors->download(errors, false);
+    
+    // Build the DIIS matrix.
+    
+    int numPrev = (iteration+1 < MaxPrevDIISDipoles ? iteration+1 : MaxPrevDIISDipoles);
+    void* buildMatrixArgs[] = {&prevErrors->getDevicePointer(), &iteration, &diisMatrix->getDevicePointer()};
+    int threadBlocks = min(numPrev, cu.getNumThreadBlocks());
+    cu.executeKernel(buildMatrixKernel, buildMatrixArgs, threadBlocks*128, 128, 128*elementSize);
+    vector<float> matrixf;
+    vector<double> matrix;
+    if (cu.getUseDoublePrecision())
+        diisMatrix->download(matrix);
+    else
+        diisMatrix->download(matrixf);
+    
+    // Determine whether the iteration has converged.
+    
+    double total1 = 0.0, total2 = 0.0;
+    for (int j = 0; j < inducedDipoleErrors->getSize(); j++) {
+        total1 += errors[j].x;
+        total2 += errors[j].y;
+    }
+    if (48.033324*sqrt(max(total1, total2)/cu.getNumAtoms()) < inducedEpsilon)
+        return true;
+
+    // Compute the coefficients for selecting the new dipoles.
+
+    float* coefficients = (float*) cu.getPinnedBuffer();
+    if (iteration == 0)
+        coefficients[0] = 1;
+    else {
+        int rank = numPrev+1;
+        Array2D<double> b(rank, rank);
+        b[0][0] = 0;
+        for (int i = 1; i < rank; i++)
+            b[i][0] = b[0][i] = -1;
+        if (cu.getUseDoublePrecision()) {
+            for (int i = 0; i < numPrev; i++)
+                for (int j = 0; j < numPrev; j++)
+                    b[i+1][j+1] = matrix[i*MaxPrevDIISDipoles+j];
+        }
+        else {
+            for (int i = 0; i < numPrev; i++)
+                for (int j = 0; j < numPrev; j++)
+                    b[i+1][j+1] = matrixf[i*MaxPrevDIISDipoles+j];
+        }
+
+        // Solve using SVD.  Since the right hand side is (-1, 0, 0, 0, ...), this is simpler than the general case.
+
+        JAMA::SVD<double> svd(b);
+        Array2D<double> u, v;
+        svd.getU(u);
+        svd.getV(v);
+        Array1D<double> s;
+        svd.getSingularValues(s);
+        int effectiveRank = svd.rank();
+        for (int i = 1; i < rank; i++) {
+            double d = 0;
+            for (int j = 0; j < effectiveRank; j++)
+                d -= u[0][j]*v[i][j]/s[j];
+            coefficients[i-1] = d;
+        }
+    }
+    diisCoefficients->upload(coefficients, false);
+    
+    // Compute the dipoles.
+    
+    void* updateInducedFieldArgs[] = {&inducedDipole->getDevicePointer(), &inducedDipolePolar->getDevicePointer(),
+        &prevDipoles->getDevicePointer(), &prevDipolesPolar->getDevicePointer(), &diisCoefficients->getDevicePointer(), &numPrev};
+    cu.executeKernel(updateInducedFieldKernel, updateInducedFieldArgs, cu.getNumThreadBlocks()*cu.ThreadBlockSize);
+    return false;
 }
 
 void CudaCalcMBPolElectrostaticsForceKernel::ensureMultipolesValid(
