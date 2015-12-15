@@ -346,15 +346,16 @@ static void testWater3() {
 
 
     std::vector<Vec3> expectedForces(numberOfParticles);
-    expectedForces[0]         = Vec3( -5.53127, 1.42697, -26.8317  );
-    expectedForces[1]         = Vec3( 5.00427, -1.62032, 5.9788    );
-    expectedForces[2]         = Vec3( -0.304354, -0.551834, 6.1784 );
-    expectedForces[3]         = Vec3( 6.07087,   16.3677, 7.41079  );
-    expectedForces[4]         = Vec3( -1.38257, -3.3467, 10.5548   );
-    expectedForces[5]         = Vec3( -1.02774, -2.34605, 0.300803 );
-    expectedForces[6]         = Vec3( 3.04715,  3.39407,  -1.12422 );
-    expectedForces[7]         = Vec3( -3.13591, -5.75858, -1.368   );
-    expectedForces[8]         = Vec3( -2.74044, -7.56528, -1.0997 );
+
+    expectedForces[0]         = Vec3( -3.19433, 2.43239, -10.3645);
+    expectedForces[1]         = Vec3( 2.85288, -1.05713, 1.48109);
+    expectedForces[2]         = Vec3( 0.0173803, -0.452184, 2.42326  );
+    expectedForces[3]         = Vec3( 1.70128, 3.9589, -3.18597);
+    expectedForces[4]         = Vec3( 0.245021, 0.703766, 8.78742);
+    expectedForces[5]         = Vec3( -0.131846, -0.335555, 0.790615 );
+    expectedForces[6]         = Vec3( 2.88521, 4.3743, 1.63126 );
+    expectedForces[7]         = Vec3( -2.57406, -4.43219, -0.234784  );
+    expectedForces[8]         = Vec3( -1.80153, -5.1923, -1.32836);
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
             expectedForces[i][j] *= cal2joule*10;
@@ -371,11 +372,8 @@ static void testWater3() {
 
     std::cout  << std::endl << "Forces:" << std::endl;
 
-    for (int i=0; i<numberOfParticles; i++) {
-         std::cout << forces[i] << " Kcal/mol/A " << std::endl;
-    }
     // Energy elec+ind(kcal/mol): -2.134083549e-02
-    double expectedEnergy = -19.6545*cal2joule;
+    double expectedEnergy = -7.08675*cal2joule;
     // ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
