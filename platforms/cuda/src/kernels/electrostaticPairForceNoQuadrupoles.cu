@@ -87,14 +87,15 @@ __device__ real gser(const real& a, const real& x) {
     real sum = 1.0/a;
     real del = sum;
 
-    for (;;) {
+    for (int i=0; i<100; i++) {
         ++ap;
         del *= x/ap;
         sum += del;
         if (fabs(del) < fabs(sum)*EPS) {
-            return sum*exp(- x + a*log(x) - gln);
+            break;
         }
     }
+    return sum*exp(- x + a*log(x) - gln);
 }
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -107,7 +108,7 @@ __device__ real gcf(const real& a, const real& x) {
     real d = 1.0/b;
     real h = d;
 
-    for (int i = 1;; ++i) {
+    for (int i = 1;i<100; ++i) {
         const real an = -i*(i - a);
 
         b += 2.0;
