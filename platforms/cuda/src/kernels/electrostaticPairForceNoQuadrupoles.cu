@@ -157,7 +157,7 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     // FIXME thole copy in unique location
     const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-    const real thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
+    const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
 	// thole[TDD] = 0.055;
 	// thole[TDDOH] = 0.626;
 	// thole[TDDHH] = 0.055;
@@ -198,7 +198,7 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     // real scale1CC = getAndScaleInverseRs( particleI, particleK, r, true, 1, TCC);
     // real scale3CD = getAndScaleInverseRs( particleI, particleK, r, true, 3, TCD);
 
-    real damp      = POW(atom1.damp*atom2.damp, 1./6.); // AA in MBPol
+    float damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
     real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
@@ -207,7 +207,7 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real dampForExpCC = -1 * thole[TCC] * ratio;
     // EXP(ttm::gammln(3.0/4.0)) = 1.2254167024651776
     real scale3CC = ( 1.0 - do_scaling*EXP(dampForExpCC) ); // needed for force
-    real scale1CC = scale3CC + do_scaling*(POW(thole[TCC], 1.0/4.0)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC));
+    real scale1CC = scale3CC + do_scaling*(POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC));
 
     real dampForExpCD = -1 * thole[TCD] * ratio;
     real scale3CD = ( 1.0 - do_scaling*EXP(dampForExpCD) );
