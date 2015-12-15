@@ -888,7 +888,8 @@ static void testWater3() {
 
 
     for (int i=0; i<numberOfParticles; i++) {
-         std::cout << finiteDifferenceForces[i] << " Kcal/mol/A " << std::endl;
+         std::cout << forces[i] << " Kcal/mol/A " << std::endl;
+         std::cout << finiteDifferenceForces[i] << " Kcal/mol/A <finite differences>" << std::endl;
     }
     std::cout << "Test END: " << testName << std::endl << std::endl;
 
