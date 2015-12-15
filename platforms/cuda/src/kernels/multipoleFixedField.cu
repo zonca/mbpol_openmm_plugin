@@ -3,7 +3,7 @@
 typedef struct {
     real4 posq;
     real3 field, fieldPolar, dipole;
-    float damp;
+    real damp;
     int moleculeIndex;
     int atomType;
 } AtomData;
@@ -111,11 +111,11 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     // get scaling factors, if needed
     // RealOpenMM rr3 = getAndScaleInverseRs( particleI, particleJ,r,false,3,TCC);
 
-    real damp      = pow(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
+    real damp      = POW(atom1.damp*atom2.damp, 1.0/6.0); // AA in MBPol
 
     real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
-    real ratio       = pow(r/damp, 4); // rA4 in MBPol
+    real ratio       = POW(r/damp, 4); // rA4 in MBPol
     real pgamma = thole[TCC];
     real dampForExp = -1 * pgamma * ratio;
 
@@ -132,6 +132,16 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     fields[3] = (!isSameWater)*pScale*field2;
 }
 #endif
+
+/// if ((atom1.moleculeIndex == 0) & (atom1.atomType == 0) & (atom2.atomType ==1) & (atom2.moleculeIndex == 2)) {
+///     printf("OneInteraction %d,%d %d,%d\n", atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType);
+///     printf("damp %f\n", damp);
+///     printf("field1 %f\n", field2.x);
+///     printf("field1 %f\n", field2.y);
+///     printf("field1 %f\n", field2.z);
+///     printf("deltaE %f\n", deltaR);
+///     printf("factor %f\n", factor);
+/// }
 
 __device__ real computeDScaleFactor(unsigned int polarizationGroup, int index) {
     return (polarizationGroup & 1<<index ? 0 : 1);
