@@ -270,17 +270,5 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
                  ) * 0.5 * rr3 * scale3CD;
     }
 
-#ifdef DIRECT_POLARIZATION
-    // real gfd = 0.5*(3*rr2*scip2*scale3i - 5*rr2*(scip3*sci4+sci3*scip4)*scale5i);
-    // real temp5 = 0.5*scale5i;
-    // real fdir_0 = gfd*xr + temp5*(sci4*atom1.inducedDipolePolar.x + scip4*atom1.inducedDipole.x + sci3*atom2.inducedDipolePolar.x + scip3*atom2.inducedDipole.x);
-    // real fdir_1 = gfd*yr + temp5*(sci4*atom1.inducedDipolePolar.y + scip4*atom1.inducedDipole.y + sci3*atom2.inducedDipolePolar.y + scip3*atom2.inducedDipole.y);
-    // real fdir_2 = gfd*zr + temp5*(sci4*atom1.inducedDipolePolar.z + scip4*atom1.inducedDipole.z + sci3*atom2.inducedDipolePolar.z + scip3*atom2.inducedDipole.z);
-    // ftm2i_0 -= fdir_0;
-    // ftm2i_1 -= fdir_1;
-    // ftm2i_2 -= fdir_2;
-#else
-#endif
-
     outputForce = -(ftm2+ftm2i);
 }
