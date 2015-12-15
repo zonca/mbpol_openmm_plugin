@@ -3,7 +3,7 @@
 typedef struct {
     real4 posq;
     real3 force, dipole, inducedDipole, inducedDipolePolar;
-    real damp;
+    float damp;
     int moleculeIndex;
     int atomType;
 } AtomData;
@@ -11,7 +11,7 @@ typedef struct {
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce);
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole,
-const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar, const real* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
+const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     data.posq = posq[atom];
     data.dipole.x = labFrameDipole[atom*3];
     data.dipole.y = labFrameDipole[atom*3+1];
@@ -60,7 +60,7 @@ extern "C" __global__ void computeElectrostatics(
         const unsigned int* __restrict__ interactingAtoms,
 #endif
         const real* __restrict__ labFrameDipole, const real* __restrict__ inducedDipole,
-        const real* __restrict__ inducedDipolePolar, const real* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
+        const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1);
