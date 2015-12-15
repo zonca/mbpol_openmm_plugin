@@ -239,8 +239,8 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
         }
     }
     real dampForExpDD = thole[tdd];
-    real scale5DD =  1.0 - do_scaling * (EXP(dampForExpDD) + (4./3.) * thole[tdd] * EXP(dampForExpDD) * ratio);
-    real scale7DD = scale5DD - do_scaling * ((4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4) * POW(r, 4));
+    real scale5DD =  1.0 - do_scaling * EXP(dampForExpDD) *  (1. + (4./3.) * thole[tdd] * ratio);
+    real scale7DD = scale5DD - do_scaling * ((4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4.0f) * POW(r, 4));
 
     real gf1 = rr3*gl0*scale3CC;
 
