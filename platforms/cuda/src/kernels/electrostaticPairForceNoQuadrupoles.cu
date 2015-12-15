@@ -237,6 +237,15 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real scale5DD =  1.0 - do_scaling * EXP(dampForExpDD) *  (1. + (4./3.) * thole[tdd] * ratio);
     real scale7DD = scale5DD - do_scaling * ((4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4.0f) * POW(r, 4));
 
+
+
+    // printing
+    if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex == 1) & (atom1.atomType==0) & (atom2.atomType==1))
+    {
+        printf("%.2f\n", atom1.damp);
+        printf("%.2f\n", atom2.damp);
+    }
+
     real gf1 = rr3*gl0*scale3CC;
 
     real3 ftm2 = gf1*delta;
