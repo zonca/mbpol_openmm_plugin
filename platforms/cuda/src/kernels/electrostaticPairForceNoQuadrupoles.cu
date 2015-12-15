@@ -216,12 +216,8 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real ei = 0.5f * gli1 * rr3 * scale3CD;
     energy = em+ei;
 
-    if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex == 1) & (atom1.atomType==0) & (atom2.atomType==1))
-    {
-        printf("%d\n", isSameWater);
-        printf("%.10f\n", scale1CC);
-    }
-    energy *= 138.9354558456;
+    const real f = 138.9354558456;
+    energy *= f;
 
     // RealOpenMM scale3CC = getAndScaleInverseRs( particleI, particleK, r, true, 3, TCC);
     // RealOpenMM scale5CD = getAndScaleInverseRs( particleI, particleK, r, true, 5, TCD);
@@ -239,8 +235,8 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
         }
     }
     real dampForExpDD = thole[tdd];
-    real scale5DD =  1.0 - do_scaling * (EXP(dampForExpDD) + (4./3.) * thole[tdd] * EXP(dampForExpDD) * ratio);
-    real scale7DD = scale5DD - do_scaling * ((4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4) * POW(r, 4));
+    real scale5DD =  1.0 - do_scaling * EXP(dampForExpDD) *  (1. + (4./3.) * thole[tdd] * ratio);
+    real scale7DD = scale5DD - do_scaling * ((4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4.0f) * POW(r, 4));
 
     real gf1 = rr3*gl0*scale3CC;
 
@@ -270,17 +266,5 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
                  ) * 0.5 * rr3 * scale3CD;
     }
 
-#ifdef DIRECT_POLARIZATION
-    // real gfd = 0.5*(3*rr2*scip2*scale3i - 5*rr2*(scip3*sci4+sci3*scip4)*scale5i);
-    // real temp5 = 0.5*scale5i;
-    // real fdir_0 = gfd*xr + temp5*(sci4*atom1.inducedDipolePolar.x + scip4*atom1.inducedDipole.x + sci3*atom2.inducedDipolePolar.x + scip3*atom2.inducedDipole.x);
-    // real fdir_1 = gfd*yr + temp5*(sci4*atom1.inducedDipolePolar.y + scip4*atom1.inducedDipole.y + sci3*atom2.inducedDipolePolar.y + scip3*atom2.inducedDipole.y);
-    // real fdir_2 = gfd*zr + temp5*(sci4*atom1.inducedDipolePolar.z + scip4*atom1.inducedDipole.z + sci3*atom2.inducedDipolePolar.z + scip3*atom2.inducedDipole.z);
-    // ftm2i_0 -= fdir_0;
-    // ftm2i_1 -= fdir_1;
-    // ftm2i_2 -= fdir_2;
-#else
-#endif
-
-    outputForce = -(ftm2+ftm2i);
+    outputForce = - f * (ftm2+ftm2i);
 }

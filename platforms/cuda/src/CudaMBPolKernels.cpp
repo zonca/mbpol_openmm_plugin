@@ -1741,6 +1741,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 		else
 			posqf[i].w = (float) charge;
 		polarizabilityVec.push_back((float) polarity);
+		dampingVec.push_back((float) damping);
 		multipoleParticlesVec.push_back(
 				make_int4(atomX, atomY, atomZ, axisType));
         moleculeIndicesVec.push_back(moleculeIndex);
