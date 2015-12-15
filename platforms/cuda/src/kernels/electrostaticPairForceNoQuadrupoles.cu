@@ -216,11 +216,6 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real ei = 0.5f * gli1 * rr3 * scale3CD;
     energy = em+ei;
 
-    if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex == 1) & (atom1.atomType==0) & (atom2.atomType==1))
-    {
-        printf("%d\n", isSameWater);
-        printf("%.10f\n", scale1CC);
-    }
     energy *= 138.9354558456;
 
     // RealOpenMM scale3CC = getAndScaleInverseRs( particleI, particleK, r, true, 3, TCC);
