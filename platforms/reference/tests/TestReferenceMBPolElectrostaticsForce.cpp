@@ -847,6 +847,8 @@ static void testWater3() {
     for (int i=0; i<numberOfParticles; i++) {
         finiteDifferenceForces.push_back(Vec3( 0.,  0., 0.  ));
     }
+
+    #ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
     for (int i=0; i<numberOfParticles; i++) {
         for (int xyz=0; xyz<3; xyz++) {
             x_orig = positions[i][xyz];
@@ -876,6 +878,7 @@ static void testWater3() {
         }
 
     }
+    #endif
 
     // Flip sign to convert gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
