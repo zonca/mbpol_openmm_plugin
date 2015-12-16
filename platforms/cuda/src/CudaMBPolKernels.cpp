@@ -1070,11 +1070,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
                 break;
 		}
 
-		std::cout << "GOT HERE after dipoles converge\n";
-		std::vector<Vec3> dipoles;
-		getInducedDipoles(context, dipoles);
-		std::cout << "first dipole" << dipoles[0] << std::endl;
-
 		// Compute electrostatic force.
 
 		void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
