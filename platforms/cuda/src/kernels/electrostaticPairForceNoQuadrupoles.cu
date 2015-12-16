@@ -240,10 +240,10 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
 
     // printing
-    if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex == 1) & (atom1.atomType==0) & (atom2.atomType==1))
+    if ((atom1.moleculeIndex == 2) & (atom2.moleculeIndex == 1) & (atom1.atomType==0) & (atom2.atomType==0))
     {
-        printf("%.2f\n", atom1.damp);
-        printf("%.2f\n", atom2.damp);
+        printf("%.2g\n", atom1.damp);
+        printf("%.2g\n", atom2.damp);
     }
 
     real gf1 = rr3*gl0*scale3CC;
