@@ -382,10 +382,9 @@ static void testWater3() {
     double x_orig;
 
 
-    // Flip sign to convert gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
            for (int j=0; j<3; j++) {
-            expectedForces[i][j] /= -1*cal2joule*10;
+            expectedForces[i][j] /= cal2joule*10;
            }
 
        }
