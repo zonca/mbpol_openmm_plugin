@@ -373,7 +373,7 @@ static void testWater3() {
     std::cout  << std::endl << "Forces:" << std::endl;
 
     // Energy elec+ind(kcal/mol): -2.134083549e-02
-    double expectedEnergy = -7.08675*cal2joule;
+    double expectedEnergy = -7.08652*cal2joule;
     // ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
