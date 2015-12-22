@@ -634,6 +634,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	defines["NUM_ATOMS"] = cu.intToString(numMultipoles);
 	defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
 	defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
+	defines["ENERGY_SCALE_FACTOR"] = cu.doubleToString(138.9354558456);
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
 		defines["DIRECT_POLARIZATION"] = "";
 	if (useShuffle)
