@@ -112,7 +112,6 @@ extern "C" __global__ void findAtomGridIndex(const real4* __restrict__ posq, int
 
 /**
  * Convert the fixed multipoles from Cartesian to fractional coordinates.
- */
 extern "C" __global__ void transformMultipolesToFractionalCoordinates(const real* __restrict__ labFrameDipole, const real* __restrict__ labFrameQuadrupole,
         real* __restrict__ fracDipole, real* __restrict__ fracQuadrupole, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
     // Build matrices for transforming the dipoles and quadrupoles.
@@ -161,6 +160,7 @@ extern "C" __global__ void transformMultipolesToFractionalCoordinates(const real
         }
     }
 }
+ */
 
 /**
  * Convert the potential from fractional to Cartesian coordinates.
