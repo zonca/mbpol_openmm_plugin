@@ -216,8 +216,7 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     real ei = 0.5f * gli1 * rr3 * scale3CD;
     energy = em+ei;
 
-    const real f = 138.9354558456;
-    energy *= f;
+    energy *= ENERGY_SCALE_FACTOR;
 
     // RealOpenMM scale3CC = getAndScaleInverseRs( particleI, particleK, r, true, 3, TCC);
     // RealOpenMM scale5CD = getAndScaleInverseRs( particleI, particleK, r, true, 5, TCD);
@@ -266,5 +265,5 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
                  ) * 0.5 * rr3 * scale3CD;
     }
 
-    outputForce = - f * (ftm2+ftm2i);
+    outputForce = - ENERGY_SCALE_FACTOR * (ftm2+ftm2i);
 }
