@@ -755,8 +755,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 				CudaKernelSources::vectorOps
 						+ CudaMBPolKernelSources::multipolePme, pmeDefines);
 		pmeGridIndexKernel = cu.getKernel(module, "findAtomGridIndex");
-		pmeTransformMultipolesKernel = cu.getKernel(module,
-				"transformMultipolesToFractionalCoordinates");
+		//pmeTransformMultipolesKernel = cu.getKernel(module,
+		//		"transformMultipolesToFractionalCoordinates");
 		pmeTransformPotentialKernel = cu.getKernel(module,
 				"transformPotentialToCartesianCoordinates");
 		pmeSpreadFixedMultipolesKernel = cu.getKernel(module,
@@ -1139,12 +1139,12 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				cu.ThreadBlockSize,
 				cu.ThreadBlockSize * PmeOrder * PmeOrder * elementSize);
 		sort->sort(*pmeAtomGridIndex);
-		void* pmeTransformMultipolesArgs[] = {
-				&labFrameDipoles->getDevicePointer(),
-				&fracDipoles->getDevicePointer(), recipBoxVectorPointer[0],
-				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
-		cu.executeKernel(pmeTransformMultipolesKernel,
-				pmeTransformMultipolesArgs, cu.getNumAtoms());
+		//void* pmeTransformMultipolesArgs[] = {
+		//		&labFrameDipoles->getDevicePointer(),
+		//		&fracDipoles->getDevicePointer(), recipBoxVectorPointer[0],
+		//		recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
+		//cu.executeKernel(pmeTransformMultipolesKernel,
+		//		pmeTransformMultipolesArgs, cu.getNumAtoms());
 		void* pmeSpreadFixedMultipolesArgs[] = {
 				&cu.getPosq().getDevicePointer(),
 				&fracDipoles->getDevicePointer(), &pmeGrid->getDevicePointer(),
