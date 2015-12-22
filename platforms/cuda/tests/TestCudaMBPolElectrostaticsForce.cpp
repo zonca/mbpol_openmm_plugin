@@ -266,7 +266,7 @@ static void testWater3() {
     std::string testName      = "testWater3";
 
     int numberOfParticles     = 9;
-    double cutoff             = 0.70;
+    double cutoff             = 10.;
 
     std::vector<double> outputElectrostaticsMoments;
     std::vector< Vec3 > inputGrid;
@@ -274,12 +274,19 @@ static void testWater3() {
 
 
     // beginning of Electrostatics setup
-    MBPolElectrostaticsForce::NonbondedMethod nonbondedMethod = MBPolElectrostaticsForce::NoCutoff;
+    MBPolElectrostaticsForce::NonbondedMethod nonbondedMethod = MBPolElectrostaticsForce::PME;
 
     System system;
-    // box dimensions
+
+    double boxDimension                               = 50;
+    Vec3 a( boxDimension, 0.0, 0.0 );
+    Vec3 b( 0.0, boxDimension, 0.0 );
+    Vec3 c( 0.0, 0.0, boxDimension );
+    system.setDefaultPeriodicBoxVectors( a, b, c );
+
     MBPolElectrostaticsForce* mbpolElectrostaticsForce        = new MBPolElectrostaticsForce();;
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
+    mbpolElectrostaticsForce->setCutoffDistance( cutoff );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
 
     unsigned int particlesPerMolecule = 3;
