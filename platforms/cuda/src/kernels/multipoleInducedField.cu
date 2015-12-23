@@ -52,6 +52,9 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         const real t = RECIP(1.0f+0.3275911f*ralpha);
         const real erfcAlphaR = (0.254829592f+(-0.284496736f+(1.421413741f+(-1.453152027f+1.061405429f*t)*t)*t)*t)*t*exp2a;
 #endif
+        // FIXME thole copy in unique location
+        const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
+        const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
         real bn0 = erfcAlphaR*rI;
         real alsq2 = 2*EWALD_ALPHA*EWALD_ALPHA;
         real alsq2n = RECIP(SQRT_PI*EWALD_ALPHA);
@@ -63,24 +66,25 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
         // compute the error function scaled and unscaled terms
 
-        real scale3 = 1;
-        real scale5 = 1;
-        real damp = atom1.damp*atom2.damp;
-        real ratio = (r/damp);
-        ratio = ratio*ratio*ratio;           
-        //FIXME: 
-        float thole = 0.4;
-        float pgamma = thole;
-        damp = damp == 0 ? 0 : -pgamma*ratio;
-        real expdamp = EXP(damp);
-        scale3 = 1 - expdamp;
-        scale5 = 1 - expdamp*(1-damp);
-        real dsc3 = scale3;
-        real dsc5 = scale5;
+        //RealOpenMM scale3 = getAndScaleInverseRs(particleI, particleJ, r, true, 3, TDD);
+        //RealOpenMM scale5 = getAndScaleInverseRs(particleI, particleJ, r, true, 5, TDD);
+        real damp      = pow(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
+
+        real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+
+        real ratio       = pow(r/damp, 4); // rA4 in MBPol
+
+        // FIXME identify if we need to use TDDOH and so on
+        real pgamma = thole[TDD];
+        real dampForExp = -1 * pgamma * ratio;
+
+        real scale3 = 1.0 - do_scaling * EXP(dampForExp);
+        real scale5 = scale3 - do_scaling * (4./3.) * pgamma * EXP(dampForExp) * ratio;
+
         real r3 = (r*r2);
         real r5 = (r3*r2);
-        real rr3 = (1-dsc3)/r3;
-        real rr5 = 3*(1-dsc5)/r5;
+        real rr3 = (1-scale3)/r3;
+        real rr5 = 3*(1-scale5)/r5;
 
         scale1 = rr3 - bn1;
         scale2 = bn2 - rr5;
