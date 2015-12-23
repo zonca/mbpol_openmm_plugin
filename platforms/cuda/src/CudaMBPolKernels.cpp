@@ -1154,55 +1154,55 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
 		cu.executeKernel(pmeSpreadFixedMultipolesKernel,
 				pmeSpreadFixedMultipolesArgs, cu.getNumAtoms());
-		//void* finishSpreadArgs[] = { &pmeGrid->getDevicePointer() };
-		//if (cu.getUseDoublePrecision())
-		//	cu.executeKernel(pmeFinishSpreadChargeKernel, finishSpreadArgs,
-		//			pmeGrid->getSize());
-		//if (cu.getUseDoublePrecision())
-		//	cufftExecZ2Z(fft, (double2*) pmeGrid->getDevicePointer(),
-		//			(double2*) pmeGrid->getDevicePointer(), CUFFT_FORWARD);
-		//else
-		//	cufftExecC2C(fft, (float2*) pmeGrid->getDevicePointer(),
-		//			(float2*) pmeGrid->getDevicePointer(), CUFFT_FORWARD);
-		//void* pmeConvolutionArgs[] = { &pmeGrid->getDevicePointer(),
-		//		&pmeBsplineModuliX->getDevicePointer(),
-		//		&pmeBsplineModuliY->getDevicePointer(),
-		//		&pmeBsplineModuliZ->getDevicePointer(),
-		//		cu.getPeriodicBoxSizePointer(), recipBoxVectorPointer[0],
-		//		recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
-		//cu.executeKernel(pmeConvolutionKernel, pmeConvolutionArgs,
-		//		cu.getNumAtoms());
-		//if (cu.getUseDoublePrecision())
-		//	cufftExecZ2Z(fft, (double2*) pmeGrid->getDevicePointer(),
-		//			(double2*) pmeGrid->getDevicePointer(), CUFFT_INVERSE);
-		//else
-		//	cufftExecC2C(fft, (float2*) pmeGrid->getDevicePointer(),
-		//			(float2*) pmeGrid->getDevicePointer(), CUFFT_INVERSE);
-		//void* pmeFixedPotentialArgs[] = { &pmeGrid->getDevicePointer(),
-		//		&pmePhi->getDevicePointer(), &field->getDevicePointer(),
-		//		&fieldPolar->getDevicePointer(),
-		//		&cu.getPosq().getDevicePointer(),
-		//		&labFrameDipoles->getDevicePointer(),
-		//		cu.getPeriodicBoxVecXPointer(), cu.getPeriodicBoxVecYPointer(),
-		//		cu.getPeriodicBoxVecZPointer(), recipBoxVectorPointer[0],
-		//		recipBoxVectorPointer[1], recipBoxVectorPointer[2],
-		//		&pmeAtomGridIndex->getDevicePointer() };
-		//cu.executeKernel(pmeFixedPotentialKernel, pmeFixedPotentialArgs,
-		//		cu.getNumAtoms());
-		//void* pmeTransformFixedPotentialArgs[] = { &pmePhi->getDevicePointer(),
-		//		&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
-		//		recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
-		//cu.executeKernel(pmeTransformPotentialKernel,
-		//		pmeTransformFixedPotentialArgs, cu.getNumAtoms());
-		//void* pmeFixedForceArgs[] = { &cu.getPosq().getDevicePointer(),
-		//		&cu.getForce().getDevicePointer(),
-		//		&cu.getEnergyBuffer().getDevicePointer(),
-		//		&labFrameDipoles->getDevicePointer(),
-		//		&fracDipoles->getDevicePointer(), &pmePhi->getDevicePointer(),
-		//		&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
-		//		recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
-		//cu.executeKernel(pmeFixedForceKernel, pmeFixedForceArgs,
-		//		cu.getNumAtoms());
+		void* finishSpreadArgs[] = { &pmeGrid->getDevicePointer() };
+		if (cu.getUseDoublePrecision())
+			cu.executeKernel(pmeFinishSpreadChargeKernel, finishSpreadArgs,
+					pmeGrid->getSize());
+		if (cu.getUseDoublePrecision())
+			cufftExecZ2Z(fft, (double2*) pmeGrid->getDevicePointer(),
+					(double2*) pmeGrid->getDevicePointer(), CUFFT_FORWARD);
+		else
+			cufftExecC2C(fft, (float2*) pmeGrid->getDevicePointer(),
+					(float2*) pmeGrid->getDevicePointer(), CUFFT_FORWARD);
+		void* pmeConvolutionArgs[] = { &pmeGrid->getDevicePointer(),
+				&pmeBsplineModuliX->getDevicePointer(),
+				&pmeBsplineModuliY->getDevicePointer(),
+				&pmeBsplineModuliZ->getDevicePointer(),
+				cu.getPeriodicBoxSizePointer(), recipBoxVectorPointer[0],
+				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
+		cu.executeKernel(pmeConvolutionKernel, pmeConvolutionArgs,
+				cu.getNumAtoms());
+		if (cu.getUseDoublePrecision())
+			cufftExecZ2Z(fft, (double2*) pmeGrid->getDevicePointer(),
+					(double2*) pmeGrid->getDevicePointer(), CUFFT_INVERSE);
+		else
+			cufftExecC2C(fft, (float2*) pmeGrid->getDevicePointer(),
+					(float2*) pmeGrid->getDevicePointer(), CUFFT_INVERSE);
+		void* pmeFixedPotentialArgs[] = { &pmeGrid->getDevicePointer(),
+				&pmePhi->getDevicePointer(), &field->getDevicePointer(),
+				&fieldPolar->getDevicePointer(),
+				&cu.getPosq().getDevicePointer(),
+				&labFrameDipoles->getDevicePointer(),
+				cu.getPeriodicBoxVecXPointer(), cu.getPeriodicBoxVecYPointer(),
+				cu.getPeriodicBoxVecZPointer(), recipBoxVectorPointer[0],
+				recipBoxVectorPointer[1], recipBoxVectorPointer[2],
+				&pmeAtomGridIndex->getDevicePointer() };
+		cu.executeKernel(pmeFixedPotentialKernel, pmeFixedPotentialArgs,
+				cu.getNumAtoms());
+		void* pmeTransformFixedPotentialArgs[] = { &pmePhi->getDevicePointer(),
+				&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
+				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
+		cu.executeKernel(pmeTransformPotentialKernel,
+				pmeTransformFixedPotentialArgs, cu.getNumAtoms());
+		void* pmeFixedForceArgs[] = { &cu.getPosq().getDevicePointer(),
+				&cu.getForce().getDevicePointer(),
+				&cu.getEnergyBuffer().getDevicePointer(),
+				&labFrameDipoles->getDevicePointer(),
+				&pmePhi->getDevicePointer(),
+				&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
+				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
+		cu.executeKernel(pmeFixedForceKernel, pmeFixedForceArgs,
+				cu.getNumAtoms());
 
 		//// Direct space calculation.
 
