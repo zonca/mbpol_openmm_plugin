@@ -435,7 +435,7 @@ extern "C" __global__ void reciprocalConvolution(real2* __restrict__ pmeGrid, co
 
 extern "C" __global__ void computeFixedPotentialFromGrid(const real2* __restrict__ pmeGrid, real* __restrict__ phi,
         long long* __restrict__ fieldBuffers, long long* __restrict__ fieldPolarBuffers,  const real4* __restrict__ posq,
-        const real* __restrict__ labFrameDipole, real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ,
+        real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ,
         real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ, int2* __restrict__ pmeAtomGridIndex) {
     real array[PME_ORDER*PME_ORDER];
     real4 theta1[PME_ORDER];
@@ -592,13 +592,13 @@ extern "C" __global__ void computeFixedPotentialFromGrid(const real2* __restrict
         phi[20*m+18] = tuv012;
         phi[20*m+19] = tuv111;
         real dipoleScale = (4/(real) 3)*(EWALD_ALPHA*EWALD_ALPHA*EWALD_ALPHA)/SQRT_PI;
-        long long fieldx = (long long) ((dipoleScale*labFrameDipole[m*3]-tuv100*fracToCart[0][0]-tuv010*fracToCart[0][1]-tuv001*fracToCart[0][2])*0x100000000);
+        long long fieldx = (long long) ((-tuv100*fracToCart[0][0]-tuv010*fracToCart[0][1]-tuv001*fracToCart[0][2])*0x100000000);
         fieldBuffers[m] = fieldx;
         fieldPolarBuffers[m] = fieldx;
-        long long fieldy = (long long) ((dipoleScale*labFrameDipole[m*3+1]-tuv100*fracToCart[1][0]-tuv010*fracToCart[1][1]-tuv001*fracToCart[1][2])*0x100000000);
+        long long fieldy = (long long) ((-tuv100*fracToCart[1][0]-tuv010*fracToCart[1][1]-tuv001*fracToCart[1][2])*0x100000000);
         fieldBuffers[m+PADDED_NUM_ATOMS] = fieldy;
         fieldPolarBuffers[m+PADDED_NUM_ATOMS] = fieldy;
-        long long fieldz = (long long) ((dipoleScale*labFrameDipole[m*3+2]-tuv100*fracToCart[2][0]-tuv010*fracToCart[2][1]-tuv001*fracToCart[2][2])*0x100000000);
+        long long fieldz = (long long) ((-tuv100*fracToCart[2][0]-tuv010*fracToCart[2][1]-tuv001*fracToCart[2][2])*0x100000000);
         fieldBuffers[m+2*PADDED_NUM_ATOMS] = fieldz;
         fieldPolarBuffers[m+2*PADDED_NUM_ATOMS] = fieldz;
     }
@@ -895,12 +895,12 @@ extern "C" __global__ void computeFixedMultipoleForceAndEnergy(real4* __restrict
 }
 
 extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict__ posq, unsigned long long* __restrict__ forceBuffers,
-        long long* __restrict__ torqueBuffers, real* __restrict__ energyBuffer, const real* __restrict__ labFrameDipole,
+        long long* __restrict__ torqueBuffers, real* __restrict__ energyBuffer,
         const real* __restrict__ labFrameQuadrupole, const real* __restrict__ fracDipole, const real* __restrict__ fracQuadrupole,
         const real* __restrict__ inducedDipole_global, const real* __restrict__ inducedDipolePolar_global,
         const real* __restrict__ phi_global, const real* __restrict__ phid_global, const real* __restrict__ phip_global,
         const real* __restrict__ phidp_global, const real* __restrict__ cphi_global, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
-    real multipole[10];
+    real multipole[1];
     real cinducedDipole[3], inducedDipole[3];
     real cinducedDipolePolar[3], inducedDipolePolar[3];
     const int deriv1[] = {1, 4, 7, 8, 10, 15, 17, 13, 14, 19};
@@ -924,43 +924,9 @@ extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict_
         // Compute the torque.
 
         multipole[0] = posq[i].w;
-        multipole[1] = labFrameDipole[i*3];
-        multipole[2] = labFrameDipole[i*3+1];
-        multipole[3] = labFrameDipole[i*3+2];
-        multipole[4] = labFrameQuadrupole[i*5];
-        multipole[5] = labFrameQuadrupole[i*5+3];
-        multipole[6] = -(multipole[4]+multipole[5]);
-        multipole[7] = 2*labFrameQuadrupole[i*5+1];
-        multipole[8] = 2*labFrameQuadrupole[i*5+2];
-        multipole[9] = 2*labFrameQuadrupole[i*5+4];
         const real* cphi = &cphi_global[10*i];
- 
-        torqueBuffers[i] += (long long) (0.5f*EPSILON_FACTOR*(multipole[3]*cphi[2] - multipole[2]*cphi[3]
-                      + 2*(multipole[6]-multipole[5])*cphi[9]
-                      + multipole[8]*cphi[7] + multipole[9]*cphi[5]
-                      - multipole[7]*cphi[8] - multipole[9]*cphi[6])*0x100000000);
-
-        torqueBuffers[i+PADDED_NUM_ATOMS] += (long long) (0.5f*EPSILON_FACTOR*(multipole[1]*cphi[3] - multipole[3]*cphi[1]
-                      + 2*(multipole[4]-multipole[6])*cphi[8]
-                      + multipole[7]*cphi[9] + multipole[8]*cphi[6]
-                      - multipole[8]*cphi[4] - multipole[9]*cphi[7])*0x100000000);
-
-        torqueBuffers[i+PADDED_NUM_ATOMS*2] += (long long) (0.5f*EPSILON_FACTOR*(multipole[2]*cphi[1] - multipole[1]*cphi[2]
-                      + 2*(multipole[5]-multipole[4])*cphi[7]
-                      + multipole[7]*cphi[4] + multipole[9]*cphi[8]
-                      - multipole[7]*cphi[5] - multipole[8]*cphi[9])*0x100000000);
 
         // Compute the force and energy.
-
-        multipole[1] = fracDipole[i*3];
-        multipole[2] = fracDipole[i*3+1];
-        multipole[3] = fracDipole[i*3+2];
-        multipole[4] = fracQuadrupole[i*6];
-        multipole[5] = fracQuadrupole[i*6+3];
-        multipole[6] = fracQuadrupole[i*6+5];
-        multipole[7] = fracQuadrupole[i*6+1];
-        multipole[8] = fracQuadrupole[i*6+2];
-        multipole[9] = fracQuadrupole[i*6+4];
 
         cinducedDipole[0] = inducedDipole_global[i*3];
         cinducedDipole[1] = inducedDipole_global[i*3+1];
