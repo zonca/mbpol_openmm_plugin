@@ -1197,7 +1197,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		void* pmeFixedForceArgs[] = { &cu.getPosq().getDevicePointer(),
 				&cu.getForce().getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
-				&labFrameDipoles->getDevicePointer(),
 				&pmePhi->getDevicePointer(),
 				&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
 				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
