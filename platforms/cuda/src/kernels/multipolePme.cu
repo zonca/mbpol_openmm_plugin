@@ -208,8 +208,8 @@ extern "C" __global__ void transformPotentialToCartesianCoordinates(const real* 
     }
 }
 
-extern "C" __global__ void gridSpreadFixedMultipoles(const real4* __restrict__ posq, const real* __restrict__ fracDipole,
-        const real* __restrict__ fracQuadrupole, real2* __restrict__ pmeGrid, int2* __restrict__ pmeAtomGridIndex,
+extern "C" __global__ void gridSpreadFixedMultipoles(const real4* __restrict__ posq,
+        real2* __restrict__ pmeGrid, int2* __restrict__ pmeAtomGridIndex,
         real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
     real array[PME_ORDER*PME_ORDER];
     real4 theta1[PME_ORDER];
@@ -272,19 +272,8 @@ extern "C" __global__ void gridSpreadFixedMultipoles(const real4* __restrict__ p
                     real4 v = theta3[iz];
 
                     real atomCharge = pos.w;
-                    real atomDipoleX = fracDipole[m*3];
-                    real atomDipoleY = fracDipole[m*3+1];
-                    real atomDipoleZ = fracDipole[m*3+2];
-                    real atomQuadrupoleXX = fracQuadrupole[m*6];
-                    real atomQuadrupoleXY = fracQuadrupole[m*6+1];
-                    real atomQuadrupoleXZ = fracQuadrupole[m*6+2];
-                    real atomQuadrupoleYY = fracQuadrupole[m*6+3];
-                    real atomQuadrupoleYZ = fracQuadrupole[m*6+4];
-                    real atomQuadrupoleZZ = fracQuadrupole[m*6+5];
-                    real term0 = atomCharge*u.x*v.x + atomDipoleY*u.y*v.x + atomDipoleZ*u.x*v.y + atomQuadrupoleYY*u.z*v.x + atomQuadrupoleZZ*u.x*v.z + atomQuadrupoleYZ*u.y*v.y;
-                    real term1 = atomDipoleX*u.x*v.x + atomQuadrupoleXY*u.y*v.x + atomQuadrupoleXZ*u.x*v.y;
-                    real term2 = atomQuadrupoleXX * u.x * v.x;
-                    real add = term0*t.x + term1*t.y + term2*t.z;
+                    real term0 = atomCharge*u.x*v.x;
+                    real add = term0*t.x;
 #ifdef USE_DOUBLE_PRECISION
                     unsigned long long * ulonglong_p = (unsigned long long *) pmeGrid;
                     atomicAdd(&ulonglong_p[2*index],  static_cast<unsigned long long>((long long) (add*0x100000000)));
