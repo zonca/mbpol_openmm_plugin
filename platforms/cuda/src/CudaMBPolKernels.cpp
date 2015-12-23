@@ -1147,7 +1147,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		//		pmeTransformMultipolesArgs, cu.getNumAtoms());
 		void* pmeSpreadFixedMultipolesArgs[] = {
 				&cu.getPosq().getDevicePointer(),
-				&fracDipoles->getDevicePointer(), &pmeGrid->getDevicePointer(),
+				&pmeGrid->getDevicePointer(),
 				&pmeAtomGridIndex->getDevicePointer(),
 				cu.getPeriodicBoxVecXPointer(), cu.getPeriodicBoxVecYPointer(),
 				cu.getPeriodicBoxVecZPointer(), recipBoxVectorPointer[0],
