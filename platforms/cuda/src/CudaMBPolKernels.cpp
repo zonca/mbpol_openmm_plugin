@@ -681,7 +681,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		electrostaticsSource
 				<< CudaMBPolKernelSources::pmeMultipoleElectrostatics;
 		electrostaticsSource
-				<< (CudaMBPolKernelSources::pmeElectrostaticPairForceNoQuadrupoles);
+				<< (CudaMBPolKernelSources::gammq);
 		electrostaticsSource << "#define APPLY_SCALE\n";
 		electrostaticsSource
 				<< (CudaMBPolKernelSources::pmeElectrostaticPairForceNoQuadrupoles);
@@ -692,6 +692,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	} else {
 		electrostaticsSource << CudaKernelSources::vectorOps;
 		electrostaticsSource << CudaMBPolKernelSources::multipoleElectrostatics;
+		electrostaticsSource
+				<< (CudaMBPolKernelSources::gammq);
 		electrostaticsSource << "#define F1\n";
 		electrostaticsSource
 				<< (CudaMBPolKernelSources::electrostaticPairForceNoQuadrupoles);
