@@ -268,8 +268,14 @@ extern "C" __device__ void computeVar(real k, real r0, real3 * a1, real3 * a2, r
     *var = EXP(-k*(d - r0));
 }
 
-extern "C" __device__ void computeGVar(real * g, real k, real r0, real3 * a1, real3 * a2, real3 * g1, real3 * g2)
+extern "C" __device__ void computeGVar(real * g, 
+									   real k, 
+									   real r0, 
+									   real3 * a1, real3 * a2, 
+									   real3 * g1, real3 * g2)
 {
+	printf ("parameter check of computeGVar: g = %10lf, k = %10lf, r0 = %10lf, a1 = < %10lf, %10lf, %10lf>, a2 = < %10lf, %10lf, %10lf>, g1 = < %10lf, %10lf, %10lf> g2 = < %10lf, %10lf, %10lf>\n",
+			*g, k, r0, a1->x, a1->y, a1->z, a2->x, a2->y, a2->z, g1->x, g1->y, g1->z, g2->x, g2->y, g2->z);
     real3 dx = (*a1-*a2)*NM_TO_A;
 
     real dsq = dot(dx,dx);
@@ -313,21 +319,24 @@ extern "C" __device__ real computeInteraction(
         const real4* __restrict__ posq,
         const real4* periodicBoxSize,
         real3 * forces) {
-        			real tempEnergy = 0.0f;
-        			// 3 water
-      				real3 positions[9];
-   			     	// first water
-    			    for (int i = 0; i < 3; i++) {
-     			       	positions[Oa + i] = make_real3( posq[atom1+i].x * NM_TO_A,
-                       	                   			   	posq[atom1+i].y * NM_TO_A,
-                             		               	   	posq[atom1+i].z * NM_TO_A);
-    			      	positions[Ob + i] = make_real3( posq[atom2+i].x * NM_TO_A,
-                       			                       	posq[atom2+i].y * NM_TO_A,
-                                                       	posq[atom2+i].z * NM_TO_A);
-     			   	   	positions[Oc + i] = make_real3( posq[atom3+i].x * NM_TO_A,
-                       			                       	posq[atom3+i].y * NM_TO_A,
-                                			           	posq[atom3+i].z * NM_TO_A);
-      				}
+	
+	real tempEnergy = 0.0f;
+	// 3 water
+	real3 positions[9];
+	// first water
+	for (int i = 0; i < 3; i++) {
+		//ordering to match ref
+		positions[Oa + i] = make_real3( posq[atom3+i].x,
+										posq[atom3+i].y,
+										posq[atom3+i].z);
+		positions[Ob + i] = make_real3( posq[atom2+i].x,
+										posq[atom2+i].y,
+										posq[atom2+i].z);
+		positions[Oc + i] = make_real3( posq[atom1+i].x,
+										posq[atom1+i].y,
+										posq[atom1+i].z);
+	}
+	    
 #if USE_PERIODIC
          			imageMolecules(periodicBoxSize, positions);
 #endif
@@ -335,33 +344,35 @@ extern "C" __device__ real computeInteraction(
 		real3 rab, rac, rbc;
 		real drab(0), drac(0), drbc(0);
 
-		rab = (positions[Oa] - positions[Ob]);
+		rab = (positions[Oa] - positions[Ob])* NM_TO_A;
 		drab += dot(rab, rab);
 
-		rac = (positions[Oa] - positions[Oc]);
+		rac = (positions[Oa] - positions[Oc])* NM_TO_A;
 		drac += dot(rac, rac);
 
-		rbc = (positions[Ob] - positions[Oc]);
+		rbc = (positions[Ob] - positions[Oc])* NM_TO_A;
 		drbc += dot(rbc, rbc);
-		printf("rab = <%lf, %lf, %lf>\n",rab.x, rab.y, rab.z);
-		printf("rac = <%lf, %lf, %lf>\n",rac.x, rac.y, rac.z);
-		printf("rbc = <%lf, %lf, %lf>\n",rbc.x, rbc.y, rbc.z);
-		/*
+//		printf("rab = <%lf, %lf, %lf>\n",rab.x, rab.y, rab.z);
+//		printf("rac = <%lf, %lf, %lf>\n",rac.x, rac.y, rac.z);
+//		printf("rbc = <%lf, %lf, %lf>\n",rbc.x, rbc.y, rbc.z);
+		/* rab ra rbc good
 		 ref
 		 rab = <1.204804, 2.388359, 1.161075>
 		 rac = <0.957227, 2.209016, -1.593952>
 		 rbc = <-0.247577, -0.179343, -2.755027>
 		 cuda
-		rab = <0.247577, 0.179343, 2.755027>
-		rac = <-0.957227, -2.209016, 1.593952>
-		rbc = <-1.204804, -2.388359, -1.161075>
+		rab = <1.204804, 2.388359, 1.161075>
+		rac = <0.957227, 2.209016, -1.593952>
+		rbc = <-0.247577, -0.179343, -2.755027>
 		 */
 
 		drab = SQRT(drab);
 		drac = SQRT(drac);
 		drbc = SQRT(drbc);
 		real cal2joule = 4.184;	
-		printf("drab = %lf, drac = %lf, drbc = %lf\n", drab, drac, drbc);
+		
+		//printf("drab = %lf, drac = %lf, drbc = %lf\n", drab, drac, drbc);
+		// drab drac drbc good
 		//ref drab = 2.91615, drac = 2.88734, drbc = 2.77194
 		//cuda drab = 2.771936, drac = 2.887337, drbc = 2.916146
 
@@ -412,7 +423,10 @@ extern "C" __device__ real computeInteraction(
         	
         	real g[36];
             tempEnergy = poly_3b_v2x_eval(x, g);
-
+            
+//            for (int i = 0; i<36; i++)
+//            	printf("before computeGVar g[%d] = %lf\n", i, g[i]);
+            
 			real gab, gac, gbc;
 			real sab, sac, sbc;
 
@@ -421,12 +435,23 @@ extern "C" __device__ real computeInteraction(
 			evaluateSwitchFunc(drbc, &gbc, &sbc);
 			
 			real s = sab*sac + sab*sbc + sac*sbc;
-
+			//printf("s = %lf\n", s);
+			// s is good
 			for (int n = 0; n < 36; ++n)
 				g[n] *= s;
-
+			
+			// zero all forces
+			for (int n = 0; n < 9; ++n){
+				forces[n].x = 0;
+				forces[n].y = 0;
+				forces[n].z = 0;
+			}
+				
 			//extern "C" __device__ void computeGVar(real g, real k, real r0, real3 * a1, real3 * a2, real3 * g1, real3 * g2)
-        	i = 0;
+			for (int n = 0; n < 9; ++n)
+				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
+
+			i = 0;
         	computeGVar(g+i, kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, forces +Ha1, forces +Ha2); ++i; //0
         	computeGVar(g+i, kHH_intra, dHH_intra, positions +Hb1, positions +Hb2, forces +Hb1, forces +Hb2); ++i;
         	computeGVar(g+i, kHH_intra, dHH_intra, positions +Hc1, positions +Hc2, forces +Hc1, forces +Hc2); ++i;
@@ -463,16 +488,21 @@ extern "C" __device__ real computeInteraction(
         	computeGVar(g+i, kOO, dOO, positions +Oa, positions +Ob, forces +Oa, forces +Ob); ++i;
         	computeGVar(g+i, kOO, dOO, positions +Oa, positions +Oc, forces +Oa, forces +Oc); ++i;
         	computeGVar(g+i, kOO, dOO, positions +Ob, positions +Oc, forces +Ob, forces +Oc); ++i; //35
-
+			//degbuging gradients
+//        	for (int i = 0; i<36; i++)
+//        		printf("after computeGVar g[%d] = %lf\n", i, g[i]);
+			for (int n = 0; n < 9; ++n)
+				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
         	gab *= (sac + sbc)*tempEnergy/drab;
             gac *= (sab + sbc)*tempEnergy/drac;
             gbc *= (sab + sac)*tempEnergy/drbc;
             
-            printf("gab = %lf\n", gab);
-            printf("gac = %lf\n", gac);
-            printf("gbc = %lf\n", gbc);
+//            printf("gab = %lf\n", gab);
+//            printf("gac = %lf\n", gac);
+//            printf("gbc = %lf\n", gbc);
             
             /* ref
+             gab gac gbc good
             gab = -0.0390668
 			gac = -0.0392534
 			gbc = -0.0397021
@@ -486,37 +516,38 @@ extern "C" __device__ real computeInteraction(
 
 			tempEnergy *= s;
 			
-			forces[Oa].x += (gab*rab.x + gac*rac.x) * cal2joule;
-			forces[Ob].x += (gbc*rbc.x - gab*rab.x) * cal2joule;
-			forces[Oc].x -= (gac*rac.x + gbc*rbc.x) * cal2joule;
+			forces[Oa].x += (gab*rab.x + gac*rac.x) * cal2joule * -NM_TO_A;
+			forces[Ob].x += (gbc*rbc.x - gab*rab.x) * cal2joule * -NM_TO_A;
+			forces[Oc].x -= (gac*rac.x + gbc*rbc.x) * cal2joule * -NM_TO_A;
 
-            forces[Oa].y += (gab*rab.y + gac*rac.y) * cal2joule;            
-            forces[Ob].y += (gbc*rbc.y - gab*rab.y) * cal2joule;
-            forces[Oc].y -= (gac*rac.y + gbc*rbc.y) * cal2joule;
+            forces[Oa].y += (gab*rab.y + gac*rac.y) * cal2joule * -NM_TO_A;            
+            forces[Ob].y += (gbc*rbc.y - gab*rab.y) * cal2joule * -NM_TO_A;
+            forces[Oc].y -= (gac*rac.y + gbc*rbc.y) * cal2joule * -NM_TO_A;
 
-            forces[Oa].z += (gab*rab.z + gac*rac.z) * cal2joule;
-            forces[Ob].z += (gbc*rbc.z - gab*rab.z) * cal2joule;
-            forces[Oc].z -= (gac*rac.z + gbc*rbc.z) * cal2joule;
+            forces[Oa].z += (gab*rab.z + gac*rac.z) * cal2joule * -NM_TO_A;
+            forces[Ob].z += (gbc*rbc.z - gab*rab.z) * cal2joule * -NM_TO_A;
+            forces[Oc].z -= (gac*rac.z + gbc*rbc.z) * cal2joule * -NM_TO_A;
 
             printf("forces[Oa] = <%lf, %lf, %lf>\n",forces[Oa].x ,forces[Oa].y, forces[Oa].z);
             printf("forces[Ob] = <%lf, %lf, %lf>\n",forces[Ob].x ,forces[Ob].y, forces[Ob].z);
             printf("forces[Oc] = <%lf, %lf, %lf>\n",forces[Oc].x ,forces[Oc].y, forces[Oc].z);
             
             /* ref
-            allForces[Oa] = <-23.7328, -19.2615, 16.736>
+			allForces[Oa] = <-23.7328, -19.2615, 16.736>
 			allForces[Ob] = <0.457798, 15.1341, 2.14656>
 			allForces[Oc] = <-12.5181, 14.6274, 6.79418>
+
              
              cuda
-            forces[Oa] = <47.869808, -32.322479, 27.491468>
-			forces[Ob] = <1.017803, -3.009752, -70.136742>
-			forces[Oc] = <-21.231544, -14.584190, -29.175079>
+			forces[Oa] = <189.473160, -111.636002, 77.668442>
+			forces[Ob] = <13.362639, 5.023933, -245.217773>
+			forces[Oc] = <-96.027763, -86.165901, -109.821854>
              */
 
         }
         real energy = tempEnergy * cal2joule;
 		
-		printf("TempEnergy (before return) = %lf\n", energy);
+		//printf("TempEnergy (before return) = %lf\n", energy);
 		
         return energy;
 
@@ -610,7 +641,15 @@ extern "C" __global__ void computeThreeBodyForce(
         	   real computed_energy = computeInteraction(atom1, atom2, atom3, posq, &periodicBoxSize, forces);
         	   printf("computed energy = %lf for atoms { %d, %d, %d } in thread: %d\n", computed_energy, atom1, atom2, atom3, threadIdx.x);
         	   energy += computed_energy;
-            }
+        	   int oxygens[] = {atom3, atom2, atom1}; // ordered to match ref
+        	   for (int j = 0, k = 0; j<3; j++){// j used to select oxygen index, k for index in force array
+				   for (int i=0, atom = oxygens[j]; i<3; i++, k++) {// i used to index of each particle associated with the oxygen
+					   atomicAdd(&forceBuffers[atom + i], static_cast<unsigned long long>((long long) (forces[k].x*0x100000000)));
+					   atomicAdd(&forceBuffers[atom + i+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[k].y*0x100000000)));
+					   atomicAdd(&forceBuffers[atom + i+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[k].z*0x100000000)));
+				   }
+        	   }
+           }
         }
     }
     energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;

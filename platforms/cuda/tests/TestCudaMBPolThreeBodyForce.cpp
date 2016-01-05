@@ -255,13 +255,13 @@ int main(int argc, char* argv[]) {
         std::cout << "TestCudaMBPolThreeBodyForce Cluster" << std::endl;
         testThreeBody( boxDimension, false );
 
-        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
-        boxDimension = 50;
-        testThreeBody( boxDimension, false);
-
-        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
-        boxDimension = 50;
-        testThreeBody( boxDimension, true);
+//        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
+//        boxDimension = 50;
+//        testThreeBody( boxDimension, false);
+//
+//        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
+//        boxDimension = 50;
+//        testThreeBody( boxDimension, true);
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
