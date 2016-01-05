@@ -3,11 +3,9 @@
 typedef struct {
     real3 pos, force, torque, dipole, inducedDipole, inducedDipolePolar;
     real q;
-    float thole, damp;
-#ifdef INCLUDE_QUADRUPOLES
-    real quadrupoleXX, quadrupoleXY, quadrupoleXZ, quadrupoleYY, quadrupoleYZ;
-    float padding;
-#endif
+    float damp;
+    int moleculeIndex;
+    int atomType;
 } AtomData;
 
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy);
@@ -19,30 +17,21 @@ __device__ void computeOneInteractionF2NoScale(AtomData& atom1, volatile AtomDat
 __device__ void computeOneInteractionT1NoScale(AtomData& atom1, volatile AtomData& atom2, const real4 delta, const real4 bn);
 __device__ void computeOneInteractionT2NoScale(AtomData& atom1, volatile AtomData& atom2, const real4 delta, const real4 bn);
 
-inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole,
-        const real* __restrict__ labFrameQuadrupole, const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar, const float2* __restrict__ dampingAndThole) {
+inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq,
+        const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar,
+        const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     real4 atomPosq = posq[atom];
     data.pos = make_real3(atomPosq.x, atomPosq.y, atomPosq.z);
     data.q = atomPosq.w;
-    data.dipole.x = labFrameDipole[atom*3];
-    data.dipole.y = labFrameDipole[atom*3+1];
-    data.dipole.z = labFrameDipole[atom*3+2];
-#ifdef INCLUDE_QUADRUPOLES
-    data.quadrupoleXX = labFrameQuadrupole[atom*5];
-    data.quadrupoleXY = labFrameQuadrupole[atom*5+1];
-    data.quadrupoleXZ = labFrameQuadrupole[atom*5+2];
-    data.quadrupoleYY = labFrameQuadrupole[atom*5+3];
-    data.quadrupoleYZ = labFrameQuadrupole[atom*5+4];
-#endif
     data.inducedDipole.x = inducedDipole[atom*3];
     data.inducedDipole.y = inducedDipole[atom*3+1];
     data.inducedDipole.z = inducedDipole[atom*3+2];
     data.inducedDipolePolar.x = inducedDipolePolar[atom*3];
     data.inducedDipolePolar.y = inducedDipolePolar[atom*3+1];
     data.inducedDipolePolar.z = inducedDipolePolar[atom*3+2];
-    float2 temp = dampingAndThole[atom];
-    data.damp = temp.x;
-    data.thole = temp.y;
+    data.damp = damping[atom];
+    data.moleculeIndex = moleculeIndex[atom];
+    data.atomType = atomType[atom];
 }
 
 __device__ real computeDScaleFactor(unsigned int polarizationGroup, int index) {
@@ -170,18 +159,8 @@ __device__ void computeSelfEnergyAndTorque(AtomData& atom1, real& energy) {
     real fterm = -EWALD_ALPHA/SQRT_PI;
     real cii = atom1.q*atom1.q;
     real dii = dot(atom1.dipole, atom1.dipole);
-#ifdef INCLUDE_QUADRUPOLES
-    real qii = 2*(atom1.quadrupoleXX*atom1.quadrupoleXX +
-                  atom1.quadrupoleYY*atom1.quadrupoleYY +
-                  atom1.quadrupoleXX*atom1.quadrupoleYY +
-                  atom1.quadrupoleXY*atom1.quadrupoleXY +
-                  atom1.quadrupoleXZ*atom1.quadrupoleXZ +
-                  atom1.quadrupoleYZ*atom1.quadrupoleYZ);
-#else
-    real qii = 0;
-#endif
     real uii = dot(atom1.dipole, atom1.inducedDipole);
-    real selfEnergy = (cii + term*(dii/3 + 2*term*qii/5));
+    real selfEnergy = (cii + term*(dii/3));
     selfEnergy += term*uii/3;
     selfEnergy *= fterm;
     energy += selfEnergy;
@@ -204,8 +183,10 @@ extern "C" __global__ void computeElectrostatics(
         real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, unsigned int maxTiles, const real4* __restrict__ blockCenter,
         const unsigned int* __restrict__ interactingAtoms,
 #endif
-        const real* __restrict__ labFrameDipole, const real* __restrict__ labFrameQuadrupole, const real* __restrict__ inducedDipole,
-        const real* __restrict__ inducedDipolePolar, const float2* __restrict__ dampingAndThole) {
+        const real* __restrict__ inducedDipole,
+        const real* __restrict__ inducedDipolePolar,
+        const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
+
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
     const unsigned int tgx = threadIdx.x & (TILE_SIZE-1);
@@ -223,7 +204,7 @@ extern "C" __global__ void computeElectrostatics(
         const unsigned int y = tileIndices.y;
         AtomData data;
         unsigned int atom1 = x*TILE_SIZE + tgx;
-        loadAtomData(data, atom1, posq, labFrameDipole, labFrameQuadrupole, inducedDipole, inducedDipolePolar, dampingAndThole);
+        loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
         data.force = make_real3(0);
         data.torque = make_real3(0);
         uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
@@ -233,18 +214,11 @@ extern "C" __global__ void computeElectrostatics(
 
             localData[threadIdx.x].pos = data.pos;
             localData[threadIdx.x].q = data.q;
-            localData[threadIdx.x].dipole = data.dipole;
-#ifdef INCLUDE_QUADRUPOLES
-            localData[threadIdx.x].quadrupoleXX = data.quadrupoleXX;
-            localData[threadIdx.x].quadrupoleXY = data.quadrupoleXY;
-            localData[threadIdx.x].quadrupoleXZ = data.quadrupoleXZ;
-            localData[threadIdx.x].quadrupoleYY = data.quadrupoleYY;
-            localData[threadIdx.x].quadrupoleYZ = data.quadrupoleYZ;
-#endif
             localData[threadIdx.x].inducedDipole = data.inducedDipole;
             localData[threadIdx.x].inducedDipolePolar = data.inducedDipolePolar;
-            localData[threadIdx.x].thole = data.thole;
             localData[threadIdx.x].damp = data.damp;
+            localData[threadIdx.x].moleculeIndex = data.moleculeIndex;
+            localData[threadIdx.x].atomType = data.atomType;
 
             // Compute forces.
 
@@ -272,7 +246,7 @@ extern "C" __global__ void computeElectrostatics(
             // This is an off-diagonal tile.
 
             unsigned int j = y*TILE_SIZE + tgx;
-            loadAtomData(localData[threadIdx.x], j, posq, labFrameDipole, labFrameQuadrupole, inducedDipole, inducedDipolePolar, dampingAndThole);
+            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
             localData[threadIdx.x].torque = make_real3(0);
             unsigned int tj = tgx;
@@ -366,7 +340,7 @@ extern "C" __global__ void computeElectrostatics(
             // Load atom data for this tile.
 
             AtomData data;
-            loadAtomData(data, atom1, posq, labFrameDipole, labFrameQuadrupole, inducedDipole, inducedDipolePolar, dampingAndThole);
+            loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             data.force = make_real3(0);
             data.torque = make_real3(0);
 #ifdef USE_CUTOFF
@@ -375,7 +349,7 @@ extern "C" __global__ void computeElectrostatics(
             unsigned int j = y*TILE_SIZE + tgx;
 #endif
             atomIndices[threadIdx.x] = j;
-            loadAtomData(localData[threadIdx.x], j, posq, labFrameDipole, labFrameQuadrupole, inducedDipole, inducedDipolePolar, dampingAndThole);
+            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
             localData[threadIdx.x].torque = make_real3(0);
 
