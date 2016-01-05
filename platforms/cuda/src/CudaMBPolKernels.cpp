@@ -1300,43 +1300,45 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 
 		//// Compute electrostatic force.
 
-		//void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
-		//		&cu.getEnergyBuffer().getDevicePointer(),
-		//		&cu.getPosq().getDevicePointer(),
-		//		&covalentFlags->getDevicePointer(),
-		//		&polarizationGroupFlags->getDevicePointer(),
-		//		&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
-		//		&numTileIndices, &nb.getInteractingTiles().getDevicePointer(),
-		//		&nb.getInteractionCount().getDevicePointer(),
-		//		cu.getPeriodicBoxSizePointer(),
-		//		cu.getInvPeriodicBoxSizePointer(),
-		//		cu.getPeriodicBoxVecXPointer(), cu.getPeriodicBoxVecYPointer(),
-		//		cu.getPeriodicBoxVecZPointer(), &maxTiles,
-		//		&nb.getBlockCenters().getDevicePointer(),
-		//		&nb.getInteractingAtoms().getDevicePointer(),
-		//		&inducedDipole->getDevicePointer(),
-		//		&inducedDipolePolar->getDevicePointer(),
-		//		&damping->getDevicePointer() };
-		//cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
-		//		numForceThreadBlocks * electrostaticsThreads,
-		//		electrostaticsThreads);
-		//void* pmeTransformInducedPotentialArgs[] = {
-		//		&pmePhidp->getDevicePointer(), &pmeCphi->getDevicePointer(),
-		//		recipBoxVectorPointer[0], recipBoxVectorPointer[1],
-		//		recipBoxVectorPointer[2] };
-		//cu.executeKernel(pmeTransformPotentialKernel,
-		//		pmeTransformInducedPotentialArgs, cu.getNumAtoms());
-		//void* pmeInducedForceArgs[] = { &cu.getPosq().getDevicePointer(),
-		//		&cu.getForce().getDevicePointer(),
-		//		&cu.getEnergyBuffer().getDevicePointer(),
-		//		&inducedDipole->getDevicePointer(),
-		//		&inducedDipolePolar->getDevicePointer(),
-		//		&pmePhi->getDevicePointer(), &pmePhid->getDevicePointer(),
-		//		&pmePhip->getDevicePointer(), &pmePhidp->getDevicePointer(),
-		//		&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
-		//		recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
-		//cu.executeKernel(pmeInducedForceKernel, pmeInducedForceArgs,
-		//		cu.getNumAtoms());
+		void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
+				&cu.getEnergyBuffer().getDevicePointer(),
+				&cu.getPosq().getDevicePointer(),
+				&covalentFlags->getDevicePointer(),
+				&polarizationGroupFlags->getDevicePointer(),
+				&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
+				&numTileIndices, &nb.getInteractingTiles().getDevicePointer(),
+				&nb.getInteractionCount().getDevicePointer(),
+				cu.getPeriodicBoxSizePointer(),
+				cu.getInvPeriodicBoxSizePointer(),
+				cu.getPeriodicBoxVecXPointer(), cu.getPeriodicBoxVecYPointer(),
+				cu.getPeriodicBoxVecZPointer(), &maxTiles,
+				&nb.getBlockCenters().getDevicePointer(),
+				&nb.getInteractingAtoms().getDevicePointer(),
+				&inducedDipole->getDevicePointer(),
+				&inducedDipolePolar->getDevicePointer(),
+                &damping->getDevicePointer(),
+                &moleculeIndex->getDevicePointer(),
+                &atomType->getDevicePointer()  };
+		cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
+				numForceThreadBlocks * electrostaticsThreads,
+				electrostaticsThreads);
+		void* pmeTransformInducedPotentialArgs[] = {
+				&pmePhidp->getDevicePointer(), &pmeCphi->getDevicePointer(),
+				recipBoxVectorPointer[0], recipBoxVectorPointer[1],
+				recipBoxVectorPointer[2] };
+		cu.executeKernel(pmeTransformPotentialKernel,
+				pmeTransformInducedPotentialArgs, cu.getNumAtoms());
+		void* pmeInducedForceArgs[] = { &cu.getPosq().getDevicePointer(),
+				&cu.getForce().getDevicePointer(),
+				&cu.getEnergyBuffer().getDevicePointer(),
+				&inducedDipole->getDevicePointer(),
+				&inducedDipolePolar->getDevicePointer(),
+				&pmePhi->getDevicePointer(), &pmePhid->getDevicePointer(),
+				&pmePhip->getDevicePointer(), &pmePhidp->getDevicePointer(),
+				&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
+				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
+		cu.executeKernel(pmeInducedForceKernel, pmeInducedForceArgs,
+				cu.getNumAtoms());
 	}
 
 
