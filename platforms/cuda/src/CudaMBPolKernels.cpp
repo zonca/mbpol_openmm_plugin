@@ -409,7 +409,13 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 }
 
 double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
-
+//	//print positins
+//    //void getPositions(std::vector<Vec3>& positions);
+//	std::vector<Vec3> positions;
+//	context.getPositions(positions);
+//	for(std::vector<Vec3>::iterator it = positions.begin(); it != positions.end(); ++it) {
+//		std::cout<< (*it)[0] << std::endl;
+//	}
 	///////////////////////////From Two Body/////////////////////////////////////
 
     CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
@@ -504,6 +510,7 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 			copyPairsArgs.push_back(&neighborStartIndex->getDevicePointer());
 	   }
     }
+
     while (true) {
 		int* numPairs = (int*) cu.getPinnedBuffer();
 		if (nb.getUseCutoff()) {

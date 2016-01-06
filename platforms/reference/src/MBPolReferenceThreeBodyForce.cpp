@@ -85,8 +85,8 @@ void g_var(const double& g,
            const OpenMM::RealVec& a1, const OpenMM::RealVec& a2,
            OpenMM::RealVec& g1,       OpenMM::RealVec& g2)
 {
-	printf ("parameter check of computeGVar: g = %10lf, k = %10lf, r0 = %10lf, a1 = < %10lf, %10lf, %10lf>, a2 = < %10lf, %10lf, %10lf>, g1 = < %10lf, %10lf, %10lf> g2 = < %10lf, %10lf, %10lf>\n",
-			g, k, r0, a1[0], a1[1], a1[2], a2[0], a2[1], a2[2], g1[0], g1[1], g1[2], g2[0], g2[1], g2[2]);
+//	printf ("parameter check of computeGVar: g = %10lf, k = %10lf, r0 = %10lf, a1 = < %10lf, %10lf, %10lf>, a2 = < %10lf, %10lf, %10lf>, g1 = < %10lf, %10lf, %10lf> g2 = < %10lf, %10lf, %10lf>\n",
+//			g, k, r0, a1[0], a1[1], a1[2], a2[0], a2[1], a2[2], g1[0], g1[1], g1[2], g2[0], g2[1], g2[2]);
 
     const double dx[3] = {(a1[0] - a2[0])*nm_to_A,
                           (a1[1] - a2[1])*nm_to_A,
@@ -146,10 +146,14 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
             for (unsigned int i=0; i < 3; i++)
                 allPositions.push_back(particlePositions[allParticleIndices[*it][i]]);
         }
-
+//	for (int i = 0; i<9; i++) {
+//		printf("before imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, allPositions[i][0], allPositions[i][1], allPositions[i][2]);
+//	}
         if( _nonbondedMethod == CutoffPeriodic )
             imageMolecules(_periodicBoxDimensions, allPositions);
-
+//	for (int i = 0; i<9; i++) {
+//		printf(" after imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, allPositions[i][0], allPositions[i][1], allPositions[i][2]);
+//	}
         RealVec rab, rac, rbc;
         double drab(0), drac(0), drbc(0);
 
@@ -216,8 +220,8 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
           double g[36];
           double retval = poly_3b_v2x::eval(thefit, x, g);
 
-//          for (int i = 0; i<36; i++)
-//        	  printf("before g_var g[%d] = %lf\n", i, g[i]);
+          for (int i = 0; i<36; i++)
+        	  printf("before g_var g[%d] = %lf\n", i, g[i]);
 
           double gab, gac, gbc;
 
@@ -310,7 +314,7 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
               {
                   forces[allParticleIndices[*it][i]] += allForces[j];
                   j++;
-                  std::cout << "forces[allParticleIndices[" << *it <<"][" << i<< "]] = " << forces[allParticleIndices[*it][i]] << std::endl;
+                 // std::cout << "forces[allParticleIndices[" << *it <<"][" << i<< "]] = " << forces[allParticleIndices[*it][i]] << std::endl;
               }
           }
 

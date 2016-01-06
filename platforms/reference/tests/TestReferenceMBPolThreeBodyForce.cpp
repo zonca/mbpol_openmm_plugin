@@ -193,13 +193,13 @@ int main( int numberOfArguments, char* argv[] ) {
         std::cout << "TestReferenceMBPolThreeBodyForce Cluster" << std::endl;
         testThreeBody( boxDimension, false );
 
-//        std::cout << "TestReferenceMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
-//        boxDimension = 50;
-//        testThreeBody( boxDimension, false);
-//
-//        std::cout << "TestReferenceMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
-//        boxDimension = 50;
-//        testThreeBody( boxDimension, true);
+        std::cout << "TestReferenceMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
+        boxDimension = 50;
+        testThreeBody( boxDimension, false);
+
+        std::cout << "TestReferenceMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
+        boxDimension = 50;
+        testThreeBody( boxDimension, true);
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
