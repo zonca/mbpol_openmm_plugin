@@ -46,6 +46,15 @@ inline __device__ real4 delta(real3 vec1, real3 vec2, real4 periodicBoxSize, rea
     result.w = result.x*result.x + result.y*result.y + result.z*result.z;
     return result;
 }
+
+extern "C" __device__ void imageOxygens(const real4 * box, real3 * allPositions)
+{
+    // Take first oxygen as central atom
+
+    // Now image the oxygen of the second &molecule
+    imageParticles(box, &allPositions[0], &allPositions[1]);
+}
+
 /**
  * Find a list of neighbors for each atom.
  */
@@ -85,6 +94,8 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
     		continue;
         
         real3 pos1 = trim(posq[atom1]);
+        printf("find neighbors pos1 = <%10lf, %10lf, %10lf>\n",  pos1.x, pos1.y, pos1.z);
+        
         int block1 = atom1/TILE_SIZE;
         real4 blockCenter1 = blockCenter[block1];
         real4 blockSize1 = blockBoundingBox[block1];
@@ -134,7 +145,33 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
                         real3 pos2 = positionCache[threadIdx.x-indexInWarp+j];
 //                        printf("threadIdx.x-indexInWarp+j = %d\n", threadIdx.x-indexInWarp+j);
                         // Decide whether to include this atom pair in the neighbor list.
-
+               
+//#if USE_PERIODIC	                        
+//                    //make copy of pos1 and pos2 because we do not want this oxygen imaging to be perminant on the data in parameters
+//                    real3 pos1_copy, pos2_copy;
+//                    pos1_copy.x = pos1.x;
+//                    pos1_copy.y = pos1.y;
+//                    pos1_copy.z = pos1.z;
+//                    pos2_copy.x = pos2.x;
+//					pos2_copy.y = pos2.y;
+//					pos2_copy.z = pos2.z;
+//					// images only oxygen here to for neighbor list, 
+//                    //for each pair in the neighbor list the second will be imaged to the first
+//                    real3 positions[] = {pos1_copy, pos2_copy};
+                    //printf("pos1 = <%10lf, %10lf, %10lf>, pos2 = <%10lf, %10lf, %10lf>\n", pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z);
+         			//printf("atom1 = %d, atom2 = %d\n", atom1, atom2);
+//                    imageOxygens(&periodicBoxSize, positions);
+//                    real4 atomDelta = delta(pos1_copy, pos2_copy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
+//
+//#else
+//                    real4 atomDelta = delta(pos1, pos2, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
+//#endif
+                        
+//#if USE_PERIODIC       // images only oxygen here to for neighbor list
+//					real3 positions[] = {pos1, pos2};
+//					imageOxygens(&periodicBoxSize, positions);
+//#endif 
+//                        
                         real4 atomDelta = delta(pos1, pos2, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
 
                         bool includeAtom = (atom2 > atom1 && atom2 < NUM_ATOMS && atomDelta.w < CUTOFF_SQUARED);
@@ -231,6 +268,7 @@ extern "C" __global__ void findBlockBounds(real4 periodicBoxSize, real4 invPerio
     int base = index*TILE_SIZE;
     while (base < NUM_ATOMS) {
         real4 pos = posq[base];
+        printf("blockbounds pos = <%10lf, %10lf, %10lf>\n",  pos.x, pos.y, pos.z);
 #ifdef USE_PERIODIC
         APPLY_PERIODIC_TO_POS(pos)
 #endif
@@ -312,6 +350,35 @@ extern "C" __device__ void evaluateSwitchFunc(real r, real * g, real * s)
         *s = 1.0;
     }
 }
+
+extern "C" __device__ void imageMolecules(const real4 * box, real3 * allPositions)
+{
+
+    // Take first oxygen as central atom
+
+    // image its two hydrogens with respect of the first oxygen
+
+    imageParticles(box, &allPositions[Oa], &allPositions[Ha1]);
+    imageParticles(box, &allPositions[Oa], &allPositions[Ha2]);
+
+    // Now image the oxygen of the second molecule
+
+    imageParticles(box, &allPositions[Oa], &allPositions[Ob]);
+
+    // Image the hydrogen of the second molecule with respect to the oxygen of the second molecule
+    imageParticles(box, &allPositions[Ob], &allPositions[Hb1]);
+    imageParticles(box, &allPositions[Ob], &allPositions[Hb2]);
+    
+    // Now image the oxygen of the third molecule
+
+    imageParticles(box, &allPositions[Oa], &allPositions[Oc]);
+
+    // Image the hydrogen of the third mo&lecule with respect to the oxygen of the second third
+    imageParticles(box, &allPositions[Oc], &allPositions[Hc1]);
+    imageParticles(box, &allPositions[Oc], &allPositions[Hc2]);
+
+}
+
 extern "C" __device__ real computeInteraction(
 		const unsigned int atom1,
         const unsigned int atom2,
@@ -336,10 +403,18 @@ extern "C" __device__ real computeInteraction(
 										posq[atom1+i].y,
 										posq[atom1+i].z);
 	}
-	    
-#if USE_PERIODIC
+	
+	for (int i = 0; i<9; i++) {
+		printf("before imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, positions[i].x, positions[i].y, positions[i].z);
+	}
+	
+#ifdef USE_PERIODIC
          			imageMolecules(periodicBoxSize, positions);
 #endif
+         			
+	for (int i = 0; i<9; i++) {
+		printf(" after imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, positions[i].x, positions[i].y, positions[i].z);
+	}
 
 		real3 rab, rac, rbc;
 		real drab(0), drac(0), drbc(0);

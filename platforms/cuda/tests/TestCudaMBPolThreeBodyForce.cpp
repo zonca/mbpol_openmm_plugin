@@ -111,7 +111,8 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
-            positions[i][j] *= 1e-1;
+        	positions[i][j] = 1e-1*positions[i][j] + 25;
+        	//positions[i][j] *= 1e-1;
         }
     }
 
@@ -158,7 +159,7 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
         forces[ii][2] /= CalToJoule*10;
     }
 
-    double tolerance = 1.0e-03;
+    double tolerance = 1.0e-01;
 
 
     double energy = state.getPotentialEnergy() / CalToJoule;
@@ -255,13 +256,13 @@ int main(int argc, char* argv[]) {
         std::cout << "TestCudaMBPolThreeBodyForce Cluster" << std::endl;
         testThreeBody( boxDimension, false );
 
-//        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
-//        boxDimension = 50;
-//        testThreeBody( boxDimension, false);
-//
-//        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
-//        boxDimension = 50;
-//        testThreeBody( boxDimension, true);
+        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
+        boxDimension = 50;
+        testThreeBody( boxDimension, false);
+
+        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
+        boxDimension = 50;
+        testThreeBody( boxDimension, true);
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
