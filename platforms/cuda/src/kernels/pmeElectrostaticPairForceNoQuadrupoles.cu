@@ -14,9 +14,6 @@ computeOneInteractionF1(
     real zr = delta.z;
     real rr1 = delta.w;
     real r = SQRT(xr*xr + yr*yr + zr*zr);
-    real psc3 = 1.;
-    real dsc3 = 1.;
-    real usc5 = 1.;
 
     // set the permanent multipole and induced dipole values;
 
@@ -214,7 +211,7 @@ computeOneInteractionF2(
     ftm23 += prefactor1*atom1.inducedDipolePolar.z;
 
     real sci3 = atom1.inducedDipole.x*xr + atom1.inducedDipole.y*yr + atom1.inducedDipole.z*zr;
-    energy += forceFactor*0.5f*sci3*(ck*(bn1-psc3));
+    energy += forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD)));
     real scip3 = atom1.inducedDipolePolar.x*xr + atom1.inducedDipolePolar.y*yr + atom1.inducedDipolePolar.z*zr;
 
 #ifndef DIRECT_POLARIZATION
