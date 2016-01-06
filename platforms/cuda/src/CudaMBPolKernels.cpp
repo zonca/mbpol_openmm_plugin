@@ -122,6 +122,7 @@ public:
     bool areGroupsIdentical(int group1, int group2) {
         return true;
     }
+
 private:
     const MBPolTwoBodyForce& force;
 };
@@ -272,7 +273,10 @@ public:
         force.getParticleParameters(index, particles);
     }
     bool areGroupsIdentical(int group1, int group2) {
-        return true;
+        return false;
+    }
+    bool areParticlesIdentical(int particle1, int particle2) {
+    	return false;
     }
 private:
     const MBPolThreeBodyForce& force;
