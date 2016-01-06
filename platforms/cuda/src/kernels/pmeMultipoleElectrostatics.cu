@@ -106,14 +106,8 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
 
     real3 force;
 
-    if (hasExclusions) {
-        computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, dScale, pScale, mScale, force, energy);
-        computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy);
-    }
-    else {
-        computeOneInteractionF1NoScale(atom1, atom2, delta, bn, bn5, forceFactor, force, energy);
-        computeOneInteractionF2NoScale(atom1, atom2, delta, bn, forceFactor, force, energy);
-    }
+    computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, dScale, pScale, mScale, force, energy);
+    computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy);
 
     atom1.force += force;
     if (forceFactor == 1)
