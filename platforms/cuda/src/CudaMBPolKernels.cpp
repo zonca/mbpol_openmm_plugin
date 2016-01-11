@@ -1308,6 +1308,11 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 					recipBoxVectorPointer[2] };
 			cu.executeKernel(pmeRecordInducedFieldDipolesKernel,
 					pmeRecordInducedFieldDipolesArgs, cu.getNumAtoms());
+
+            bool converged = iterateDipolesByDIIS(i);
+            if (converged)
+                break;
+
 		}
 
 		//// Compute electrostatic force.
