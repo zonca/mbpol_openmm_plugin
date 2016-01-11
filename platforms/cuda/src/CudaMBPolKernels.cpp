@@ -1336,15 +1336,15 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
                 &damping->getDevicePointer(),
                 &moleculeIndex->getDevicePointer(),
                 &atomType->getDevicePointer()  };
-		//cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
-		//		numForceThreadBlocks * electrostaticsThreads,
-		//		electrostaticsThreads);
+		cu.executeKernel(electrostaticsKernel, electrostaticsArgs,
+				numForceThreadBlocks * electrostaticsThreads,
+				electrostaticsThreads);
 		void* pmeTransformInducedPotentialArgs[] = {
 				&pmePhidp->getDevicePointer(), &pmeCphi->getDevicePointer(),
 				recipBoxVectorPointer[0], recipBoxVectorPointer[1],
 				recipBoxVectorPointer[2] };
-		//cu.executeKernel(pmeTransformPotentialKernel,
-		//		pmeTransformInducedPotentialArgs, cu.getNumAtoms());
+		cu.executeKernel(pmeTransformPotentialKernel,
+				pmeTransformInducedPotentialArgs, cu.getNumAtoms());
 		void* pmeInducedForceArgs[] = { &cu.getPosq().getDevicePointer(),
 				&cu.getForce().getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
@@ -1354,8 +1354,8 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&pmePhip->getDevicePointer(), &pmePhidp->getDevicePointer(),
 				&pmeCphi->getDevicePointer(), recipBoxVectorPointer[0],
 				recipBoxVectorPointer[1], recipBoxVectorPointer[2] };
-		//cu.executeKernel(pmeInducedForceKernel, pmeInducedForceArgs,
-		//		cu.getNumAtoms());
+		cu.executeKernel(pmeInducedForceKernel, pmeInducedForceArgs,
+				cu.getNumAtoms());
 	}
 
 
