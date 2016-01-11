@@ -88,6 +88,13 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
         scale1 = rr3 - bn1;
         scale2 = bn2 - rr5;
+        //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex == 2) & (atom2.atomType==1))
+        //{
+        //    printf("r: %.8g\n", r);
+        //    printf("dampForExp: %.8g\n", dampForExp);
+        //    printf("scale1: %.8g\n", scale1);
+        //    printf("scale2: %.8g\n", scale2);
+        //}
     }
     else {
         scale1 = 0;
