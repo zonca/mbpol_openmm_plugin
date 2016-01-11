@@ -289,6 +289,14 @@ static void testWater3() {
     mbpolElectrostaticsForce->setCutoffDistance( cutoff );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
 
+    // disable Ewald by setting alpha to very low value
+    mbpolElectrostaticsForce->setAEwald( 1e-15 );
+    std::vector<int> pmeGridDimension( 3 );
+    int inputPmeGridDimension = 20;
+    pmeGridDimension[0] = pmeGridDimension[1] = pmeGridDimension[2] = inputPmeGridDimension;
+    mbpolElectrostaticsForce->setPmeGridDimensions( pmeGridDimension );
+
+
     unsigned int particlesPerMolecule = 3;
 
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
@@ -302,11 +310,11 @@ static void testWater3() {
 
     int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, -1,
                                             waterMoleculeIndex, 0, 0.001310, 0.001310 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, -1,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, -1,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
         waterMoleculeIndex++;
     }
@@ -395,16 +403,16 @@ static void testWater3() {
            }
 
        }
-    std::cout  << std::endl << "Forces:" << std::endl;
+    //std::cout  << std::endl << "Forces:" << std::endl;
 
-	for (int i = 0; i < numberOfParticles; i++) {
-		std::cout << "Force atom " << i << ": " << expectedForces[i]
-				<< " Kcal/mol/A <mbpol>" << std::endl;
-		std::cout << "Force atom " << i << ": " << forces[i]
-				<< " Kcal/mol/A <openmm-mbpol>" << std::endl << std::endl;
-	}
+	//for (int i = 0; i < numberOfParticles; i++) {
+	//	std::cout << "Force atom " << i << ": " << expectedForces[i]
+	//			<< " Kcal/mol/A <mbpol>" << std::endl;
+	//	std::cout << "Force atom " << i << ": " << forces[i]
+	//			<< " Kcal/mol/A <openmm-mbpol>" << std::endl << std::endl;
+	//}
 
-    std::cout << "Test END: " << testName << std::endl << std::endl;
+    //std::cout << "Test END: " << testName << std::endl << std::endl;
     //for( unsigned int ii = 0; ii < forces.size(); ii++ ){
     //    ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
     //}
