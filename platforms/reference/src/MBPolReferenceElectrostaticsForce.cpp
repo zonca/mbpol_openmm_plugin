@@ -600,6 +600,10 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoles( const std::vect
 
     convergeInduceDipoles( particleData, updateInducedDipoleField );
 
+    for( unsigned int ii = 0; ii < 4; ii++ )
+		std::cout << _inducedDipole[ii] << std::endl;
+
+
     return;
 }
 
