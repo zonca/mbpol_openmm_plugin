@@ -1243,6 +1243,12 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		cu.executeKernel(pmeInducedPotentialKernel, pmeInducedPotentialArgs,
 				cu.getNumAtoms());
 
+
+        std::vector<Vec3> dipoles;
+        getInducedDipoles(context, dipoles);
+        for (int i=0; i<dipoles.size(); i++)
+            std::cout << dipoles[i] << std::endl;
+
 		//// Iterate until the dipoles converge.
 
 		vector<float2> errors;
