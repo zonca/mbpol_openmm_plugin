@@ -37,6 +37,7 @@
 #include "openmm/cuda/CudaForceInfo.h"
 #include "CudaKernelSources.h"
 #include "jama_svd.h"
+#include <limits>
 
 #include <iostream>
 //////////////// for electrostatics///////////////////////
@@ -339,10 +340,13 @@ public:
 				return false;
 			}
 		}
-		return true;
+        // FIXME implement particles identical and groups identical to allow
+        // optimization by the CUDA platform, see:
+        // http://docs.openmm.org/6.1.0/developerguide/developer.html#reordering-of-particles
+		return false;
 	}
 	int getNumParticleGroups() {
-		return 7 * force.getNumElectrostatics();
+		return force.getNumElectrostatics();
 	}
 	void getParticlesInGroup(int index, vector<int>& particles) {
 		int particle = index / 7;
@@ -351,7 +355,7 @@ public:
 				MBPolElectrostaticsForce::CovalentType(type), particles);
 	}
 	bool areGroupsIdentical(int group1, int group2) {
-		return ((group1 % 7) == (group2 % 7));
+		return false;
 	}
 private:
 	const MBPolElectrostaticsForce& force;
@@ -364,7 +368,7 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(
 				system), hasInitializedScaleFactors(false), hasInitializedFFT(
 				false), multipolesAreValid(false),
 		field(NULL), fieldPolar(
-		NULL), inducedField(NULL), inducedFieldPolar(NULL), damping(NULL), inducedDipole(
+		NULL), inducedField(NULL), inducedFieldPolar(NULL), potentialBuffers(NULL), chargeDerivatives(NULL), damping(NULL), inducedDipole(
 		NULL), inducedDipolePolar(
 		NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(
 		NULL), prevErrors(NULL), polarizability(NULL), covalentFlags(
@@ -386,6 +390,10 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
 		delete inducedField;
 	if (inducedFieldPolar != NULL)
 		delete inducedFieldPolar;
+	if (potentialBuffers != NULL)
+		delete potentialBuffers;
+	if (chargeDerivatives != NULL)
+		delete chargeDerivatives;
 	if (damping != NULL)
 		delete damping;
 	if (inducedDipole != NULL)
@@ -582,6 +590,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		}
 	}
 
+    includeChargeRedistribution = force.getIncludeChargeRedistribution();
 	// Record other options.
 
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Mutual) {
@@ -595,6 +604,11 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		maxInducedIterations = 0;
 	bool usePME = (force.getNonbondedMethod() == MBPolElectrostaticsForce::PME);
 
+    potentialBuffers = new CudaArray(cu, paddedNumAtoms, sizeof(long long), "potentialBuffers");
+    cu.addAutoclearBuffer(*potentialBuffers);
+
+    // 3 vectors for each atom
+    chargeDerivatives = new CudaArray(cu, 9*paddedNumAtoms, elementSize, "chargeDerivatives");
 	// Create the kernels.
 
 	bool useShuffle = (cu.getComputeCapability() >= 3.0
@@ -609,6 +623,9 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	defines["NUM_ATOMS"] = cu.intToString(numMultipoles);
 	defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
 	defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
+    if (includeChargeRedistribution)
+        defines["INCLUDE_CHARGE_REDISTRIBUTION"] = "1";
+
 	defines["ENERGY_SCALE_FACTOR"] = cu.doubleToString(138.9354558456);
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
 		defines["DIRECT_POLARIZATION"] = "";
@@ -651,7 +668,18 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		defines["CUTOFF_SQUARED"] = cu.doubleToString(
 				force.getCutoffDistance() * force.getCutoffDistance());
 	}
+
+
+    //__device__ const real EPS = 2.2204460492503131E-16; //;
+    //__device__ const real FPMIN = 2.2250738585072014e-308/EPS; //std::numeric_limits<real>::min()/EPS;
+    defines["EPS"] = cu.doubleToString(cu.getUseDoublePrecision() ? std::numeric_limits<double>::epsilon() : std::numeric_limits<float>::epsilon());
+    defines["FPMIN"] = cu.doubleToString(cu.getUseDoublePrecision() ? std::numeric_limits<double>::min()/std::numeric_limits<double>::epsilon() : std::numeric_limits<float>::min()/std::numeric_limits<float>::epsilon());
+
 	int maxThreads = cu.getNonbondedUtilities().getForceThreadBlockSize();
+
+    // 1 thread per water molecule, numMultipoles / 4 should be enough, some extra threads will just do nothing
+    // the best would be to have the number of molecules that need charge redistribution
+	computeWaterChargeThreads = numMultipoles;
 	fixedFieldThreads = min(maxThreads,
 			cu.computeThreadBlockSize(fixedThreadMemory));
 	inducedFieldThreads = min(maxThreads,
@@ -661,6 +689,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			defines);
 	recordInducedDipolesKernel = cu.getKernel(module, "recordInducedDipoles");
 	computePotentialKernel = cu.getKernel(module, "computePotentialAtPoints");
+	computeWaterChargeKernel = cu.getKernel(module, "computeWaterCharge");
+	computeChargeDerivativesForces = cu.getKernel(module, "computeChargeDerivativesForces");
 	defines["THREAD_BLOCK_SIZE"] = cu.intToString(fixedFieldThreads);
 	module = cu.createModule(
 			CudaKernelSources::vectorOps
@@ -721,6 +751,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		pmeDefines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
 		pmeDefines["EPSILON_FACTOR"] = cu.doubleToString(138.9354558456);
 		pmeDefines["GRID_SIZE_X"] = cu.intToString(gridSizeX);
+        std::cout << "gridSizeX: " << pmeDefines["GRID_SIZE_X"] << std::endl;
 		pmeDefines["GRID_SIZE_Y"] = cu.intToString(gridSizeY);
 		pmeDefines["GRID_SIZE_Z"] = cu.intToString(gridSizeZ);
 		pmeDefines["M_PI"] = cu.doubleToString(M_PI);
@@ -990,6 +1021,19 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 	int elementSize = (
 			cu.getUseDoublePrecision() ? sizeof(double) : sizeof(float));
 	void* npt = NULL;
+
+	// Compute water charge
+
+    if (includeChargeRedistribution) {
+        void* computeWaterChargeArgs[] = { &cu.getPosq().getDevicePointer(),
+        &chargeDerivatives->getDevicePointer(),
+        &numMultipoles,
+        &moleculeIndex->getDevicePointer(),
+        &atomType->getDevicePointer()  };
+        cu.executeKernel(computeWaterChargeKernel, computeWaterChargeArgs,
+                1 * computeWaterChargeThreads, computeWaterChargeThreads);
+    }
+
 	if (pmeGrid == NULL) {
 		// Compute induced dipoles.
 
@@ -1042,6 +1086,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		// Compute electrostatic force.
 
 		void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
+				&potentialBuffers->getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
 				&covalentFlags->getDevicePointer(),
@@ -1198,6 +1243,11 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		cu.executeKernel(recordInducedDipolesKernel, recordInducedDipolesArgs,
 				cu.getNumAtoms());
 
+        //std::vector<Vec3> dipoles;
+        //getInducedDipoles(context, dipoles);
+        //for (int i=0; i<dipoles.size(); i++)
+        //    std::cout << dipoles[i] << std::endl;
+
 		//// Reciprocal space calculation for the induced dipoles.
 
 		cu.clearBuffer(*pmeGrid);
@@ -1298,7 +1348,18 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 					recipBoxVectorPointer[2] };
 			cu.executeKernel(pmeRecordInducedFieldDipolesKernel,
 					pmeRecordInducedFieldDipolesArgs, cu.getNumAtoms());
+
+            bool converged = iterateDipolesByDIIS(i);
+            if (converged)
+                break;
+
 		}
+
+        std::vector<Vec3> dipoles;
+        getInducedDipoles(context, dipoles);
+        for (int i=0; i<dipoles.size(); i++)
+            std::cout << dipoles[i] << std::endl;
+
 
 		//// Compute electrostatic force.
 
@@ -1343,6 +1404,17 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				cu.getNumAtoms());
 	}
 
+    // compute force contribution from charge derivatives
+    if (includeChargeRedistribution) {
+        void* computeChargeDerivativesForcesArgs[] = {
+        &chargeDerivatives->getDevicePointer(),
+        &numMultipoles,
+		&cu.getForce().getDevicePointer(),
+		&potentialBuffers->getDevicePointer()
+        };
+        cu.executeKernel(computeChargeDerivativesForces, computeChargeDerivativesForcesArgs,
+                1 * computeWaterChargeThreads, computeWaterChargeThreads);
+    }
 
 	// Record the current atom positions so we can tell later if they have changed.
 
@@ -1516,7 +1588,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(
 	// Compute the potential.
 
 	void* computePotentialArgs[] = { &cu.getPosq().getDevicePointer(),
-			&labFrameDipoles->getDevicePointer(),
 			&inducedDipole->getDevicePointer(), &points.getDevicePointer(),
 			&potential.getDevicePointer(), &numPoints,
 			cu.getPeriodicBoxSizePointer(), cu.getInvPeriodicBoxSizePointer(),
@@ -1583,7 +1654,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::computeSystemMultipoleMoments(
 	double zyqdp = 0.0;
 	double zzqdp = 0.0;
 	vector<T> labDipoleVec, inducedDipoleVec;
-	labFrameDipoles->download(labDipoleVec);
 	inducedDipole->download(inducedDipoleVec);
 	for (int i = 0; i < numAtoms; i++) {
 		totalCharge += posqLocal[i].w;

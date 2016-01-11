@@ -68,18 +68,30 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
         //RealOpenMM scale3 = getAndScaleInverseRs(particleI, particleJ, r, true, 3, TDD);
         //RealOpenMM scale5 = getAndScaleInverseRs(particleI, particleJ, r, true, 5, TDD);
-        real damp      = pow(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
+        real damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
-        real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+        bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
-        real ratio       = pow(r/damp, 4); // rA4 in MBPol
+        real ratio       = POW(r/damp, 4); // rA4 in MBPol
 
         // FIXME identify if we need to use TDDOH and so on
-        real pgamma = thole[TDD];
+        int tdd = TDD;
+        if (isSameWater) {
+            if ((atom1.atomType == 0) | (atom2.atomType == 0)) { // one is oxygen
+                tdd = TDDOH;
+            } else { // both hydrogens
+                tdd = TDDHH;
+            }
+        }
+        real pgamma = thole[tdd];
         real dampForExp = -1 * pgamma * ratio;
 
-        real scale3 = 1.0 - do_scaling * EXP(dampForExp);
-        real scale5 = scale3 - do_scaling * (4./3.) * pgamma * EXP(dampForExp) * ratio;
+        real scale3 = 1.0;
+        if (do_scaling)
+            scale3 -= EXP(dampForExp);
+        real scale5 = scale3;
+        if (do_scaling)
+            scale5 -= (4./3.) * pgamma * EXP(dampForExp) * ratio;
 
         real r3 = (r*r2);
         real r5 = (r3*r2);
@@ -120,11 +132,8 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real rr5 = -3*rr3*r2I;
 
     real damp      = pow(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
-    if ((atom1.moleculeIndex == 0) & (atom1.atomType == 0)){
-        //printf("damp %d,%d = %f\n", atom1.atomType, atom2.atomType, damp);
-    }
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
     real ratio       = pow(r/damp, 4); // rA4 in MBPol
 
@@ -132,15 +141,18 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real pgamma = thole[TDD];
     real dampForExp = -1 * pgamma * ratio;
 
-    real rr3_factor = 1.0 - do_scaling * EXP(dampForExp);
+    real rr3_factor = 1.0;
+    if (do_scaling)
+        rr3_factor -= EXP(dampForExp);
     rr3 *= rr3_factor;
-    rr5 *= rr3_factor - do_scaling * (4./3.) * pgamma * EXP(dampForExp) * ratio;
+
+    real rr5_factor = rr3_factor;
+    if (do_scaling)
+        rr5_factor -= (4./3.) * pgamma * EXP(dampForExp) * ratio;
+    rr5 *= rr5_factor;
 
     real dDotDelta = rr5*dot(deltaR, atom2.inducedDipole);
     atom1.field += rr3*atom2.inducedDipole + dDotDelta*deltaR;
-    if ((atom1.moleculeIndex == 0) & (atom1.atomType == 0) & (atom2.atomType ==0) & (atom2.moleculeIndex == 2)) {
-        //printf("rr3 %f %f %f\n", atom1.field.x, atom1.field.y, atom1.field.z);
-}
 
     dDotDelta = rr5*dot(deltaR, atom2.inducedDipolePolar);
     atom1.fieldPolar += rr3*atom2.inducedDipolePolar + dDotDelta*deltaR;

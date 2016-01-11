@@ -111,58 +111,6 @@ extern "C" __global__ void findAtomGridIndex(const real4* __restrict__ posq, int
 }
 
 /**
- * Convert the fixed multipoles from Cartesian to fractional coordinates.
-extern "C" __global__ void transformMultipolesToFractionalCoordinates(const real* __restrict__ labFrameDipole, const real* __restrict__ labFrameQuadrupole,
-        real* __restrict__ fracDipole, real* __restrict__ fracQuadrupole, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
-    // Build matrices for transforming the dipoles and quadrupoles.
-    
-    __shared__ real a[3][3];
-    if (threadIdx.x == 0) {
-        a[0][0] = GRID_SIZE_X*recipBoxVecX.x;
-        a[0][1] = GRID_SIZE_X*recipBoxVecY.x;
-        a[0][2] = GRID_SIZE_X*recipBoxVecZ.x;
-        a[1][0] = GRID_SIZE_Y*recipBoxVecX.y;
-        a[1][1] = GRID_SIZE_Y*recipBoxVecY.y;
-        a[1][2] = GRID_SIZE_Y*recipBoxVecZ.y;
-        a[2][0] = GRID_SIZE_Z*recipBoxVecX.z;
-        a[2][1] = GRID_SIZE_Z*recipBoxVecY.z;
-        a[2][2] = GRID_SIZE_Z*recipBoxVecZ.z;
-    }
-    __syncthreads();
-    int index1[] = {0, 0, 0, 1, 1, 2};
-    int index2[] = {0, 1, 2, 1, 2, 2};
-    __shared__ real b[6][6];
-    if (threadIdx.x < 36) {
-        int i = threadIdx.x/6;
-        int j = threadIdx.x-6*i;
-        b[i][j] = a[index1[i]][index1[j]]*a[index2[i]][index2[j]];
-        if (index1[i] != index2[i])
-            b[i][j] += a[index1[i]][index2[j]]*a[index2[i]][index1[j]];
-    }
-    __syncthreads();
-    
-    // Transform the multipoles.
-    
-    real quadScale[] = {1, 2, 2, 1, 2, 1};
-    for (int i = blockIdx.x*blockDim.x+threadIdx.x; i < NUM_ATOMS; i += blockDim.x*gridDim.x) {
-        for (int j = 0; j < 3; j++) {
-            real dipole = 0;
-            for (int k = 0; k < 3; k++)
-                dipole += a[j][k]*labFrameDipole[3*i+k];
-            fracDipole[3*i+j] = dipole;
-        }
-        for (int j = 0; j < 6; j++) {
-            real quadrupole = 0;
-            for (int k = 0; k < 5; k++)
-                quadrupole += quadScale[k]*b[j][k]*labFrameQuadrupole[5*i+k];
-            quadrupole -= quadScale[5]*b[j][5]*(labFrameQuadrupole[5*i]+labFrameQuadrupole[5*i+3]);
-            fracQuadrupole[6*i+j] = quadrupole;
-        }
-    }
-}
- */
-
-/**
  * Convert the potential from fractional to Cartesian coordinates.
  */
 extern "C" __global__ void transformPotentialToCartesianCoordinates(const real* __restrict__ fphi, real* __restrict__ cphi, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
@@ -895,8 +843,7 @@ extern "C" __global__ void computeFixedMultipoleForceAndEnergy(real4* __restrict
 }
 
 extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict__ posq, unsigned long long* __restrict__ forceBuffers,
-        long long* __restrict__ torqueBuffers, real* __restrict__ energyBuffer,
-        const real* __restrict__ labFrameQuadrupole, const real* __restrict__ fracDipole, const real* __restrict__ fracQuadrupole,
+        real* __restrict__ energyBuffer,
         const real* __restrict__ inducedDipole_global, const real* __restrict__ inducedDipolePolar_global,
         const real* __restrict__ phi_global, const real* __restrict__ phid_global, const real* __restrict__ phip_global,
         const real* __restrict__ phidp_global, const real* __restrict__ cphi_global, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
@@ -967,7 +914,8 @@ extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict_
         }
 
         const real* phidp = &phidp_global[20*i];
-        for (int k = 0; k < 10; k++) {
+        //for (int k = 0; k < 10; k++) {
+        for (int k = 0; k < 1; k++) {
             f.x += multipole[k]*phidp[deriv1[k]];
             f.y += multipole[k]*phidp[deriv2[k]];
             f.z += multipole[k]*phidp[deriv3[k]];

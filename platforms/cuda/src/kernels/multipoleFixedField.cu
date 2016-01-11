@@ -18,6 +18,11 @@ inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __res
 #ifdef USE_EWALD
 __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 deltaR, float dScale, float pScale, real3* fields) {
     real r2 = dot(deltaR, deltaR);
+    bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
+    fields[0] = make_real3(0);
+    fields[1] = make_real3(0);
+    fields[2] = make_real3(0);
+    fields[3] = make_real3(0);
     if (r2 <= CUTOFF_SQUARED) {
         // calculate the error function damping terms
         // FIXME thole copy in unique location
@@ -49,14 +54,17 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         // RealOpenMM s3 = getAndScaleInverseRs( particleI, particleJ, r, true, 3,TCC);
         real damp      = POW(atom1.damp*atom2.damp, 1.0/6.0); // AA in MBPol
 
-        real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+        bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
         real ratio       = POW(r/damp, 4); // rA4 in MBPol
         real pgamma = thole[TCC];
         real dampForExp = -1 * pgamma * ratio;
 
-        bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
-        real s3 = isSameWater * 2 + !isSameWater * ( 1.0 - do_scaling*EXP(dampForExp) );
+        real s3 = 1.0;
+        if (isSameWater)
+            s3 = 2.0;
+        if ((!isSameWater) & (do_scaling))
+            s3 -= EXP(dampForExp);
         real rr3 = (s3 - 1.)/(r2*r);
 
         real3 fid = -deltaR*(rr3*atom2.posq.w);
@@ -70,12 +78,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         fields[1] = fim-fip;
         fields[2] = fkm-fkd;
         fields[3] = fkm-fkp;
-    }
-    else {
-        fields[0] = make_real3(0);
-        fields[1] = make_real3(0);
-        fields[2] = make_real3(0);
-        fields[3] = make_real3(0);
     }
 }
 #else
@@ -97,23 +99,31 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
     real damp      = POW(atom1.damp*atom2.damp, 1.0/6.0); // AA in MBPol
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
     real ratio       = POW(r/damp, 4); // rA4 in MBPol
     real pgamma = thole[TCC];
     real dampForExp = -1 * pgamma * ratio;
 
-    rr3 *= ( 1.0 - do_scaling*EXP(dampForExp) );
+    if (do_scaling)
+        rr3 *= ( 1.0 - EXP(dampForExp) );
 
     real factor = -rr3*atom2.posq.w;
     real3 field1 = deltaR*factor;
     factor = rr3*atom1.posq.w;
     real3 field2 = deltaR*factor;
 
-    fields[0] = (!isSameWater)*dScale*field1;
-    fields[1] = (!isSameWater)*pScale*field1;
-    fields[2] = (!isSameWater)*dScale*field2;
-    fields[3] = (!isSameWater)*pScale*field2;
+    fields[0] = make_real3(0);
+    fields[1] = make_real3(0);
+    fields[2] = make_real3(0);
+    fields[3] = make_real3(0);
+
+    if (!isSameWater) {
+        fields[0] = dScale*field1;
+        fields[1] = pScale*field1;
+        fields[2] = dScale*field2;
+        fields[3] = pScale*field2;
+    }
 }
 #endif
 
@@ -189,8 +199,8 @@ extern "C" __global__ void computeFixedField(
                 int atom2 = y*TILE_SIZE+j;
                 if (atom1 != atom2 && atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 fields[4];
-                    float d = computeDScaleFactor(polarizationGroup, j);
-                    float p = computePScaleFactor(covalent, polarizationGroup, j);
+                    float d = 1;
+                    float p = 1;
                     computeOneInteraction(data, localData[tbx+j], delta, d, p, fields);
                     data.field += fields[0];
                     data.fieldPolar += fields[1];
@@ -214,8 +224,8 @@ extern "C" __global__ void computeFixedField(
                 int atom2 = y*TILE_SIZE+tj;
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 fields[4];
-                    float d = computeDScaleFactor(polarizationGroup, tj);
-                    float p = computePScaleFactor(covalent, polarizationGroup, tj);
+                    float d = 1;
+                    float p = 1;
                     computeOneInteraction(data, localData[tbx+tj], delta, d, p, fields);
                     data.field += fields[0];
                     data.fieldPolar += fields[1];

@@ -26,12 +26,8 @@ computeOneInteractionF1(
     real bn3 = bn.z;
     real bn4 = bn.w;
 
-    real offset = 1-mScale;
     real rr3 = rr1*rr1*rr1;
-    real gf4 = 2*(bn2 - 3*offset*rr3*rr1*rr1);
-    real ftm21 = 0;
-    real ftm22 = 0;
-    real ftm23 = 0;
+    real3 ftm2 = make_real3(0);
 
     // calculate the scalar products for permanent components
 
@@ -42,17 +38,23 @@ computeOneInteractionF1(
 
     float damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 );
 
     real ratio       = POW(r/damp, 4.); // rA4 in MBPol
 
     real dampForExpCC = -1 * thole[TCC] * ratio;
     // EXP(ttm::gammln(3.0/4.0)) = 1.2254167024651776
-    real scale3CC = ( 1.0 - do_scaling*EXP(dampForExpCC) ); // needed for force
-    real scale1CC = scale3CC + do_scaling*(POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC));
+    real scale3CC = 1.0;
+    if (do_scaling)
+        scale3CC -= EXP(dampForExpCC); // needed for force
+    real scale1CC = scale3CC;
+    if (do_scaling)
+        scale1CC += POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC);
 
     real dampForExpCD = -1 * thole[TCD] * ratio;
-    real scale3CD = ( 1.0 - do_scaling*EXP(dampForExpCD) );
+    real scale3CD = 1.0;
+    if (do_scaling)
+        scale3CD -= do_scaling*EXP(dampForExpCD);
 
     // in PME same water interactions are not excluded,
     // but the scale factors are set to 0.
@@ -60,22 +62,27 @@ computeOneInteractionF1(
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
     scale1CC *= !isSameWater;
     scale3CD *= !isSameWater;
+    scale3CC *= !isSameWater;
 
-    energy += forceFactor*(rr1*gl0*(1 - scale1CC));
+    energy += -forceFactor*(rr1*gl0*(1 - scale1CC));
 
+    real3 delta3 = trimTo3(delta);
     real gf1 = bn1*gl0;
-    gf1 -= offset*(rr3*gl0);
-    ftm21 += gf1*xr;
-    ftm22 += gf1*yr;
-    ftm23 += gf1*zr;
+    real offset = 1.;
+    gf1 -= (1 - scale3CC) * rr3 * gl0;
+    ftm2 += gf1*delta3;
 
-    real gf2 = -ck*bn1 - offset*(-ck*rr3);
-
-    real gf3 = ci*bn1 - offset*(ci*rr3);
-
-    force.x = ftm21;
-    force.y = ftm22;
-    force.z = ftm23;
+    force = ftm2;
+    //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.0621) < 0.01))
+    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex ==1) & (atom2.atomType == 0))
+    {
+        printf("atom1.pos.x: %.8g\n", atom1.pos.x-1.8);
+        printf("atom2.pos.x: %.8g\n", atom2.pos.x-1.8);
+        printf("gl0: %.8g\n", gl0);
+        printf("scale1CC: %.8g\n", scale1CC);
+        printf("gf1: %.8g\n", gf1);
+        printf("erl: %.8g\n", forceFactor*(rr1*gl0*(1 - scale1CC))/4.184*ENERGY_SCALE_FACTOR);
+    }
 }
 
 
@@ -94,6 +101,7 @@ computeOneInteractionF2(
     real xr = delta.x;
     real yr = delta.y;
     real zr = delta.z;
+    real3 delta3 = trimTo3(delta);
     real rr1 = delta.w;
     real psc3 = 1.;
     real dsc3 = 1.;
@@ -110,187 +118,125 @@ computeOneInteractionF2(
     real bn4 = bn.w;
 
     real rr5 = rr1*rr1;
-          rr5 = 3*rr1*rr5*rr5;
+    rr5 = 3*rr1*rr5*rr5;
+    real rr7 = 5.0 * rr5 * rr1 * rr1;
 
-    real ftm21 = 0;
-    real ftm22 = 0;
-    real ftm23 = 0;
+    real3 ftm2 = make_real3(0);
 
     real rr3 = rr1*rr1*rr1;
-
-    real gfi3 = ci*bn1;
-
-    real prefactor1;
-    prefactor1 = 0.5f;//*(ci*psc3 + sc3*psc5 - gfi3);
-    ftm21 -= prefactor1*atom2.inducedDipole.x;
-    ftm22 -= prefactor1*atom2.inducedDipole.y;
-    ftm23 -= prefactor1*atom2.inducedDipole.z;
-
-    prefactor1 = 0.5f;//*(ci*dsc3 + sc3*dsc5 - gfi3);
-    ftm21 -= prefactor1*atom2.inducedDipolePolar.x;
-    ftm22 -= prefactor1*atom2.inducedDipolePolar.y;
-    ftm23 -= prefactor1*atom2.inducedDipolePolar.z;
 
     // RealOpenMM scale3CD =getAndScaleInverseRs(particleI,particleJ,r,true,3,TCD);
 
     float damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 );
 
     real r = SQRT(xr*xr + yr*yr + zr*zr);
     real ratio       = POW(r/damp, 4.); // rA4 in MBPol
 
     real dampForExpCD = -1 * thole[TCD] * ratio;
-    real scale3CD = ( 1.0 - do_scaling*EXP(dampForExpCD) );
+    real scale3CD = 1.0;
+    if (do_scaling)
+        scale3CD -= EXP(dampForExpCD);
+    real scale5CD = scale3CD;
+    if (do_scaling)
+        scale5CD -= (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
 
     // in PME same water interactions are not excluded,
     // but the scale factors are set to 0.
 
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
     scale3CD *= !isSameWater;
+    scale5CD *= !isSameWater;
 
     real sci4 = atom2.inducedDipole.x*xr + atom2.inducedDipole.y*yr + atom2.inducedDipole.z*zr;
     energy += forceFactor*0.5f*sci4*(rr3 * (1 - scale3CD) - bn1)*ci;
 
     real scip4 = atom2.inducedDipolePolar.x*xr + atom2.inducedDipolePolar.y*yr + atom2.inducedDipolePolar.z*zr;
-#ifndef DIRECT_POLARIZATION
-    prefactor1 = 0.5f*(bn2 );
-    ftm21 += prefactor1*((sci4*atom1.inducedDipolePolar.x + scip4*atom1.inducedDipole.x));
-    ftm22 += prefactor1*((sci4*atom1.inducedDipolePolar.y + scip4*atom1.inducedDipole.y));
-    ftm23 += prefactor1*((sci4*atom1.inducedDipolePolar.z + scip4*atom1.inducedDipole.z));
-#endif
-
-    real gli1 = -ci*sci4;
-    real glip1 = -ci*scip4;
-
-    real gfi1 = (bn2*(gli1+glip1));
-    gfi1 -= (rr1*rr1)*(3*(gli1*psc3 + glip1*dsc3));
-    gfi1 *= 0.5f;
-    ftm21 += gfi1*xr;
-    ftm22 += gfi1*yr;
-    ftm23 += gfi1*zr;
-
-    {
-        real expdamp = EXP(damp);
-        real temp3 = -1.5f*damp*expdamp*rr1*rr1;
-        real temp5 = -damp;
-        real temp7 = -0.2f - 0.6f*damp;
-
-        real ddsc31 = temp3*xr;
-        real ddsc32 = temp3*yr;
-        real ddsc33 = temp3*zr;
-
-        real ddsc51 = temp5*ddsc31;
-        real ddsc52 = temp5*ddsc32;
-        real ddsc53 = temp5*ddsc33;
-
-        real ddsc71 = temp7*ddsc51;
-        real ddsc72 = temp7*ddsc52;
-        real ddsc73 = temp7*ddsc53;
-
-        real rr3 = rr1*rr1*rr1;
-        temp3 = (gli1*pScale + glip1*dScale);
-        ftm21 -= rr3*temp3*ddsc31;
-        ftm22 -= rr3*temp3*ddsc32;
-        ftm23 -= rr3*temp3*ddsc33;
-    }
-
-//K
+//#ifndef DIRECT_POLARIZATION
+//    prefactor1 = 0.5f*(bn2 );
+//    ftm21 += prefactor1*((sci4*atom1.inducedDipolePolar.x + scip4*atom1.inducedDipole.x));
+//    ftm22 += prefactor1*((sci4*atom1.inducedDipolePolar.y + scip4*atom1.inducedDipole.y));
+//    ftm23 += prefactor1*((sci4*atom1.inducedDipolePolar.z + scip4*atom1.inducedDipole.z));
+//#endif
 
     real ck = atom2.q;
-    real gfi2 = (-ck*bn1 );
-
-    prefactor1 = 0.5f*(ck*psc3 + gfi2);
-    ftm21 += prefactor1*atom1.inducedDipole.x;
-    ftm22 += prefactor1*atom1.inducedDipole.y;
-    ftm23 += prefactor1*atom1.inducedDipole.z;
-
-    prefactor1 = 0.5f*(ck*dsc3 + gfi2);
-    ftm21 += prefactor1*atom1.inducedDipolePolar.x;
-    ftm22 += prefactor1*atom1.inducedDipolePolar.y;
-    ftm23 += prefactor1*atom1.inducedDipolePolar.z;
-
-    real sci3 = atom1.inducedDipole.x*xr + atom1.inducedDipole.y*yr + atom1.inducedDipole.z*zr;
+    real sci3 = dot(atom1.inducedDipole, delta3);
+    real scip3 = dot(atom1.inducedDipolePolar, delta3);
     energy += forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD)));
-    real scip3 = atom1.inducedDipolePolar.x*xr + atom1.inducedDipolePolar.y*yr + atom1.inducedDipolePolar.z*zr;
 
-#ifndef DIRECT_POLARIZATION
-    prefactor1 = 0.5f*(bn2 );
-
-    ftm21 += prefactor1*(sci3*atom2.inducedDipolePolar.x + scip3*atom2.inducedDipole.x);
-    ftm22 += prefactor1*(sci3*atom2.inducedDipolePolar.y + scip3*atom2.inducedDipole.y);
-    ftm23 += prefactor1*(sci3*atom2.inducedDipolePolar.z + scip3*atom2.inducedDipole.z);
-    
-    real sci34;
-    sci4 = atom2.inducedDipole.x*xr + atom2.inducedDipole.y*yr + atom2.inducedDipole.z*zr;
-    scip4 = atom2.inducedDipolePolar.x*xr + atom2.inducedDipolePolar.y*yr + atom2.inducedDipolePolar.z*zr;
-    sci34 = (sci3*scip4+scip3*sci4);
-
-    gfi1 = sci34*(usc5*(5*rr1*rr1) -bn3);
-#else
-    gfi1 = 0;
-#endif
-    
-
-    real scip2 = atom1.inducedDipole.x*atom2.inducedDipolePolar.x +
-                                  atom1.inducedDipole.y*atom2.inducedDipolePolar.y +
-                                  atom1.inducedDipole.z*atom2.inducedDipolePolar.z +
-                                  atom2.inducedDipole.x*atom1.inducedDipolePolar.x +
-                                  atom2.inducedDipole.y*atom1.inducedDipolePolar.y +
-                                  atom2.inducedDipole.z*atom1.inducedDipolePolar.z;
-
-           gli1 = ck*sci3;
-          glip1 = ck*scip3;
+    real gli1 = ck*sci3 - ci*sci4;
+    real glip1 = ck * scip3 -ci*scip4;
+    // get the induced force with screening
 
 
-    gfi1 += (bn2*(gli1+glip1));
-    gfi1 -= (rr1*rr1)*(3*(gli1*psc3 + glip1*dsc3));
-#ifndef DIRECT_POLARIZATION
-    gfi1 += scip2*(bn2 - (3*rr1*rr1)*usc3);
-#endif
-    
+    real scip2 = dot(atom1.inducedDipole, atom2.inducedDipolePolar) +
+                 dot(atom2.inducedDipole, atom1.inducedDipolePolar);
+
+    real gfi1 = bn2*(gli1+glip1+scip2) - bn3*(scip3*sci4+sci3*scip4);
+    //gfi1 -= (rr1*rr1)*(3*(gli1*psc3 + glip1*dsc3) + 5*(gli2*psc5 + glip2*dsc5));
     gfi1 *= 0.5f;
+    ftm2 += gfi1 * delta3;
 
-    ftm21 += gfi1*xr;
-    ftm22 += gfi1*yr;
-    ftm23 += gfi1*zr;
+    real gfi2 = (-ck*bn1 );
+    real gfi3 = ci*bn1;
 
-    {
-        real expdamp = EXP(damp);
-        real temp3 = -1.5f*damp*expdamp*rr1*rr1;
-        real temp5 = -damp;
-        real temp7 = -0.2f - 0.6f*damp;
+    ftm2 += 0.5f * gfi2 * (atom1.inducedDipole + atom1.inducedDipolePolar);
+    ftm2 += 0.5f * gfi3 * (atom2.inducedDipole + atom2.inducedDipolePolar);
 
-        real ddsc31 = temp3*xr;
-        real ddsc32 = temp3*yr;
-        real ddsc33 = temp3*zr;
+    ftm2 += 0.5f*bn2*(sci3*atom2.inducedDipolePolar + scip3*atom2.inducedDipole);
+    ftm2 += 0.5f*bn2*(sci4*atom1.inducedDipolePolar + scip4*atom1.inducedDipole);
 
-        real ddsc51 = temp5*ddsc31;
-        real ddsc52 = temp5*ddsc32;
-        real ddsc53 = temp5*ddsc33;
+    // get the induced force without screening
 
-        real ddsc71 = temp7*ddsc51;
-        real ddsc72 = temp7*ddsc52;
-        real ddsc73 = temp7*ddsc53;
+    int t = TDD;
+    if ((isSameWater) & ((atom1.atomType == 0) | (atom2.atomType == 0)))
+        t = TDDOH;
 
-        real rr3 = rr1*rr1*rr1;
+    if ((isSameWater) & ((atom1.atomType == 1) & (atom2.atomType == 1)))
+        t = TDDHH;
 
-        temp3 = gli1*pScale + glip1*dScale;
+    real dampForExpDD = -1 * thole[t] * ratio;
+    real scale5DD = 1.0;
+    if (do_scaling)
+        scale5DD -= EXP(dampForExpDD) + (4./3.) * thole[t] * EXP(dampForExpDD) * ratio;
+    real scale7DD = scale5DD;
+    if (do_scaling)
+        scale7DD -= (4./15.) * thole[t] * (4. * thole[t] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4) * POW(r, 4);
 
-        ftm21 -= rr3*temp3*ddsc31;
-        ftm22 -= rr3*temp3*ddsc32;
-        ftm23 -= rr3*temp3*ddsc33;
+    real gfri1 = 0.5f*(rr5 * ( gli1  * (1 - scale5CD)   // charge - inddip
+                        + glip1 * (1 - scale5CD)   // charge - inddip
+                  + scip2 * (1 - scale5DD) ) // inddip - inddip
+                      - rr7 * (sci3*scip4+scip3*sci4)
+                              * (1 - scale7DD)   // inddip - inddip
+               );
 
-#ifndef DIRECT_POLARIZATION
-        temp3 =  uScale*scip2;
-        temp5 = -(3*rr1*rr1)*uScale*sci34;
-        ftm21 -= rr3*(temp3*ddsc31 + temp5*ddsc51);
-        ftm22 -= rr3*(temp3*ddsc32 + temp5*ddsc52);
-        ftm23 -= rr3*(temp3*ddsc33 + temp5*ddsc53);
-#endif
-    }
+    ftm2 -= gfri1 * delta3;
 
-    force.x += ftm21;
-    force.y += ftm22;
-    force.z += ftm23;
+    ftm2 -= 0.5f*rr5*(1 - scale5DD)*((sci3*atom2.inducedDipolePolar + scip3*atom2.inducedDipole) +
+                      (sci4*atom1.inducedDipolePolar + scip4*atom1.inducedDipole));
+
+    ftm2 -= 0.5f * rr3*(1 - scale3CD) *(-(atom1.inducedDipole + atom1.inducedDipolePolar) * ck +
+                                         (atom2.inducedDipole + atom2.inducedDipolePolar) * ci);
+
+    // if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.19) < 0.001))
+    // {
+    //     printf("scale3CD: %.8g\n", scale3CD);
+    //     printf("first part: %.8g\n", forceFactor*0.5f*sci4*(rr3 * (1 - scale3CD) - bn1)*ci);
+    //     printf("second part: %.8g\n", forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD))));
+    // }
+
+    // if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-1.8+0.0621) < 0.001))
+    // {
+    //     printf("atom1.pos.x: %.8g\n", atom1.pos.x-1.8);
+    //     printf("atom2.pos.x: %.8g\n", atom2.pos.x-1.8);
+    //     printf("gfi1: %.8g\n", gfi1);
+    //     printf("bn2*(gli1+glip1+scip2): %.8g\n", bn2*(gli1+glip1+scip2));
+    //     printf("bn2: %.8g\n", bn2);
+    //     printf("gli1: %.8g\n", gli1);
+    //     printf("glip1: %.8g\n", glip1);
+    //     printf("scip2: %.8g\n", scip2);
+    //     printf("gfri1: %.8g\n", gfri1);
+    // }
+    force += ftm2;
 }
