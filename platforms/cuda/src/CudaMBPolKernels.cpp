@@ -724,6 +724,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		pmeDefines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
 		pmeDefines["EPSILON_FACTOR"] = cu.doubleToString(138.9354558456);
 		pmeDefines["GRID_SIZE_X"] = cu.intToString(gridSizeX);
+        std::cout << "gridSizeX: " << pmeDefines["GRID_SIZE_X"] << std::endl;
 		pmeDefines["GRID_SIZE_Y"] = cu.intToString(gridSizeY);
 		pmeDefines["GRID_SIZE_Z"] = cu.intToString(gridSizeZ);
 		pmeDefines["M_PI"] = cu.doubleToString(M_PI);
