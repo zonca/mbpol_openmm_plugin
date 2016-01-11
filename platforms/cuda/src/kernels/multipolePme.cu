@@ -895,8 +895,7 @@ extern "C" __global__ void computeFixedMultipoleForceAndEnergy(real4* __restrict
 }
 
 extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict__ posq, unsigned long long* __restrict__ forceBuffers,
-        long long* __restrict__ torqueBuffers, real* __restrict__ energyBuffer,
-        const real* __restrict__ labFrameQuadrupole, const real* __restrict__ fracDipole, const real* __restrict__ fracQuadrupole,
+        real* __restrict__ energyBuffer,
         const real* __restrict__ inducedDipole_global, const real* __restrict__ inducedDipolePolar_global,
         const real* __restrict__ phi_global, const real* __restrict__ phid_global, const real* __restrict__ phip_global,
         const real* __restrict__ phidp_global, const real* __restrict__ cphi_global, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
