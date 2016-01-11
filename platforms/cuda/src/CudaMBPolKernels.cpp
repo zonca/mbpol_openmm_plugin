@@ -339,10 +339,13 @@ public:
 				return false;
 			}
 		}
-		return true;
+        // FIXME implement particles identical and groups identical to allow
+        // optimization by the CUDA platform, see:
+        // http://docs.openmm.org/6.1.0/developerguide/developer.html#reordering-of-particles
+		return false;
 	}
 	int getNumParticleGroups() {
-		return 7 * force.getNumElectrostatics();
+		return force.getNumElectrostatics();
 	}
 	void getParticlesInGroup(int index, vector<int>& particles) {
 		int particle = index / 7;
@@ -351,7 +354,7 @@ public:
 				MBPolElectrostaticsForce::CovalentType(type), particles);
 	}
 	bool areGroupsIdentical(int group1, int group2) {
-		return ((group1 % 7) == (group2 % 7));
+		return false;
 	}
 private:
 	const MBPolElectrostaticsForce& force;
