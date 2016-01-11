@@ -68,11 +68,11 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
         //RealOpenMM scale3 = getAndScaleInverseRs(particleI, particleJ, r, true, 3, TDD);
         //RealOpenMM scale5 = getAndScaleInverseRs(particleI, particleJ, r, true, 5, TDD);
-        real damp      = pow(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
+        real damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
         real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
-        real ratio       = pow(r/damp, 4); // rA4 in MBPol
+        real ratio       = POW(r/damp, 4); // rA4 in MBPol
 
         // FIXME identify if we need to use TDDOH and so on
         real pgamma = thole[TDD];
