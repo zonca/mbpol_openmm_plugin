@@ -1381,6 +1381,8 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPair
 
     _fixedElectrostaticsField[iIndex]      += fim - fid;
     _fixedElectrostaticsField[jIndex]      += fjm - fjd;
+	if ((particleI.particleIndex==0) & ((particleJ.particleIndex==7) | (particleJ.particleIndex==8)))
+		printf("Field: %.8g\n", (fim-fid)[0]);
 
     _fixedElectrostaticsFieldPolar[iIndex] += fim - fip;
     _fixedElectrostaticsFieldPolar[jIndex] += fjm - fjp;
@@ -2419,6 +2421,14 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxns(
 
     RealOpenMM preFactor1  = rr3 - bn1;
     RealOpenMM preFactor2  = bn2 - rr5;
+
+
+	if ((particleI.particleIndex==0) & ((particleJ.particleIndex==7) | (particleJ.particleIndex==8)))
+	{
+        printf("preFactor1 %.8g\n", preFactor1);
+        printf("preFactor2 %.8g\n", preFactor2);
+        printf("r %.8g\n", r);
+	}
 
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
         calculateDirectInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, preFactor1, preFactor2, deltaR,
