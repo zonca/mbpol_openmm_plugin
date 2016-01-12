@@ -61,25 +61,25 @@ extern "C" __device__ void imageOxygens(const real4 * box, real3 * allPositions)
 extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodicBoxSize, real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ,
         const real4* __restrict__ posq, const real4* __restrict__ blockCenter, const real4* __restrict__ blockBoundingBox, int2* __restrict__ neighborPairs,
         int* __restrict__ numNeighborPairs, int* __restrict__ numNeighborsForAtom, int maxNeighborPairs
-#ifdef USE_EXCLUSIONS
-        , int* __restrict__ exclusions, int* __restrict__ exclusionStartIndex
-#endif
+//#ifdef USE_EXCLUSIONS
+//        , int* __restrict__ exclusions, int* __restrict__ exclusionStartIndex
+//#endif
         ) {
 //	printf("threadIdx.x = %d\n", threadIdx.x);
-//	if (threadIdx.x == 3) {
+//	//if (threadIdx.x == 3) {
 //		printf("FIND_NEIGHBORS_WORKGROUP_SIZE = %d\n", FIND_NEIGHBORS_WORKGROUP_SIZE);
-//		printf("PADDED_NUM_ATOMS = %d\n", PADDED_NUM_ATOMS);
+//		printf("PADDED_NUM_ATOMS = %d\n", PADDED_NUM_ATOMS); //320 for 100 mol
 //		printf("NUM_BLOCKS = %d\n", NUM_BLOCKS);
 //		printf("TILE_SIZE = %d\n", TILE_SIZE);
 //		printf("CUTOFF_SQUARED = %d\n", CUTOFF_SQUARED);
 //		printf("NUM_ATOMS = %d\n",NUM_ATOMS);
-//		for (int i = 0; i<NUM_BLOCKS; i++) {
-//			printf("blockCenter[%d] = {%lf, %lf, %lf, %lf}\n", i, blockCenter[i].x, blockCenter[i].y, blockCenter[i].z, blockCenter[i].w);
-//			printf("blockBoundingBox[%d] = {%lf, %lf, %lf, %lf}\n", i, blockBoundingBox[i].x, blockBoundingBox[i].y, blockBoundingBox[i].z, blockBoundingBox[i].w);
-//		}
+////		for (int i = 0; i<NUM_BLOCKS; i++) {
+////			printf("blockCenter[%d] = {%lf, %lf, %lf, %lf}\n", i, blockCenter[i].x, blockCenter[i].y, blockCenter[i].z, blockCenter[i].w);
+////			printf("blockBoundingBox[%d] = {%lf, %lf, %lf, %lf}\n", i, blockBoundingBox[i].x, blockBoundingBox[i].y, blockBoundingBox[i].z, blockBoundingBox[i].w);
+////		//}
 //		printf("blockDim.x*gridDim.x = %d\n", blockDim.x*gridDim.x);
 //		printf("blockIdx.x*blockDim.x+threadIdx.x = %d\n",blockIdx.x*blockDim.x+threadIdx.x);
-//	}
+//	//}
     __shared__ real3 positionCache[FIND_NEIGHBORS_WORKGROUP_SIZE];
     int indexInWarp = threadIdx.x%32;
     for (int atom1 = blockIdx.x*blockDim.x+threadIdx.x; atom1 < PADDED_NUM_ATOMS; atom1 += blockDim.x*gridDim.x) {
@@ -145,40 +145,14 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
                         real3 pos2 = positionCache[threadIdx.x-indexInWarp+j];
 //                        printf("threadIdx.x-indexInWarp+j = %d\n", threadIdx.x-indexInWarp+j);
                         // Decide whether to include this atom pair in the neighbor list.
-               
-//#if USE_PERIODIC	                        
-//                    //make copy of pos1 and pos2 because we do not want this oxygen imaging to be perminant on the data in parameters
-//                    real3 pos1_copy, pos2_copy;
-//                    pos1_copy.x = pos1.x;
-//                    pos1_copy.y = pos1.y;
-//                    pos1_copy.z = pos1.z;
-//                    pos2_copy.x = pos2.x;
-//					pos2_copy.y = pos2.y;
-//					pos2_copy.z = pos2.z;
-//					// images only oxygen here to for neighbor list, 
-//                    //for each pair in the neighbor list the second will be imaged to the first
-//                    real3 positions[] = {pos1_copy, pos2_copy};
-                    //printf("pos1 = <%10lf, %10lf, %10lf>, pos2 = <%10lf, %10lf, %10lf>\n", pos1.x, pos1.y, pos1.z, pos2.x, pos2.y, pos2.z);
-         			//printf("atom1 = %d, atom2 = %d\n", atom1, atom2);
-//                    imageOxygens(&periodicBoxSize, positions);
-//                    real4 atomDelta = delta(pos1_copy, pos2_copy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
-//
-//#else
-//                    real4 atomDelta = delta(pos1, pos2, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
-//#endif
-                        
-//#if USE_PERIODIC       // images only oxygen here to for neighbor list
-//					real3 positions[] = {pos1, pos2};
-//					imageOxygens(&periodicBoxSize, positions);
-//#endif 
-//                        
+                                      
                         real4 atomDelta = delta(pos1, pos2, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
 
                         bool includeAtom = (atom2 > atom1 && atom2 < NUM_ATOMS && atomDelta.w < CUTOFF_SQUARED);
 
                         if (includeAtom) {
                             included[numIncluded++] = atom2;
-//                            printf("pair found: %d, %d\n", atom1, atom2);
+//                            printf("Tid %d, pair found: %d, %d\n", threadIdx.x, atom1, atom2);
                         }
                     }
                 }
@@ -196,7 +170,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         }
         numNeighborsForAtom[atom1] = totalNeighborsForAtom1;
     }
-//    printf("completed call of findNeighbors: %d\n", threadIdx.x);
+    //printf("completed call of findNeighbors: %d\n", threadIdx.x);
 }
 
 /**
@@ -249,6 +223,7 @@ extern "C" __global__ void computeNeighborStartIndices(int* __restrict__ numNeig
 extern "C" __global__ void copyPairsToNeighborList(const int2* __restrict__ neighborPairs, int* __restrict__ neighbors, int* __restrict__ numNeighborPairs,
             int maxNeighborPairs, int* __restrict__ numNeighborsForAtom, const int* __restrict__ neighborStartIndex) {
     int actualPairs = *numNeighborPairs;
+    //printf("actualPairs = %d\n", actualPairs);
     if (actualPairs > maxNeighborPairs)
         return; // There wasn't enough memory for the neighbor list, so we'll need to rebuild it.
     for (unsigned int index = blockDim.x*blockIdx.x+threadIdx.x; index < actualPairs; index += blockDim.x*gridDim.x) {
@@ -265,10 +240,11 @@ extern "C" __global__ void copyPairsToNeighborList(const int2* __restrict__ neig
 extern "C" __global__ void findBlockBounds(real4 periodicBoxSize, real4 invPeriodicBoxSize, real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ,
         const real4* __restrict__ posq, real4* __restrict__ blockCenter, real4* __restrict__ blockBoundingBox, int* __restrict__ numNeighborPairs) {
 	int index = blockIdx.x*blockDim.x+threadIdx.x;
+	//printf("Thread %d\n", index);
     int base = index*TILE_SIZE;
     while (base < NUM_ATOMS) {
         real4 pos = posq[base];
-        //printf("blockbounds pos = <%10lf, %10lf, %10lf>\n",  pos.x, pos.y, pos.z);
+//        printf("Thread %d blockbounds pos = <%10lf, %10lf, %10lf>\n", index,  pos.x, pos.y, pos.z);
 #ifdef USE_PERIODIC
         APPLY_PERIODIC_TO_POS(pos)
 #endif
@@ -312,8 +288,8 @@ extern "C" __device__ void computeGVar(real * g,
 									   real3 * a1, real3 * a2, 
 									   real3 * g1, real3 * g2)
 {
-	printf ("parameter check of computeGVar: g = %10lf, k = %10lf, r0 = %10lf, a1 = < %10lf, %10lf, %10lf>, a2 = < %10lf, %10lf, %10lf>, g1 = < %10lf, %10lf, %10lf> g2 = < %10lf, %10lf, %10lf>\n",
-			*g, k, r0, a1->x, a1->y, a1->z, a2->x, a2->y, a2->z, g1->x, g1->y, g1->z, g2->x, g2->y, g2->z);
+//	printf ("parameter check of computeGVar: g = %10lf, k = %10lf, r0 = %10lf, a1 = < %10lf, %10lf, %10lf>, a2 = < %10lf, %10lf, %10lf>, g1 = < %10lf, %10lf, %10lf> g2 = < %10lf, %10lf, %10lf>\n",
+//			*g, k, r0, a1->x, a1->y, a1->z, a2->x, a2->y, a2->z, g1->x, g1->y, g1->z, g2->x, g2->y, g2->z);
     real3 dx = (*a1-*a2)*NM_TO_A;
 
     real dsq = dot(dx,dx);
@@ -424,12 +400,12 @@ extern "C" __device__ real computeInteraction(
 	
 	
 	
-	for (int i = 0; i<9; i++) {
-		printf("before imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, 
-				(positions[i].x > 49 ? positions[i].x-50 : positions[i].x),
-				(positions[i].y > 49 ? positions[i].y-50 : positions[i].y),
-				(positions[i].z > 49 ? positions[i].z-50 : positions[i].z));
-	}
+//	for (int i = 0; i<9; i++) {
+//		printf("before imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, 
+//				(positions[i].x > 49 ? positions[i].x-50 : positions[i].x),
+//				(positions[i].y > 49 ? positions[i].y-50 : positions[i].y),
+//				(positions[i].z > 49 ? positions[i].z-50 : positions[i].z));
+//	}
 //	for (int i = 0; i<9; i++) {
 //		printf("before imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, positions[i].x, positions[i].y, positions[i].z);
 //	}
@@ -440,12 +416,12 @@ extern "C" __device__ real computeInteraction(
 //	for (int i = 0; i<9; i++) {
 //		printf(" after imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, positions[i].x, positions[i].y, positions[i].z);
 //	}
-	for (int i = 0; i<9; i++) {
-		printf(" after imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, 
-				(positions[i].x > 49 ? positions[i].x-50 : positions[i].x),
-				(positions[i].y > 49 ? positions[i].y-50 : positions[i].y),
-				(positions[i].z > 49 ? positions[i].z-50 : positions[i].z));
-	}
+//	for (int i = 0; i<9; i++) {
+//		printf(" after imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, 
+//				(positions[i].x > 49 ? positions[i].x-50 : positions[i].x),
+//				(positions[i].y > 49 ? positions[i].y-50 : positions[i].y),
+//				(positions[i].z > 49 ? positions[i].z-50 : positions[i].z));
+//	}
 
 		real3 rab, rac, rbc;
 		real drab(0), drac(0), drbc(0);
@@ -597,8 +573,8 @@ extern "C" __device__ real computeInteraction(
 			//degbuging gradients
 //        	for (int i = 0; i<36; i++)
 //        		printf("after computeGVar g[%d] = %lf\n", i, g[i]);
-			for (int n = 0; n < 9; ++n)
-				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
+//			for (int n = 0; n < 9; ++n)
+//				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
         	gab *= (sac + sbc)*tempEnergy/drab;
             gac *= (sab + sbc)*tempEnergy/drac;
             gbc *= (sab + sac)*tempEnergy/drbc;
@@ -634,9 +610,9 @@ extern "C" __device__ real computeInteraction(
             forces[Ob].z += (gbc*rbc.z - gab*rab.z) * cal2joule * -NM_TO_A;
             forces[Oc].z -= (gac*rac.z + gbc*rbc.z) * cal2joule * -NM_TO_A;
 
-            printf("forces[Oa] = <%lf, %lf, %lf>\n",forces[Oa].x ,forces[Oa].y, forces[Oa].z);
-            printf("forces[Ob] = <%lf, %lf, %lf>\n",forces[Ob].x ,forces[Ob].y, forces[Ob].z);
-            printf("forces[Oc] = <%lf, %lf, %lf>\n",forces[Oc].x ,forces[Oc].y, forces[Oc].z);
+//            printf("forces[Oa] = <%lf, %lf, %lf>\n",forces[Oa].x ,forces[Oa].y, forces[Oa].z);
+//            printf("forces[Ob] = <%lf, %lf, %lf>\n",forces[Ob].x ,forces[Ob].y, forces[Ob].z);
+//            printf("forces[Oc] = <%lf, %lf, %lf>\n",forces[Oc].x ,forces[Oc].y, forces[Oc].z);
             
             /* ref
 			allForces[Oa] = <-23.7328, -19.2615, 16.736>
@@ -658,31 +634,6 @@ extern "C" __device__ real computeInteraction(
         return energy;
 
 }
-
-
-//extern "C" __global__ void computeThreeBodyForce(
-//
-//        // const unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ tempForceBuffers) {
-//        unsigned long long* __restrict__ forceBuffers,
-//        real* __restrict__ energyBuffer,
-//        const real4* __restrict__ posq,
-//        const ushort2* __restrict__ exclusionTiles,
-//        unsigned int startTileIndex,
-//        unsigned int numTileIndices
-//#ifdef USE_CUTOFF
-//        , const int* __restrict__ tiles,
-//        const unsigned int* __restrict__ interactionCount,
-//        real4 periodicBoxSize,
-//        real4 invPeriodicBoxSize,
-//        unsigned int maxTiles,
-//        // const real4* __restrict__ blockSize,
-//        const unsigned int* __restrict__ interactingAtoms
-//#endif
-//        ) {
-//    real energy = 0.0f;
-//
-//    energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
-//}
 
 extern "C" __global__ void computeThreeBodyForce(
         unsigned long long* __restrict__ forceBuffers, mixed* __restrict__ energyBuffer, const real4* __restrict__ posq,
@@ -748,7 +699,6 @@ extern "C" __global__ void computeThreeBodyForce(
         	   printf("computed energy = %lf for atoms { %d, %d, %d } in thread: %d\n", computed_energy, atom1, atom2, atom3, threadIdx.x);
         	   energy += computed_energy;
         	   int oxygens[] = {atom3, atom2, atom1}; // ordered to match ref
-        	   //int oxygens[] = {atom2, atom3, atom1}; // tempfix for case 3
         	   for (int j = 0, k = 0; j<3; j++){// j used to select oxygen index, k for index in force array
 				   for (int i=0, atom = oxygens[j]; i<3; i++, k++) {// i used to index of each particle associated with the oxygen
 					   atomicAdd(&forceBuffers[atom + i], static_cast<unsigned long long>((long long) (forces[k].x*0x100000000)));

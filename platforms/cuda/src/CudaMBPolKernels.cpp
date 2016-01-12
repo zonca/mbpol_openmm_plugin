@@ -38,6 +38,7 @@
 #include "CudaKernelSources.h"
 #include "openmm/cuda/CudaParameterSet.h"
 
+#include <cuda_runtime.h>
 
 using namespace MBPolPlugin;
 using namespace OpenMM;
@@ -356,7 +357,7 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 			// Select a size for the array that holds the neighbor list.  We have to make a fairly
 			// arbitrary guess, but if this turns out to be too small we'll increase it later.
 
-			maxNeighborPairs = 150*numParticles;
+			maxNeighborPairs = 150*numParticles/3;
 			neighborPairs = CudaArray::create<int2>(cu, maxNeighborPairs, "customManyParticleNeighborPairs");
 			neighbors = CudaArray::create<int>(cu, maxNeighborPairs, "customManyParticleNeighbors");
 		}
@@ -411,6 +412,14 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 //	    cu.getNonbondedUtilities().setUsePadding(true);
 	    cu.addForce(new CudaMBPolThreeBodyForceInfo(force));
 }
+
+
+#define CHECK_RESULT(result, prefix) \
+    if (result != CUDA_SUCCESS) { \
+        std::stringstream m; \
+        m<<prefix<<": "<<CudaContext::getErrorString(result)<<" ("<<result<<")"<<" at "<<__FILE__<<":"<<__LINE__; \
+        throw OpenMMException(m.str());\
+    }
 
 double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
 //	//print positins
@@ -514,28 +523,32 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 			copyPairsArgs.push_back(&neighborStartIndex->getDevicePointer());
 	   }
     }
+    CUevent event;
 
     while (true) {
 		int* numPairs = (int*) cu.getPinnedBuffer();
 		if (nb.getUseCutoff()) {
 			cu.executeKernel(blockBoundsKernel, &blockBoundsArgs[0], cu.getNumAtomBlocks());
-			cu.executeKernel(neighborsKernel, &neighborsArgs[0], cu.getNumAtoms(), findNeighborsWorkgroupSize);
+			//CHECK_RESULT(cuEventRecord(event, 0), "Error recording event for CustomManyParticleForce");
 
+			cu.executeKernel(neighborsKernel, &neighborsArgs[0], cu.getNumAtoms(), findNeighborsWorkgroupSize);
 			// We need to make sure there was enough memory for the neighbor list.  Download the
 			// information asynchronously so kernels can be running at the same time.
 			// download originally was set false,
+		    cudaDeviceSynchronize();
+
 			numNeighborPairs->download(numPairs, true);
-			//CHECK_RESULT(cuEventRecord(event, 0), "Error recording event for CustomManyParticleForce");
+
 			cu.executeKernel(startIndicesKernel, &startIndicesArgs[0], 256, 256, 256*sizeof(int));
+
 			cu.executeKernel(copyPairsKernel, &copyPairsArgs[0], maxNeighborPairs);
 		}
 		int maxThreads = min(cu.getNumAtoms()*forceWorkgroupSize, cu.getEnergyBuffer().getSize());
-//		std::cout << "Max threads: " << maxThreads << std::endl;
+
 		//TODO: implement the computation of the three body kernels
 		cu.executeKernel(computeThreeBodyForceKernel, &forceArgs[0], maxThreads, forceWorkgroupSize);
-//	    cu.executeKernel(computeThreeBodyForceKernel, args, cu.getPaddedNumAtoms());
 		if (nb.getUseCutoff()) {
-			// Make sure there was enough memory for the neighbor list.
+			 //Make sure there was enough memory for the neighbor list.
 
 			//CHECK_RESULT(cuEventSynchronize(event), "Error synchronizing on event for CustomManyParticleForce");
 			if (*numPairs > maxNeighborPairs) {
@@ -555,7 +568,7 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 				continue;
 			}
 		}
-//		std::cout << "Number of Neighbor Pairs: " << *numPairs << std::endl;
+		std::cout << "Number of Neighbor Pairs: " << *numPairs << std::endl;
 //		std::cout<< "cutoff = " << nb.getCutoffDistance() << std::endl;
 
 		break;
