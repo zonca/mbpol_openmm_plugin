@@ -61,7 +61,7 @@ computeOneInteractionF1(
     scale1CC *= !isSameWater;
     scale3CD *= !isSameWater;
 
-    energy += forceFactor*(rr1*gl0*(1 - scale1CC));
+    energy += -forceFactor*(rr1*gl0*(1 - scale1CC));
 
     real gf1 = bn1*gl0;
     gf1 -= offset*(rr3*gl0);
