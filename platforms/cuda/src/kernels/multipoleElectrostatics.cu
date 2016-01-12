@@ -102,9 +102,9 @@ extern "C" __global__ void computeElectrostatics(
                 if (atom1 != atom2 && atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 tempForce;
                     real tempEnergy;
-                    float d = computeDScaleFactor(polarizationGroup, j);
-                    float p = computePScaleFactor(covalent, polarizationGroup, j);
-                    float m = computeMScaleFactor(covalent, j);
+                    float d = 1.;
+                    float p = 1.;
+                    float m = 1.;
                     computeOneInteractionF1(data, localData[tbx+j], d, p, m, tempEnergy, tempForce);
                     data.force += tempForce;
                     energy += 0.5f*tempEnergy;
@@ -127,9 +127,9 @@ extern "C" __global__ void computeElectrostatics(
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 tempForce;
                     real tempEnergy;
-                    float d = computeDScaleFactor(polarizationGroup, tj);
-                    float p = computePScaleFactor(covalent, polarizationGroup, tj);
-                    float m = computeMScaleFactor(covalent, tj);
+                    float d = 1.;
+                    float p = 1.;
+                    float m = 1.;
                     computeOneInteractionF1(data, localData[tbx+tj], d, p, m, tempEnergy, tempForce);
                     data.force += tempForce;
                     localData[tbx+tj].force -= tempForce;

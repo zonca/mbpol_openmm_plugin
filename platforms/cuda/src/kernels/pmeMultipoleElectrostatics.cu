@@ -30,25 +30,6 @@ inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __res
     data.atomType = atomType[atom];
 }
 
-__device__ real computeDScaleFactor(unsigned int polarizationGroup, int index) {
-    return (polarizationGroup & 1<<index ? 0 : 1);
-}
-
-__device__ float computeMScaleFactor(uint2 covalent, int index) {
-    int mask = 1<<index;
-    bool x = (covalent.x & mask);
-    bool y = (covalent.y & mask);
-    return (x ? (y ? 0.0f : 0.4f) : (y ? 0.8f : 1.0f));
-}
-
-__device__ float computePScaleFactor(uint2 covalent, unsigned int polarizationGroup, int index) {
-    int mask = 1<<index;
-    bool x = (covalent.x & mask);
-    bool y = (covalent.y & mask);
-    bool p = (polarizationGroup & mask);
-    return (x && y ? 0.0f : (x && p ? 0.5f : 1.0f));
-}
-
 __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool hasExclusions, float dScale, float pScale, float mScale, float forceFactor,
                                       real& energy, real4 periodicBoxSize, real4 invPeriodicBoxSize, real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ) {
     real4 delta;
@@ -188,9 +169,9 @@ extern "C" __global__ void computeElectrostatics(
             for (unsigned int j = 0; j < TILE_SIZE; j++) {
                 int atom2 = y*TILE_SIZE+j;
                 if (atom1 != atom2 && atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
-                    float d = computeDScaleFactor(polarizationGroup, j);
-                    float p = computePScaleFactor(covalent, polarizationGroup, j);
-                    float m = computeMScaleFactor(covalent, j);
+                    float d = 1.;
+                    float p = 1.;
+                    float m = 1.;
                     computeOneInteraction(data, localData[tbx+j], true, d, p, m, 0.5f, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
                 }
             }
@@ -213,9 +194,9 @@ extern "C" __global__ void computeElectrostatics(
             for (j = 0; j < TILE_SIZE; j++) {
                 int atom2 = y*TILE_SIZE+tj;
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
-                    float d = computeDScaleFactor(polarizationGroup, tj);
-                    float p = computePScaleFactor(covalent, polarizationGroup, tj);
-                    float m = computeMScaleFactor(covalent, tj);
+                    float d = 1.;
+                    float p = 1.;
+                    float m = 1.;
                     computeOneInteraction(data, localData[tbx+tj], true, d, p, m, 1, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
