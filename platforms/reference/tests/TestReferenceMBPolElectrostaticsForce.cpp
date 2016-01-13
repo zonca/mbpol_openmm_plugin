@@ -50,7 +50,7 @@
 
 #define ASSERT_EQUAL_VEC_MOD(expected, found, tol,testname) {ASSERT_EQUAL_TOL_MOD((expected)[0], (found)[0], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[1], (found)[1], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[2], (found)[2], (tol),(testname));};
 
-// #define COMPUTE_FINITE_DIFFERENCES_FORCES
+#define COMPUTE_FINITE_DIFFERENCES_FORCES
 
 using namespace  OpenMM;
 using namespace MBPolPlugin;
@@ -905,7 +905,7 @@ static void testWater3PMEHugeBox() {
     std::cout << "Test START: " << testName << std::endl;
 
     int numberOfParticles     = 3*3;
-    double cutoff             = 10.;
+    double cutoff             = 0.9;
 
     std::vector<double> outputElectrostaticsMoments;
     std::vector< Vec3 > inputGrid;
@@ -917,7 +917,7 @@ static void testWater3PMEHugeBox() {
 
     System system;
 
-    double boxDimension                               = 50;
+    double boxDimension                               = 1.8;
     Vec3 a( boxDimension, 0.0, 0.0 );
     Vec3 b( 0.0, boxDimension, 0.0 );
     Vec3 c( 0.0, 0.0, boxDimension );
@@ -930,13 +930,18 @@ static void testWater3PMEHugeBox() {
     mbpolElectrostaticsForce->setMutualInducedTargetEpsilon(mutualInducedDipoleTargetEpsilon);
     //mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
 
-    // disable Ewald by setting alpha to very low value
-    mbpolElectrostaticsForce->setAEwald( 1e-15 );
-
     std::vector<int> pmeGridDimension( 3 );
-    int inputPmeGridDimension = 20;
-    pmeGridDimension[0] = pmeGridDimension[1] = pmeGridDimension[2] = inputPmeGridDimension;
-    mbpolElectrostaticsForce->setPmeGridDimensions( pmeGridDimension );
+    // disable Ewald by setting alpha to very low value
+    if (boxDimension > 10) {
+        mbpolElectrostaticsForce->setAEwald( 1e-15 );
+        int inputPmeGridDimension = 20;
+        pmeGridDimension[0] = pmeGridDimension[1] = pmeGridDimension[2] = inputPmeGridDimension;
+        mbpolElectrostaticsForce->setPmeGridDimensions( pmeGridDimension );
+    } else {
+        mbpolElectrostaticsForce->setAEwald( 0. );
+        mbpolElectrostaticsForce->setEwaldErrorTolerance( 1.0e-03 );
+    }
+
 
     double virtualSiteWeightO = 0.573293118;
     double virtualSiteWeightH = 0.213353441;
@@ -1081,12 +1086,12 @@ static void testWater3PMEHugeBox() {
             positions[i][xyz] = x_orig;
         }
     #endif
-//        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-//        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <precomputerd finite differences>" << std::endl;
-//#ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
-//        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
-//#endif
-//        std::cout << std::endl;
+        std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <precomputerd finite differences>" << std::endl;
+#ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
+        std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
+#endif
+        std::cout << std::endl;
     }
 
 //    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
