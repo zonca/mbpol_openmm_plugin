@@ -10,8 +10,6 @@ typedef struct {
 
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy);
 __device__ void computeOneInteractionF2(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy);
-__device__ void computeOneInteractionF1NoScale(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor, real3& force, real& energy);
-__device__ void computeOneInteractionF2NoScale(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor, real3& force, real& energy);
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq,
         const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar,
