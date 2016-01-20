@@ -158,8 +158,14 @@ computeOneInteractionF2(
     real gli1 = -ci*sci4;
     real glip1 = -ci*scip4;
 
-    real gfi1 = rr5 * (gli1+glip1) * (1 - scale5CD); // charge - inddip
-    gfi1 -= (rr1*rr1)*(3*(gli1*psc3 + glip1*dsc3));
+    real sci3 = dot(atom1.inducedDipole, delta3);
+    real scip3 = dot(atom1.inducedDipolePolar, delta3);
+
+    real scip2 = dot(atom1.inducedDipole, atom2.inducedDipolePolar) +
+                 dot(atom2.inducedDipole, atom1.inducedDipolePolar);
+
+    real gfi1 = bn2*(gli1+glip1+scip2) - bn3*(scip3*sci4+sci3*scip4);
+    //gfi1 -= (rr1*rr1)*(3*(gli1*psc3 + glip1*dsc3) + 5*(gli2*psc5 + glip2*dsc5));
     gfi1 *= 0.5f;
     ftm2 += gfi1 * delta3;
 
@@ -187,9 +193,7 @@ computeOneInteractionF2(
     prefactor1 = 0.5f*(ck*dsc3 + gfi2);
     ftm2 += prefactor1*atom1.inducedDipolePolar;
 
-    real sci3 = atom1.inducedDipole.x*xr + atom1.inducedDipole.y*yr + atom1.inducedDipole.z*zr;
     energy += forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD)));
-    real scip3 = atom1.inducedDipolePolar.x*xr + atom1.inducedDipolePolar.y*yr + atom1.inducedDipolePolar.z*zr;
 
     if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.19) < 0.001))
     {
@@ -204,8 +208,8 @@ computeOneInteractionF2(
     ftm2 += prefactor1*(sci3*atom2.inducedDipolePolar + scip3*atom2.inducedDipole);
     
     real sci34;
-    sci4 = atom2.inducedDipole.x*xr + atom2.inducedDipole.y*yr + atom2.inducedDipole.z*zr;
-    scip4 = atom2.inducedDipolePolar.x*xr + atom2.inducedDipolePolar.y*yr + atom2.inducedDipolePolar.z*zr;
+    sci4 = dot(atom2.inducedDipole, delta3);
+    scip4 = dot(atom2.inducedDipolePolar, delta3);
     sci34 = (sci3*scip4+scip3*sci4);
 
     gfi1 = sci34*(usc5*(5*rr1*rr1) -bn3);
@@ -214,12 +218,6 @@ computeOneInteractionF2(
 //#endif
     
 
-    real scip2 = atom1.inducedDipole.x*atom2.inducedDipolePolar.x +
-                                  atom1.inducedDipole.y*atom2.inducedDipolePolar.y +
-                                  atom1.inducedDipole.z*atom2.inducedDipolePolar.z +
-                                  atom2.inducedDipole.x*atom1.inducedDipolePolar.x +
-                                  atom2.inducedDipole.y*atom1.inducedDipolePolar.y +
-                                  atom2.inducedDipole.z*atom1.inducedDipolePolar.z;
 
            gli1 = ck*sci3;
           glip1 = ck*scip3;
