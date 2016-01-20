@@ -88,6 +88,10 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, dScale, pScale, mScale, force, energy);
     computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy);
 
+    //if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex==0))
+    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.176) < 0.001))
+    printf("Energy [%d, %d] [%d, %d] %g Kcal, e, %g\n", atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType, (energy - energy_before) / 4.184 * ENERGY_SCALE_FACTOR, forceFactor*atom1.q*atom2.q*bn0/ 4.184 * ENERGY_SCALE_FACTOR);
+
     atom1.force += force;
     if (forceFactor == 1)
         atom2.force -= force;
