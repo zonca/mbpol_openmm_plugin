@@ -161,13 +161,13 @@ computeOneInteractionF2(
 
     real ck = atom2.q;
     real sci3 = dot(atom1.inducedDipole, delta3);
+    real scip3 = dot(atom1.inducedDipolePolar, delta3);
     energy += forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD)));
 
-    real gli1 = -ci*sci4;
-    real glip1 = -ci*scip4;
+    real gli1 = ck*sci3 - ci*sci4;
+    real glip1 = ck * scip3 -ci*scip4;
     // get the induced force with screening
 
-    real scip3 = dot(atom1.inducedDipolePolar, delta3);
 
     real scip2 = dot(atom1.inducedDipole, atom2.inducedDipolePolar) +
                  dot(atom2.inducedDipole, atom1.inducedDipolePolar);
