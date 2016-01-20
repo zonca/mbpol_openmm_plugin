@@ -18,6 +18,11 @@ inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __res
 #ifdef USE_EWALD
 __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 deltaR, float dScale, float pScale, real3* fields) {
     real r2 = dot(deltaR, deltaR);
+    bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
+    fields[0] = make_real3(0);
+    fields[1] = make_real3(0);
+    fields[2] = make_real3(0);
+    fields[3] = make_real3(0);
     if (r2 <= CUTOFF_SQUARED) {
         // calculate the error function damping terms
         // FIXME thole copy in unique location
@@ -70,12 +75,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         fields[1] = fim-fip;
         fields[2] = fkm-fkd;
         fields[3] = fkm-fkp;
-    }
-    else {
-        fields[0] = make_real3(0);
-        fields[1] = make_real3(0);
-        fields[2] = make_real3(0);
-        fields[3] = make_real3(0);
     }
 }
 #else
