@@ -191,6 +191,13 @@ computeOneInteractionF2(
     energy += forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD)));
     real scip3 = atom1.inducedDipolePolar.x*xr + atom1.inducedDipolePolar.y*yr + atom1.inducedDipolePolar.z*zr;
 
+    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.19) < 0.001))
+    {
+        printf("scale3CD: %.8g\n", scale3CD);
+        printf("first part: %.8g\n", forceFactor*0.5f*sci4*(rr3 * (1 - scale3CD) - bn1)*ci);
+        printf("second part: %.8g\n", forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD))));
+    }
+
 //#ifndef DIRECT_POLARIZATION
     prefactor1 = 0.5f*(bn2 );
 
