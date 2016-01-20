@@ -58,6 +58,15 @@ computeOneInteractionF1(
     scale3CD *= !isSameWater;
 
     energy += -forceFactor*(rr1*gl0*(1 - scale1CC));
+    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.0621) < 0.001))
+    //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex ==0) & (atom2.atomType == 1))
+    {
+        printf("atom1.pos.x: %.8g\n", atom1.pos.x-50);
+        printf("atom2.pos.x: %.8g\n", atom2.pos.x-50);
+        printf("gl0: %.8g\n", gl0);
+        printf("scale1CC: %.8g\n", scale1CC);
+        printf("erl: %.8g\n", forceFactor*(rr1*gl0*(1 - scale1CC))/4.184*ENERGY_SCALE_FACTOR);
+    }
 
     real3 delta3 = trimTo3(delta);
     real gf1 = bn1*gl0;
