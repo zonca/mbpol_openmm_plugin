@@ -38,17 +38,23 @@ computeOneInteractionF1(
 
     float damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 );
 
     real ratio       = POW(r/damp, 4.); // rA4 in MBPol
 
     real dampForExpCC = -1 * thole[TCC] * ratio;
     // EXP(ttm::gammln(3.0/4.0)) = 1.2254167024651776
-    real scale3CC = ( 1.0 - do_scaling*EXP(dampForExpCC) ); // needed for force
-    real scale1CC = scale3CC + do_scaling*(POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC));
+    real scale3CC = 1.0;
+    if (do_scaling)
+        scale3CC -= EXP(dampForExpCC); // needed for force
+    real scale1CC = scale3CC;
+    if (do_scaling)
+        scale1CC += POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC);
 
     real dampForExpCD = -1 * thole[TCD] * ratio;
-    real scale3CD = ( 1.0 - do_scaling*EXP(dampForExpCD) );
+    real scale3CD = 1.0;
+    if (do_scaling)
+        scale3CD -= do_scaling*EXP(dampForExpCD);
 
     // in PME same water interactions are not excluded,
     // but the scale factors are set to 0.
@@ -121,14 +127,18 @@ computeOneInteractionF2(
 
     float damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 );
 
     real r = SQRT(xr*xr + yr*yr + zr*zr);
     real ratio       = POW(r/damp, 4.); // rA4 in MBPol
 
     real dampForExpCD = -1 * thole[TCD] * ratio;
-    real scale3CD = ( 1.0 - do_scaling*EXP(dampForExpCD) );
-    real scale5CD = scale3CD - do_scaling * (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
+    real scale3CD = 1.0;
+    if (do_scaling)
+        scale3CD -= EXP(dampForExpCD);
+    real scale5CD = scale3CD;
+    if (do_scaling)
+        scale5CD -= (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
 
     // in PME same water interactions are not excluded,
     // but the scale factors are set to 0.
@@ -197,8 +207,12 @@ computeOneInteractionF2(
         t = TDDHH;
 
     real dampForExpDD = -1 * thole[t] * ratio;
-    real scale5DD = ( 1.0 - EXP(dampForExpDD) )- do_scaling * (4./3.) * thole[t] * EXP(dampForExpDD) * ratio;
-    real scale7DD = scale5DD - (4./15.) * thole[t] * (4. * thole[t] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4) * POW(r, 4);
+    real scale5DD = 1.0;
+    if (do_scaling)
+        scale5DD -= EXP(dampForExpDD) + (4./3.) * thole[t] * EXP(dampForExpDD) * ratio;
+    real scale7DD = scale5DD;
+    if (do_scaling)
+        scale7DD -= (4./15.) * thole[t] * (4. * thole[t] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4) * POW(r, 4);
 
     real gfri1 = 0.5f*(rr5 * ( gli1  * (1 - scale5CD)   // charge - inddip
                         + glip1 * (1 - scale5CD)   // charge - inddip
