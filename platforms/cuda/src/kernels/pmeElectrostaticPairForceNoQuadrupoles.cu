@@ -127,6 +127,7 @@ computeOneInteractionF2(
 
     real dampForExpCD = -1 * thole[TCD] * ratio;
     real scale3CD = ( 1.0 - do_scaling*EXP(dampForExpCD) );
+    real scale5CD = scale3CD - do_scaling * (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
 
     // in PME same water interactions are not excluded,
     // but the scale factors are set to 0.
@@ -148,7 +149,7 @@ computeOneInteractionF2(
     real gli1 = -ci*sci4;
     real glip1 = -ci*scip4;
 
-    real gfi1 = (bn2*(gli1+glip1));
+    real gfi1 = rr5 * (gli1+glip1) * (1 - scale5CD); // charge - inddip
     gfi1 -= (rr1*rr1)*(3*(gli1*psc3 + glip1*dsc3));
     gfi1 *= 0.5f;
     ftm2 += gfi1 * delta3;
