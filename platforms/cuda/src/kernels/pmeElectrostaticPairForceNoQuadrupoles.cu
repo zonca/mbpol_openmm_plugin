@@ -186,19 +186,6 @@ computeOneInteractionF2(
     ftm2 += 0.5f*bn2*(sci3*atom2.inducedDipolePolar + scip3*atom2.inducedDipole);
     ftm2 += 0.5f*bn2*(sci4*atom1.inducedDipolePolar + scip4*atom1.inducedDipole);
 
-    {
-        real expdamp = EXP(damp);
-        real temp3 = -1.5f*damp*expdamp*rr1*rr1;
-        real temp5 = -damp;
-        real temp7 = -0.2f - 0.6f*damp;
-
-        real3 ddsc3 = temp3*delta3;
-
-        real rr3 = rr1*rr1*rr1;
-        temp3 = (gli1*pScale + glip1*dScale);
-        ftm2 -= rr3*temp3*ddsc3;
-    }
-
     // get the induced force without screening
 
     int t = TDD;
