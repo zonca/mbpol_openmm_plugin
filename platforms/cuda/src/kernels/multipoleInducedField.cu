@@ -70,7 +70,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         //RealOpenMM scale5 = getAndScaleInverseRs(particleI, particleJ, r, true, 5, TDD);
         real damp      = POW(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
 
-        real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+        bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
         real ratio       = POW(r/damp, 4); // rA4 in MBPol
 
@@ -78,8 +78,12 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         real pgamma = thole[TDD];
         real dampForExp = -1 * pgamma * ratio;
 
-        real scale3 = 1.0 - do_scaling * EXP(dampForExp);
-        real scale5 = scale3 - do_scaling * (4./3.) * pgamma * EXP(dampForExp) * ratio;
+        real scale3 = 1.0;
+        if (do_scaling)
+            scale3 -= EXP(dampForExp);
+        real scale5 = scale3;
+        if (do_scaling)
+            scale5 -= (4./3.) * pgamma * EXP(dampForExp) * ratio;
 
         real r3 = (r*r2);
         real r5 = (r3*r2);
@@ -131,7 +135,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         //printf("damp %d,%d = %f\n", atom1.atomType, atom2.atomType, damp);
     }
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
     real ratio       = pow(r/damp, 4); // rA4 in MBPol
 
@@ -139,9 +143,13 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real pgamma = thole[TDD];
     real dampForExp = -1 * pgamma * ratio;
 
-    real rr3_factor = 1.0 - do_scaling * EXP(dampForExp);
+    real rr3_factor = 1.0;
+    if (do_scaling)
+        rr3_factor -= EXP(dampForExp);
     rr3 *= rr3_factor;
-    rr5 *= rr3_factor - do_scaling * (4./3.) * pgamma * EXP(dampForExp) * ratio;
+    rr5 *= rr3_factor;
+    if (do_scaling)
+        rr5 -= (4./3.) * pgamma * EXP(dampForExp) * ratio;
 
     real dDotDelta = rr5*dot(deltaR, atom2.inducedDipole);
     atom1.field += rr3*atom2.inducedDipole + dDotDelta*deltaR;

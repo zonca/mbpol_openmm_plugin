@@ -54,14 +54,17 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         // RealOpenMM s3 = getAndScaleInverseRs( particleI, particleJ, r, true, 3,TCC);
         real damp      = POW(atom1.damp*atom2.damp, 1.0/6.0); // AA in MBPol
 
-        real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+        bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
         real ratio       = POW(r/damp, 4); // rA4 in MBPol
         real pgamma = thole[TCC];
         real dampForExp = -1 * pgamma * ratio;
 
-        bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
-        real s3 = isSameWater * 2 + !isSameWater * ( 1.0 - do_scaling*EXP(dampForExp) );
+        real s3 = 1.0;
+        if (isSameWater)
+            s3 = 2.0;
+        if ((!isSameWater) & (do_scaling))
+            s3 -= EXP(dampForExp);
         real rr3 = (s3 - 1.)/(r2*r);
 
         real3 fid = -deltaR*(rr3*atom2.posq.w);
@@ -96,13 +99,14 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
     real damp      = POW(atom1.damp*atom2.damp, 1.0/6.0); // AA in MBPol
 
-    real do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
+    bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
     real ratio       = POW(r/damp, 4); // rA4 in MBPol
     real pgamma = thole[TCC];
     real dampForExp = -1 * pgamma * ratio;
 
-    rr3 *= ( 1.0 - do_scaling*EXP(dampForExp) );
+    if (do_scaling)
+        rr3 *= ( 1.0 - EXP(dampForExp) );
 
     real factor = -rr3*atom2.posq.w;
     real3 field1 = deltaR*factor;
