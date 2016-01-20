@@ -26,9 +26,7 @@ computeOneInteractionF1(
     real bn3 = bn.z;
     real bn4 = bn.w;
 
-    real offset = 1-mScale;
     real rr3 = rr1*rr1*rr1;
-    real gf4 = 2*(bn2 - 3*offset*rr3*rr1*rr1);
     real3 ftm2 = make_real3(0);
 
     // calculate the scalar products for permanent components
@@ -63,7 +61,8 @@ computeOneInteractionF1(
 
     real3 delta3 = trimTo3(delta);
     real gf1 = bn1*gl0;
-    gf1 -= offset*(rr3*gl0);
+    real offset = 1.;
+    gf1 -= (1 - scale3CC) * rr3 * gl0;
     ftm2 += gf1*delta3;
 
     real gf2 = -ck*bn1 - offset*(-ck*rr3);
