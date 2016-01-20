@@ -191,7 +191,7 @@ computeOneInteractionF2(
     energy += forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD)));
     real scip3 = atom1.inducedDipolePolar.x*xr + atom1.inducedDipolePolar.y*yr + atom1.inducedDipolePolar.z*zr;
 
-#ifndef DIRECT_POLARIZATION
+//#ifndef DIRECT_POLARIZATION
     prefactor1 = 0.5f*(bn2 );
 
     ftm2 += prefactor1*(sci3*atom2.inducedDipolePolar + scip3*atom2.inducedDipole);
