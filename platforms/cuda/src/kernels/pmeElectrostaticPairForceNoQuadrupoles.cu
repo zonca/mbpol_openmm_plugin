@@ -65,10 +65,6 @@ computeOneInteractionF1(
     gf1 -= (1 - scale3CC) * rr3 * gl0;
     ftm2 += gf1*delta3;
 
-    real gf2 = -ck*bn1 - offset*(-ck*rr3);
-
-    real gf3 = ci*bn1 - offset*(ci*rr3);
-
     force = ftm2;
 }
 
