@@ -966,7 +966,8 @@ extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict_
         }
 
         const real* phidp = &phidp_global[20*i];
-        for (int k = 0; k < 10; k++) {
+        //for (int k = 0; k < 10; k++) {
+        for (int k = 0; k < 1; k++) {
             f.x += multipole[k]*phidp[deriv1[k]];
             f.y += multipole[k]*phidp[deriv2[k]];
             f.z += multipole[k]*phidp[deriv3[k]];
