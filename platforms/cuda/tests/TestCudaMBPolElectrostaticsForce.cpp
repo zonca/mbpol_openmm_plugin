@@ -323,6 +323,7 @@ static void testWater3() {
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
         waterMoleculeIndex++;
     }
+	mbpolElectrostaticsForce->setMutualInducedTargetEpsilon( 1.0e-12 );
 
     system.addForce(mbpolElectrostaticsForce);
 

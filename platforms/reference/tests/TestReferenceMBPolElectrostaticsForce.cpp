@@ -910,7 +910,7 @@ static void testWater3PMEHugeBox() {
     std::vector<double> outputElectrostaticsMoments;
     std::vector< Vec3 > inputGrid;
     std::vector< double > outputGridPotential;
-    double mutualInducedDipoleTargetEpsilon = 1e-4;
+    double mutualInducedDipoleTargetEpsilon = 1e-12;
 
     // beginning of Electrostatics setup
     MBPolElectrostaticsForce::NonbondedMethod nonbondedMethod = MBPolElectrostaticsForce::PME;
