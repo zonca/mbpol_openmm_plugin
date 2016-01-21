@@ -113,10 +113,17 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     factor = rr3*atom1.posq.w;
     real3 field2 = deltaR*factor;
 
-    fields[0] = dScale*field1;
-    fields[1] = pScale*field1;
-    fields[2] = dScale*field2;
-    fields[3] = pScale*field2;
+    fields[0] = make_real3(0);
+    fields[1] = make_real3(0);
+    fields[2] = make_real3(0);
+    fields[3] = make_real3(0);
+
+    if (!isSameWater) {
+        fields[0] = dScale*field1;
+        fields[1] = pScale*field1;
+        fields[2] = dScale*field2;
+        fields[3] = pScale*field2;
+    }
 }
 #endif
 
