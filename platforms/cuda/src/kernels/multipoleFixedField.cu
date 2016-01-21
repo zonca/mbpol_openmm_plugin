@@ -199,8 +199,8 @@ extern "C" __global__ void computeFixedField(
                 int atom2 = y*TILE_SIZE+j;
                 if (atom1 != atom2 && atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 fields[4];
-                    float d = computeDScaleFactor(polarizationGroup, j);
-                    float p = computePScaleFactor(covalent, polarizationGroup, j);
+                    float d = 1;
+                    float p = 1;
                     computeOneInteraction(data, localData[tbx+j], delta, d, p, fields);
                     data.field += fields[0];
                     data.fieldPolar += fields[1];
@@ -224,8 +224,8 @@ extern "C" __global__ void computeFixedField(
                 int atom2 = y*TILE_SIZE+tj;
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 fields[4];
-                    float d = computeDScaleFactor(polarizationGroup, tj);
-                    float p = computePScaleFactor(covalent, polarizationGroup, tj);
+                    float d = 1;
+                    float p = 1;
                     computeOneInteraction(data, localData[tbx+tj], delta, d, p, fields);
                     data.field += fields[0];
                     data.fieldPolar += fields[1];
