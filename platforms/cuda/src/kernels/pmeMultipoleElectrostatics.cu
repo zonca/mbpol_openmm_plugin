@@ -101,20 +101,12 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
  * Compute the self energy and self torque.
  */
 __device__ void computeSelfEnergyAndTorque(AtomData& atom1, real& energy) {
-    real term = 2*EWALD_ALPHA*EWALD_ALPHA;
     real fterm = -EWALD_ALPHA/SQRT_PI;
     real cii = atom1.q*atom1.q;
-    real dii = dot(atom1.dipole, atom1.dipole);
-    real uii = dot(atom1.dipole, atom1.inducedDipole);
-    real selfEnergy = (cii + term*(dii/3));
-    selfEnergy += term*uii/3;
+    real selfEnergy = cii;
     selfEnergy *= fterm;
     energy += selfEnergy;
 
-    // self-torque for PME
-
-    real3 ui = atom1.inducedDipole+atom1.inducedDipolePolar;
-    atom1.torque += ((2/(real) 3)*(EWALD_ALPHA*EWALD_ALPHA*EWALD_ALPHA)/SQRT_PI)*cross(atom1.dipole, ui);
 }
 
 /**
