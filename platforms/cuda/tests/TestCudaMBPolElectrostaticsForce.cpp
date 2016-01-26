@@ -261,9 +261,9 @@ static void testWater3VirtualSite() {
 }
 */
 
-static void testWater3() {
+static void testWater3PMESmallBox() {
 
-    std::string testName      = "testWater3";
+    std::string testName      = "testWater3PMESmallBox";
 
     int numberOfParticles     = 9;
     double cutoff             = 0.9;
@@ -432,7 +432,7 @@ int main(int numberOfArguments, char* argv[]) {
 	try {
 		std::cout << "TestReferenceMBPolElectrostaticsForce running test..."
 				<< std::endl;
-		testWater3();
+		testWater3PMESmallBox();
 	} catch (const std::exception& e) {
 		std::cout << "exception: " << e.what() << std::endl;
 		std::cout << "FAIL - ERROR.  Test failed." << std::endl;
