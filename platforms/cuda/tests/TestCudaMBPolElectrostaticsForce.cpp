@@ -428,12 +428,167 @@ static void testWater3PMESmallBox() {
 
     return;
 }
+static void testWater3() {
+
+    std::string testName      = "testWater3";
+
+    int numberOfParticles     = 9;
+    double cutoff             = 0.9;
+
+    std::vector<double> outputElectrostaticsMoments;
+    std::vector< Vec3 > inputGrid;
+    std::vector< double > outputGridPotential;
+
+
+    // beginning of Electrostatics setup
+    MBPolElectrostaticsForce::NonbondedMethod nonbondedMethod = MBPolElectrostaticsForce::NoCutoff;
+
+    System system;
+
+    double boxDimension                               = 1.8;
+    Vec3 a( boxDimension, 0.0, 0.0 );
+    Vec3 b( 0.0, boxDimension, 0.0 );
+    Vec3 c( 0.0, 0.0, boxDimension );
+    system.setDefaultPeriodicBoxVectors( a, b, c );
+
+    MBPolElectrostaticsForce* mbpolElectrostaticsForce        = new MBPolElectrostaticsForce();;
+    mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
+    mbpolElectrostaticsForce->setCutoffDistance( cutoff );
+    mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
+
+    unsigned int particlesPerMolecule = 3;
+
+    for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
+        system.addParticle( 1.5999000e+01 );
+        system.addParticle( 1.0080000e+00 );
+        system.addParticle( 1.0080000e+00 );
+    }
+
+    std::vector<double> zeroDipole(3);
+    std::vector<double> zeroQuadrupole(9);
+
+    int waterMoleculeIndex=0;
+    for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, -1,
+                                            waterMoleculeIndex, 0, 0.001310, 0.001310 );
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, -1,
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, -1,
+                                            waterMoleculeIndex, 1, 0.000294, 0.000294 );
+        waterMoleculeIndex++;
+    }
+	mbpolElectrostaticsForce->setMutualInducedTargetEpsilon( 1.0e-12 );
+
+    system.addForce(mbpolElectrostaticsForce);
+
+    static std::vector<Vec3> positions; // Static to work around bug in Visual Studio that makes compilation very very slow.
+    positions.resize(numberOfParticles);
+
+    positions[0]             = Vec3( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
+    positions[1]             = Vec3( -6.218989773e-01, -6.009430735e-01,  1.572437625e+00  );
+    positions[2]             = Vec3( -2.017613812e+00, -4.190350349e-01,  2.239642849e+00  );
+
+    positions[3]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
+    positions[4]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
+    positions[5]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
+
+    positions[6]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
+    positions[7]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
+    positions[8]             = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
+
+    for (int i=0; i<numberOfParticles; i++) {
+        for (int j=0; j<3; j++) {
+            positions[i][j] *= 1e-1;
+        }
+    }
+
+    std::string platformName;
+    platformName = "CUDA";
+    LangevinIntegrator integrator(0.0, 0.1, 0.01);
+    Platform::getPlatformByName("CUDA").setPropertyDefaultValue("CudaPrecision", "double");
+    Context context(system, integrator, Platform::getPlatformByName( platformName ) );
+
+    context.setPositions(positions);
+    context.applyConstraints(1e-4); // update position of virtual site
+
+    double tolerance          = 1.0e-05;
+
+//    // test energy and forces
+//
+    State state                = context.getState(State::Forces | State::Energy);
+    std::vector<Vec3> forces   = state.getForces();
+    double energy              = state.getPotentialEnergy();
+
+
+    std::vector<Vec3> expectedForces(numberOfParticles);
+
+    expectedForces[0] = Vec3( -3.16044, 2.51619, -10.4468 );
+    expectedForces[1] = Vec3( 2.8369, -1.09973, 1.51442 );
+    expectedForces[2] = Vec3( -0.000995658, -0.489109, 2.45613 );
+    expectedForces[3] = Vec3( 1.74561, 4.04209, -3.25936 );
+    expectedForces[4] = Vec3( 0.228276, 0.671561, 8.83775 );
+    expectedForces[5] = Vec3( -0.151251, -0.370903, 0.828224 );
+    expectedForces[6] = Vec3( 2.93059, 4.45924, 1.57344 );
+    expectedForces[7] = Vec3( -2.60135, -4.48994, -0.199221 );
+    expectedForces[8] = Vec3( -1.82625, -5.23961, -1.30325 );
+    for (int i=0; i<numberOfParticles; i++) {
+        for (int j=0; j<3; j++) {
+            expectedForces[i][j] *= cal2joule*10;
+        }
+    }
+
+    for (int i=0; i<numberOfParticles; i++) {
+           for (int j=0; j<3; j++) {
+            forces[i][j] /= cal2joule*10;
+           }
+       }
+
+    std::cout << "Test start: " << testName << std::endl;
+
+    std::cout  << std::endl << "Forces:" << std::endl;
+
+    // Energy elec+ind(kcal/mol): -2.134083549e-02
+    double expectedEnergy = -7.16939*cal2joule;
+    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
+    std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
+    std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
+    const double eps = 1.0e-4;
+
+    double x_orig;
+
+
+    for (int i=0; i<numberOfParticles; i++) {
+           for (int j=0; j<3; j++) {
+            expectedForces[i][j] /= cal2joule*10;
+           }
+
+       }
+    std::cout  << std::endl << "Forces:" << std::endl;
+
+	for (int i = 0; i < numberOfParticles; i++) {
+		std::cout << "Force atom " << i << ": " << expectedForces[i]
+				<< " Kcal/mol/A <expected>" << std::endl;
+		std::cout << "Force atom " << i << ": " << forces[i]
+				<< " Kcal/mol/A <openmm-mbpol>" << std::endl;
+        std:cout << std::endl;
+	}
+
+    std::cout << "Test END: " << testName << std::endl << std::endl;
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
+    }
+
+
+    return;
+}
+
 int main(int numberOfArguments, char* argv[]) {
 	registerMBPolCudaKernelFactories();
 	try {
 		std::cout << "TestReferenceMBPolElectrostaticsForce running test..."
 				<< std::endl;
-        testWater3VirtualSite();
+        //testWater3VirtualSite();
+        testWater3();
 		// testWater3PMESmallBox();
 	} catch (const std::exception& e) {
 		std::cout << "exception: " << e.what() << std::endl;
