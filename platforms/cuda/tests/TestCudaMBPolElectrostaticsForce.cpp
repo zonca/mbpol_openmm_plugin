@@ -357,7 +357,7 @@ static void testWater3() {
     context.setPositions(positions);
     context.applyConstraints(1e-4); // update position of virtual site
 
-    double tolerance          = 1.0e-04;
+    double tolerance          = 1.0e-05;
 
 //    // test energy and forces
 //
@@ -368,15 +368,15 @@ static void testWater3() {
 
     std::vector<Vec3> expectedForces(numberOfParticles);
 
-    expectedForces[0]         = Vec3( -3.15858, 2.51672, -10.4447 );
-    expectedForces[1]         = Vec3( 2.83637, -1.09969, 1.51435 );
-    expectedForces[2]         = Vec3( -0.00150819, -0.489284, 2.45652 );
-    expectedForces[3]         = Vec3( 1.74606, 4.04144, -3.25808 );
-    expectedForces[4]         = Vec3( 0.227879, 0.671049, 8.83489 );
-    expectedForces[5]         = Vec3( -0.152257, -0.371266, 0.827071 );
-    expectedForces[6]         = Vec3( 2.9302, 4.4584, 1.57282 );
-    expectedForces[7]         = Vec3( -2.60122, -4.48937, -0.198493 );
-    expectedForces[8]         = Vec3( -1.82585, -5.2382, -1.30308 );
+    expectedForces[0] = Vec3( -3.16044, 2.51619, -10.4468 );
+    expectedForces[1] = Vec3( 2.8369, -1.09973, 1.51442 );
+    expectedForces[2] = Vec3( -0.000995658, -0.489109, 2.45613 );
+    expectedForces[3] = Vec3( 1.74561, 4.04209, -3.25936 );
+    expectedForces[4] = Vec3( 0.228276, 0.671561, 8.83775 );
+    expectedForces[5] = Vec3( -0.151251, -0.370903, 0.828224 );
+    expectedForces[6] = Vec3( 2.93059, 4.45924, 1.57344 );
+    expectedForces[7] = Vec3( -2.60135, -4.48994, -0.199221 );
+    expectedForces[8] = Vec3( -1.82625, -5.23961, -1.30325 );
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
             expectedForces[i][j] *= cal2joule*10;
@@ -394,8 +394,8 @@ static void testWater3() {
     std::cout  << std::endl << "Forces:" << std::endl;
 
     // Energy elec+ind(kcal/mol): -2.134083549e-02
-    double expectedEnergy = -7.16846*cal2joule;
-    // ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
+    double expectedEnergy = -7.16939*cal2joule;
+    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
     const double eps = 1.0e-4;
@@ -412,16 +412,17 @@ static void testWater3() {
     std::cout  << std::endl << "Forces:" << std::endl;
 
 	for (int i = 0; i < numberOfParticles; i++) {
-		//std::cout << "Force atom " << i << ": " << expectedForces[i]
-		//		<< " Kcal/mol/A <expected>" << std::endl;
+		std::cout << "Force atom " << i << ": " << expectedForces[i]
+				<< " Kcal/mol/A <expected>" << std::endl;
 		std::cout << "Force atom " << i << ": " << forces[i]
 				<< " Kcal/mol/A <openmm-mbpol>" << std::endl;
+        std:cout << std::endl;
 	}
 
-    //std::cout << "Test END: " << testName << std::endl << std::endl;
-    //for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-    //    ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
-    //}
+    std::cout << "Test END: " << testName << std::endl << std::endl;
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
+    }
 
 
     return;
