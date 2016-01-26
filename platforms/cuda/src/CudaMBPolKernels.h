@@ -218,7 +218,6 @@ private:
     std::vector<int2> polarizationFlagValues;
     CudaArray* multipoleParticles;
     CudaArray* molecularDipoles;
-    CudaArray* labFrameDipoles;
     CudaArray* fracDipoles;
     CudaArray* field;
     CudaArray* fieldPolar;

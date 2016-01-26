@@ -1536,7 +1536,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(
 	// Compute the potential.
 
 	void* computePotentialArgs[] = { &cu.getPosq().getDevicePointer(),
-			&labFrameDipoles->getDevicePointer(),
 			&inducedDipole->getDevicePointer(), &points.getDevicePointer(),
 			&potential.getDevicePointer(), &numPoints,
 			cu.getPeriodicBoxSizePointer(), cu.getInvPeriodicBoxSizePointer(),
@@ -1603,7 +1602,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::computeSystemMultipoleMoments(
 	double zyqdp = 0.0;
 	double zzqdp = 0.0;
 	vector<T> labDipoleVec, inducedDipoleVec;
-	labFrameDipoles->download(labDipoleVec);
 	inducedDipole->download(inducedDipoleVec);
 	for (int i = 0; i < numAtoms; i++) {
 		totalCharge += posqLocal[i].w;

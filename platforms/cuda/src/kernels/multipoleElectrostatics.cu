@@ -10,12 +10,9 @@ typedef struct {
 
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce);
 
-inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq, const real* __restrict__ labFrameDipole,
+inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq,
 const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     data.posq = posq[atom];
-    data.dipole.x = labFrameDipole[atom*3];
-    data.dipole.y = labFrameDipole[atom*3+1];
-    data.dipole.z = labFrameDipole[atom*3+2];
 
     data.inducedDipole.x = inducedDipole[atom*3];
     data.inducedDipole.y = inducedDipole[atom*3+1];
@@ -59,7 +56,7 @@ extern "C" __global__ void computeElectrostatics(
         real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ, unsigned int maxTiles, const real4* __restrict__ blockCenter,
         const unsigned int* __restrict__ interactingAtoms,
 #endif
-        const real* __restrict__ labFrameDipole, const real* __restrict__ inducedDipole,
+        const real* __restrict__ inducedDipole,
         const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
     const unsigned int totalWarps = (blockDim.x*gridDim.x)/TILE_SIZE;
     const unsigned int warp = (blockIdx.x*blockDim.x+threadIdx.x)/TILE_SIZE;
@@ -79,7 +76,7 @@ extern "C" __global__ void computeElectrostatics(
         const unsigned int y = tileIndices.y;
         AtomData data;
         unsigned int atom1 = x*TILE_SIZE + tgx;
-        loadAtomData(data, atom1, posq, labFrameDipole, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
+        loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
         data.force = make_real3(0);
         uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
         unsigned int polarizationGroup = polarizationGroupFlags[pos*TILE_SIZE+tgx];
@@ -119,7 +116,7 @@ extern "C" __global__ void computeElectrostatics(
             // This is an off-diagonal tile.
 
             unsigned int j = y*TILE_SIZE + tgx;
-            loadAtomData(localData[threadIdx.x], j, posq, labFrameDipole, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
+            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
             unsigned int tj = tgx;
             for (j = 0; j < TILE_SIZE; j++) {
@@ -208,7 +205,7 @@ extern "C" __global__ void computeElectrostatics(
             // Load atom data for this tile.
 
             AtomData data;
-            loadAtomData(data, atom1, posq, labFrameDipole, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
+            loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             data.force = make_real3(0);
 #ifdef USE_CUTOFF
             unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
@@ -216,7 +213,7 @@ extern "C" __global__ void computeElectrostatics(
             unsigned int j = y*TILE_SIZE + tgx;
 #endif
             atomIndices[threadIdx.x] = j;
-            loadAtomData(localData[threadIdx.x], j, posq, labFrameDipole, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
+            loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
 
             // Compute forces.
