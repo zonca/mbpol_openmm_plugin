@@ -37,6 +37,7 @@
 #include "openmm/cuda/CudaForceInfo.h"
 #include "CudaKernelSources.h"
 #include "jama_svd.h"
+#include <limits>
 
 #include <iostream>
 //////////////// for electrostatics///////////////////////
@@ -654,6 +655,13 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		defines["CUTOFF_SQUARED"] = cu.doubleToString(
 				force.getCutoffDistance() * force.getCutoffDistance());
 	}
+
+
+    //__device__ const real EPS = 2.2204460492503131E-16; //;
+    //__device__ const real FPMIN = 2.2250738585072014e-308/EPS; //std::numeric_limits<real>::min()/EPS;
+    defines["EPS"] = cu.doubleToString(cu.getUseDoublePrecision() ? std::numeric_limits<double>::epsilon() : std::numeric_limits<float>::epsilon());
+    defines["FPMIN"] = cu.doubleToString(cu.getUseDoublePrecision() ? std::numeric_limits<double>::min()/std::numeric_limits<double>::epsilon() : std::numeric_limits<float>::min()/std::numeric_limits<float>::epsilon());
+
 	int maxThreads = cu.getNonbondedUtilities().getForceThreadBlockSize();
 	fixedFieldThreads = min(maxThreads,
 			cu.computeThreadBlockSize(fixedThreadMemory));

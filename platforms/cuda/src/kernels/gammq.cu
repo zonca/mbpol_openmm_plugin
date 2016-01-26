@@ -1,8 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////
 
-__device__ const real EPS = 2.2204460492503131E-16; //std::numeric_limits<real>::epsilon();
-__device__ const real FPMIN = 2.2250738585072014e-308/EPS; //std::numeric_limits<real>::min()/EPS;
-
 const int ngau = 18;
 
 __device__ const real y[18] = {0.0021695375159141994,
