@@ -733,6 +733,9 @@ static void testWater3() {
     MBPolElectrostaticsForce* mbpolElectrostaticsForce        = new MBPolElectrostaticsForce();;
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
+
+    double mutualInducedDipoleTargetEpsilon = 1e-9;
+    mbpolElectrostaticsForce->setMutualInducedTargetEpsilon(mutualInducedDipoleTargetEpsilon);
     std::vector<double> thole;
 
     for( unsigned int jj = 0; jj < 5; jj++)
@@ -1758,7 +1761,7 @@ int main( int numberOfArguments, char* argv[] ) {
         //WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge* wrapperForComputeWaterCharge = new WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge();
         //wrapperForComputeWaterCharge->testComputeWaterCharge();
 
-        //testWater3();
+        testWater3();
 
         //testWater3VirtualSite();
 
@@ -1775,7 +1778,7 @@ int main( int numberOfArguments, char* argv[] ) {
 
         //mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
 
-        testWater3PMEHugeBox();
+        //testWater3PMEHugeBox();
 
         //testWater3VirtualSitePMEHugeBox();
 
