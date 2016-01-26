@@ -147,9 +147,11 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     if (do_scaling)
         rr3_factor -= EXP(dampForExp);
     rr3 *= rr3_factor;
-    rr5 *= rr3_factor;
+
+    real rr5_factor = rr3_factor;
     if (do_scaling)
-        rr5 -= (4./3.) * pgamma * EXP(dampForExp) * ratio;
+        rr5_factor -= (4./3.) * pgamma * EXP(dampForExp) * ratio;
+    rr5 *= rr5_factor;
 
     real dDotDelta = rr5*dot(deltaR, atom2.inducedDipole);
     atom1.field += rr3*atom2.inducedDipole + dDotDelta*deltaR;
