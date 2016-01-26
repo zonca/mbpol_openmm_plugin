@@ -394,7 +394,7 @@ static void testWater3() {
     std::cout  << std::endl << "Forces:" << std::endl;
 
     // Energy elec+ind(kcal/mol): -2.134083549e-02
-    double expectedEnergy = -7.18846*cal2joule;
+    double expectedEnergy = -7.16846*cal2joule;
     // ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
@@ -412,10 +412,10 @@ static void testWater3() {
     std::cout  << std::endl << "Forces:" << std::endl;
 
 	for (int i = 0; i < numberOfParticles; i++) {
-		std::cout << "Force atom " << i << ": " << expectedForces[i]
-				<< " Kcal/mol/A <mbpol>" << std::endl;
+		//std::cout << "Force atom " << i << ": " << expectedForces[i]
+		//		<< " Kcal/mol/A <expected>" << std::endl;
 		std::cout << "Force atom " << i << ": " << forces[i]
-				<< " Kcal/mol/A <openmm-mbpol>" << std::endl << std::endl;
+				<< " Kcal/mol/A <openmm-mbpol>" << std::endl;
 	}
 
     //std::cout << "Test END: " << testName << std::endl << std::endl;

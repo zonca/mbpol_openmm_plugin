@@ -853,7 +853,7 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
 
     calculateInducedDipoles( particleData );
 
-    std::cout << "First induced dipole " << _inducedDipole[0] << std::endl;
+    // std::cout << "First induced dipole " << _inducedDipole[0] << std::endl;
 
     if( !getMutualInducedDipoleConverged() ){
         std::stringstream message;
@@ -1381,8 +1381,8 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPair
 
     _fixedElectrostaticsField[iIndex]      += fim - fid;
     _fixedElectrostaticsField[jIndex]      += fjm - fjd;
-	if ((particleI.particleIndex==0) & ((particleJ.particleIndex==7) | (particleJ.particleIndex==8)))
-		printf("Field: %.8g\n", (fim-fid)[0]);
+	//if ((particleI.particleIndex==0) & ((particleJ.particleIndex==7) | (particleJ.particleIndex==8)))
+	//	printf("Field: %.8g\n", (fim-fid)[0]);
 
     _fixedElectrostaticsFieldPolar[iIndex] += fim - fip;
     _fixedElectrostaticsFieldPolar[jIndex] += fjm - fjp;
@@ -2423,12 +2423,12 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxns(
     RealOpenMM preFactor2  = bn2 - rr5;
 
 
-	if ((particleI.particleIndex==0) & ((particleJ.particleIndex==7) | (particleJ.particleIndex==8)))
-	{
-        printf("preFactor1 %.8g\n", preFactor1);
-        printf("preFactor2 %.8g\n", preFactor2);
-        printf("r %.8g\n", r);
-	}
+	//if ((particleI.particleIndex==0) & ((particleJ.particleIndex==7) | (particleJ.particleIndex==8)))
+	//{
+    //    printf("preFactor1 %.8g\n", preFactor1);
+    //    printf("preFactor2 %.8g\n", preFactor2);
+    //    printf("r %.8g\n", r);
+	//}
 
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
         calculateDirectInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, preFactor1, preFactor2, deltaR,
@@ -2586,6 +2586,11 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
     energy              = (e + ei);
 
+    RealOpenMM conversionFactor  = (_electric/_dielectric);
+	//if ((particleI.particleIndex == 0) & (particleJ.particleIndex == 3))
+	//printf("Energy [%d, %d] %g Kcal\n", particleI.particleIndex, particleJ.particleIndex, (energy/2 ) / 4.184 * conversionFactor);
+	//printf("Energy [%d, %d] %.3f Kcal\n", particleI.particleIndex, particleJ.particleIndex, ralpha);
+
     electrostaticPotential[iIndex] += ck * (bn0 - rr1 * (1 - scale1CC)); // /2.;
     electrostaticPotential[jIndex] += ci * (bn0 - rr1 * (1 - scale1CC));//  /2.;
 
@@ -2669,9 +2674,35 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     ftm2i -= ftm2ri;
 
     // increment gradient due to force and torque on first site;
-    RealOpenMM conversionFactor  = (_electric/_dielectric);
+    conversionFactor  = (_electric/_dielectric);
 
     energy                 *= conversionFactor;
+
+	//if ((particleI.particleIndex == 0) && (particleJ.particleIndex == 1)) {
+	//	std::cout << "e: " << e / 4.184 * conversionFactor << std::endl;
+	//	std::cout << "erl: " << erl/ 4.184 * conversionFactor  << std::endl;
+	//	std::cout << "ei: " << ei/ 4.184 * conversionFactor  << std::endl;
+	//	std::cout << "erli: " << erli / 4.184 * conversionFactor << std::endl;
+	//	std::cout << "bn0: " << bn0 << std::endl;
+	//	std::cout << "gl0: " << gl0 << std::endl;
+	//	std::cout << "gf1: " << gf1 << std::endl;
+	//	std::cout << "gfi1: " << gfi1 << std::endl;
+	//	std::cout << "gfri1: " << gfri1 << std::endl;
+	//	std::cout << "bn2*(gli1+glip1+scip2): " << bn2*(gli1+glip1+scip2) << std::endl;
+	//	std::cout << "bn2: " << bn2 << std::endl;
+	//	std::cout << "scip2: " << scip2 << std::endl;
+	//	std::cout << "gli1: " << gli1 << std::endl;
+	//	std::cout << "glip1: " << glip1 << std::endl;
+	//	std::cout << "total: " << ftm2[0] + ftm2i[0] << std::endl;
+	//	std::cout << "scale1CC: " << scale1CC << std::endl;
+	//	std::cout << "scale3CD: " << scale3CD << std::endl;
+	//	std::cout << "I pos: " << particleI.position << std::endl;
+	//	std::cout << "J pos: " << particleJ.position << std::endl;
+
+	//}
+
+	if (particleI.particleIndex == 0)
+		std::cout << particleI.particleIndex << particleJ.particleIndex << "total: " << (ftm2[0] + ftm2i[0])*conversionFactor/41.84 << std::endl;
 
     forces[iIndex]      -= (ftm2 + ftm2i)*conversionFactor;
 

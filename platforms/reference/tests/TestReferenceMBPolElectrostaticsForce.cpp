@@ -50,7 +50,7 @@
 
 #define ASSERT_EQUAL_VEC_MOD(expected, found, tol,testname) {ASSERT_EQUAL_TOL_MOD((expected)[0], (found)[0], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[1], (found)[1], (tol),(testname)); ASSERT_EQUAL_TOL_MOD((expected)[2], (found)[2], (tol),(testname));};
 
-#define COMPUTE_FINITE_DIFFERENCES_FORCES
+// #define COMPUTE_FINITE_DIFFERENCES_FORCES
 
 using namespace  OpenMM;
 using namespace MBPolPlugin;
@@ -1087,11 +1087,11 @@ static void testWater3PMEHugeBox() {
         }
     #endif
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <precomputerd finite differences>" << std::endl;
+        //std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <precomputerd finite differences>" << std::endl;
 #ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
         std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
 #endif
-        std::cout << std::endl;
+        //std::cout << std::endl;
     }
 
 //    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;

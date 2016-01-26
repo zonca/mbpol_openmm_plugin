@@ -65,15 +65,6 @@ computeOneInteractionF1(
     scale3CC *= !isSameWater;
 
     energy += -forceFactor*(rr1*gl0*(1 - scale1CC));
-    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.0621) < 0.001))
-    //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex ==0) & (atom2.atomType == 1))
-    {
-        printf("atom1.pos.x: %.8g\n", atom1.pos.x-50);
-        printf("atom2.pos.x: %.8g\n", atom2.pos.x-50);
-        printf("gl0: %.8g\n", gl0);
-        printf("scale1CC: %.8g\n", scale1CC);
-        printf("erl: %.8g\n", forceFactor*(rr1*gl0*(1 - scale1CC))/4.184*ENERGY_SCALE_FACTOR);
-    }
 
     real3 delta3 = trimTo3(delta);
     real gf1 = bn1*gl0;
@@ -82,6 +73,16 @@ computeOneInteractionF1(
     ftm2 += gf1*delta3;
 
     force = ftm2;
+    //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.0621) < 0.01))
+    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex ==1) & (atom2.atomType == 0))
+    {
+        printf("atom1.pos.x: %.8g\n", atom1.pos.x-1.8);
+        printf("atom2.pos.x: %.8g\n", atom2.pos.x-1.8);
+        printf("gl0: %.8g\n", gl0);
+        printf("scale1CC: %.8g\n", scale1CC);
+        printf("gf1: %.8g\n", gf1);
+        printf("erl: %.8g\n", forceFactor*(rr1*gl0*(1 - scale1CC))/4.184*ENERGY_SCALE_FACTOR);
+    }
 }
 
 
@@ -218,12 +219,24 @@ computeOneInteractionF2(
     ftm2 -= 0.5f * rr3*(1 - scale3CD) *(-(atom1.inducedDipole + atom1.inducedDipolePolar) * ck +
                                          (atom2.inducedDipole + atom2.inducedDipolePolar) * ci);
 
-    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.19) < 0.001))
-    {
-        printf("scale3CD: %.8g\n", scale3CD);
-        printf("first part: %.8g\n", forceFactor*0.5f*sci4*(rr3 * (1 - scale3CD) - bn1)*ci);
-        printf("second part: %.8g\n", forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD))));
-    }
+    // if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.19) < 0.001))
+    // {
+    //     printf("scale3CD: %.8g\n", scale3CD);
+    //     printf("first part: %.8g\n", forceFactor*0.5f*sci4*(rr3 * (1 - scale3CD) - bn1)*ci);
+    //     printf("second part: %.8g\n", forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD))));
+    // }
 
+    // if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-1.8+0.0621) < 0.001))
+    // {
+    //     printf("atom1.pos.x: %.8g\n", atom1.pos.x-1.8);
+    //     printf("atom2.pos.x: %.8g\n", atom2.pos.x-1.8);
+    //     printf("gfi1: %.8g\n", gfi1);
+    //     printf("bn2*(gli1+glip1+scip2): %.8g\n", bn2*(gli1+glip1+scip2));
+    //     printf("bn2: %.8g\n", bn2);
+    //     printf("gli1: %.8g\n", gli1);
+    //     printf("glip1: %.8g\n", glip1);
+    //     printf("scip2: %.8g\n", scip2);
+    //     printf("gfri1: %.8g\n", gfri1);
+    // }
     force += ftm2;
 }

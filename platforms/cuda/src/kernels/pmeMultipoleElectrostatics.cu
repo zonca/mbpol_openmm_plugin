@@ -34,6 +34,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     delta.x = atom2.pos.x - atom1.pos.x;
     delta.y = atom2.pos.y - atom1.pos.y;
     delta.z = atom2.pos.z - atom1.pos.z;
+    real energy_before = energy;
 
     // periodic box
 
@@ -89,8 +90,11 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy);
 
     //if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex==0))
-    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.176) < 0.001))
-    printf("Energy [%d, %d] [%d, %d] %g Kcal, e, %g\n", atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType, (energy - energy_before) / 4.184 * ENERGY_SCALE_FACTOR, forceFactor*atom1.q*atom2.q*bn0/ 4.184 * ENERGY_SCALE_FACTOR);
+    //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.176) < 0.001))
+    //printf("Energy [%d, %d] [%d, %d] %g Kcal, e, %g\n", atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType, (energy - energy_before) / 4.184 * ENERGY_SCALE_FACTOR, forceFactor*atom1.q*atom2.q*bn0/ 4.184 * ENERGY_SCALE_FACTOR);
+    ////if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex ==1) & (atom2.atomType == 1))
+    //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0))
+    //    printf("total force[%d, %d] [%d, %d]: %.8f\n",  atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType,force.x);
 
     atom1.force += force;
     if (forceFactor == 1)

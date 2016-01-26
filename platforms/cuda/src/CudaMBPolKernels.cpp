@@ -1202,6 +1202,11 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		cu.executeKernel(recordInducedDipolesKernel, recordInducedDipolesArgs,
 				cu.getNumAtoms());
 
+        //std::vector<Vec3> dipoles;
+        //getInducedDipoles(context, dipoles);
+        //for (int i=0; i<dipoles.size(); i++)
+        //    std::cout << dipoles[i] << std::endl;
+
 		//// Reciprocal space calculation for the induced dipoles.
 
 		cu.clearBuffer(*pmeGrid);

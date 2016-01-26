@@ -999,10 +999,6 @@ extern "C" __global__ void recordInducedFieldDipoles(const real* __restrict__ ph
     __syncthreads();
     for (int i = blockIdx.x*blockDim.x+threadIdx.x; i < NUM_ATOMS; i += blockDim.x*gridDim.x) {
         inducedField[i] -= (long long) (0x100000000*(phid[10*i+1]*fracToCart[0][0] + phid[10*i+2]*fracToCart[0][1] + phid[10*i+3]*fracToCart[0][2]));
-        if (i == 0){
-            //printf("inducedField Change %.8g\n", (phid[10*i+1]*fracToCart[0][0] + phid[10*i+2]*fracToCart[0][1] + phid[10*i+3]*fracToCart[0][2]));
-            printf(" GRID_SIZE_X %.8g\n", phid[10*i+3]);
-        }
         inducedField[i+PADDED_NUM_ATOMS] -= (long long) (0x100000000*(phid[10*i+1]*fracToCart[1][0] + phid[10*i+2]*fracToCart[1][1] + phid[10*i+3]*fracToCart[1][2]));
         inducedField[i+PADDED_NUM_ATOMS*2] -= (long long) (0x100000000*(phid[10*i+1]*fracToCart[2][0] + phid[10*i+2]*fracToCart[2][1] + phid[10*i+3]*fracToCart[2][2]));
         inducedFieldPolar[i] -= (long long) (0x100000000*(phip[10*i+1]*fracToCart[0][0] + phip[10*i+2]*fracToCart[0][1] + phip[10*i+3]*fracToCart[0][2]));
