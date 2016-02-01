@@ -138,6 +138,7 @@ static void testWater3VirtualSite() {
 
 	std::string platformName;
 	platformName = "CUDA";
+    Platform::getPlatformByName("CUDA").setPropertyDefaultValue("CudaPrecision", "double");
 	LangevinIntegrator integrator(0.0, 0.1, 0.01);
 	// constructing the context is causing an exception
 	Context context(system, integrator,
