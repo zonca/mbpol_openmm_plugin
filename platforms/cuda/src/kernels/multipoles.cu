@@ -66,3 +66,296 @@ extern "C" __global__ void computePotentialAtPoints(const real4* __restrict__ po
 		potential[point] = p;
 	}
 }
+
+extern "C" __global__ void computeWaterCharge(
+        real4* __restrict__ posq, unsigned int numMultipoles,
+        const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
+
+        const unsigned int moleculeId = blockIdx.x*blockDim.x+threadIdx.x;
+
+        // TODO make this flexible based on moleculeIndex and atomType
+        const unsigned int O  = moleculeId * 4;
+        const unsigned int H1 = O + 1;
+        const unsigned int H2 = O + 2;
+        const unsigned int M  = O + 3;
+
+        if (M <= numMultipoles) {
+            const real Bohr_A = 0.52917721092; // CODATA 2010
+            // M-site positioning (TTM2.1-F)
+            const real gammaM = 0.426706882;
+
+            const real gamma1 = 1.0 - gammaM;
+            const real gamma2 = gammaM/2;
+            const real ath0 = 1.82400520401572996557;
+            const real costhe = -0.24780227221366464506;
+            const real reoh = 0.958649;
+            const real b1D = 1.0;
+            const real a = 0.2999e0;
+            const real b = -0.6932e0;
+            const real c0 = 1.0099e0;
+            const real c1 = -0.1801e0;
+            const real c2 = 0.0892e0;
+
+
+            const real e =  1.602176565e-19; // C CODATA 2010
+
+            // interaction energy of 2 unit charges 1A apart
+            const real E_cc = 1.0e-7*(c0*e*c0*e)/1.0e-10; // in J
+            const real Na = 6.02214129e+23; // CODATA 2010
+            const real kcal_J = 4184.0;
+
+            const real CHARGECON = SQRT(E_cc*Na/kcal_J);
+
+            const size_t idxD0[84] = {
+                   1, 1, 1, 2, 1, 1, 1, 2, 2, 3, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4,
+                   1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 1, 1, 1, 1, 1,
+                   1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6, 1, 1, 1, 1,
+                   1, 1, 1, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5,
+                   5, 6, 6, 7
+            };
+
+            const size_t idxD1[84] = {
+                   1, 1, 2, 1, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1,
+                   1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4, 5,
+                   6, 1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4,
+                   5, 6, 7, 1, 2, 3, 4, 5, 6, 1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2,
+                   3, 1, 2, 1
+            };
+
+            const size_t idxD2[84] = {
+                   1, 2, 1, 1, 3, 2, 1, 2, 1, 1, 4, 3, 2, 1, 3, 2, 1, 2, 1, 1,
+                   5, 4, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1, 2, 1, 1, 6, 5, 4, 3, 2,
+                   1, 5, 4, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1, 2, 1, 1, 7, 6, 5, 4,
+                   3, 2, 1, 6, 5, 4, 3, 2, 1, 5, 4, 3, 2, 1, 4, 3, 2, 1, 3, 2,
+                   1, 2, 1, 1
+            };
+
+
+            const real coefD[84] = {
+                  -2.1689686086730e-03, 1.4910379754728e-02, 5.3546078430060e-02,
+                  -7.4055995388666e-02,-3.7764333017616e-03, 1.4089887256484e-01,
+                  -6.2584207687264e-02,-1.1260393113022e-01,-5.7824159269319e-02,
+                   1.4360743650655e-02,-1.5469680141070e-02,-1.3036350092795e-02,
+                   2.7515837781556e-02, 1.4098478875076e-01,-2.7663168397781e-02,
+                  -5.2378176254797e-03,-1.0237198381792e-02, 8.9571999265473e-02,
+                   7.2920263098603e-03,-2.6873260551686e-01, 2.0220870325864e-02,
+                  -7.0764766270927e-02, 1.2140640273760e-01, 2.0978491966341e-02,
+                  -1.9443840512668e-01, 4.0826835370618e-02,-4.5365190474650e-02,
+                   6.2779900072132e-02,-1.3194351021000e-01,-1.4673032718563e-01,
+                   1.1894031277247e-01,-6.4952851564679e-03, 8.8503610374493e-02,
+                   1.4899437409291e-01, 1.3962841511565e-01,-2.6459446720450e-02,
+                  -5.0128914532773e-02, 1.8329676428116e-01,-1.5559089125095e-01,
+                  -4.0176879767592e-02, 3.6192059996636e-01, 1.0202887240343e-01,
+                   1.9318668580051e-01,-4.3435977107932e-01,-4.2080828803311e-02,
+                   1.9144626027273e-01,-1.7851138969948e-01, 1.0524533875070e-01,
+                  -1.7954071602185e-02, 5.2022455612120e-02,-2.8891891146828e-01,
+                  -4.7452036576319e-02,-1.0939400546289e-01, 3.5916564473568e-01,
+                  -2.0162789820172e-01,-3.5838629543696e-01, 5.6706523551202e-03,
+                   1.3849337488211e-01,-4.1733982195604e-01, 4.1641570764241e-01,
+                  -1.2243429796296e-01, 4.7141730971228e-02,-1.8224510249551e-01,
+                  -1.8880981556620e-01,-3.1992359561800e-01,-1.8567550546587e-01,
+                   6.1850530431280e-01,-6.1142756235141e-02,-1.6996135584933e-01,
+                   5.4252879499871e-01, 6.6128603899427e-01, 1.2107016404639e-02,
+                  -1.9633639729189e-01, 2.7652059420824e-03,-2.2684111109778e-01,
+                  -4.7924491598635e-01, 2.4287790137314e-01,-1.4296023329441e-01,
+                   8.9664665907006e-02,-1.4003228575602e-01,-1.3321543452254e-01,
+                  -1.8340983193745e-01, 2.3426707273520e-01, 1.5141050914514e-01
+            };
+
+            real3 ROH1 = (trimTo3(posq[H1]) - trimTo3(posq[ O])) * 10.;
+            real3 ROH2 = (trimTo3(posq[H2]) - trimTo3(posq[ O])) * 10.;
+            real3 RHH  = (trimTo3(posq[H1]) - trimTo3(posq[H2])) * 10.;
+            real dROH1 = SQRT(dot(ROH1, ROH1));
+            real dROH2 = SQRT(dot(ROH2, ROH2));
+            real dRHH  = SQRT(dot( RHH,  RHH));
+
+            const real costh =
+                dot(ROH1, ROH2)/(dROH1*dROH2);
+
+            const real efac = EXP(-b1D*(POW((dROH1 - reoh), 2)
+                                             + POW((dROH2 - reoh), 2)));
+
+            const real x1 = (dROH1 - reoh)/reoh;
+            const real x2 = (dROH2 - reoh)/reoh;
+            const real x3 = costh - costhe;
+
+            real fmat[3][16];
+
+            for (size_t i = 0; i < 3; ++i) {
+                fmat[i][0] = 0.0;
+                fmat[i][1] = 1.0;
+            }
+
+            for (size_t j = 2; j < 16; ++j) {
+                fmat[0][j] = fmat[0][j - 1]*x1;
+                fmat[1][j] = fmat[1][j - 1]*x2;
+                fmat[2][j] = fmat[2][j - 1]*x3;
+            }
+
+            // Calculate the dipole moment
+
+            real p1(0), p2(0);
+            real pl1 = costh;
+            real pl2 = 0.5*(3*pl1*pl1 - 1.0);
+
+            real dp1dr1(0);
+            real dp1dr2(0);
+            real dp1dcabc(0);
+            real dp2dr1(0);
+            real dp2dr2(0);
+            real dp2dcabc(0);
+
+            for (size_t j = 1; j < 84; ++j) {
+                const size_t inI = idxD0[j];
+                const size_t inJ = idxD1[j];
+                const size_t inK = idxD2[j];
+
+                p1 += coefD[j]*fmat[0][inI]*fmat[1][inJ]*fmat[2][inK];
+                p2 += coefD[j]*fmat[0][inJ]*fmat[1][inI]*fmat[2][inK];
+
+                dp1dr1 +=
+                    coefD[j]*(inI - 1)*fmat[0][inI - 1]*fmat[1][inJ]*fmat[2][inK];
+                dp1dr2 +=
+                    coefD[j]*(inJ - 1)*fmat[0][inI]*fmat[1][inJ - 1]*fmat[2][inK];
+                dp1dcabc +=
+                    coefD[j]*(inK - 1)*fmat[0][inI]*fmat[1][inJ]*fmat[2][inK - 1];
+                dp2dr1 +=
+                    coefD[j]*(inJ - 1)*fmat[0][inJ - 1]*fmat[1][inI]*fmat[2][inK];
+                dp2dr2 +=
+                    coefD[j]*(inI - 1)*fmat[0][inJ]*fmat[1][inI - 1]*fmat[2][inK];
+                dp2dcabc +=
+                    coefD[j]*(inK - 1)*fmat[0][inJ]*fmat[1][inI]*fmat[2][inK - 1];
+            }
+
+            const real xx = Bohr_A;
+            const real xx2 = xx*xx;
+
+            dp1dr1 /= reoh/xx;
+            dp1dr2 /= reoh/xx;
+            dp2dr1 /= reoh/xx;
+            dp2dr2 /= reoh/xx;
+
+            const real pc0 =
+                a*(POW(dROH1, b) + POW(dROH2, b))*(c0 + pl1*c1 + pl2*c2);
+
+            const real dpc0dr1 =
+                a*b*POW(dROH1, b - 1)*(c0 + pl1*c1 + pl2*c2)*xx2;
+            const real dpc0dr2 =
+                a*b*POW(dROH2, b - 1)*(c0 + pl1*c1 + pl2*c2)*xx2;
+            real dpc0dcabc =
+                a*(POW(dROH1, b) + POW(dROH2, b))*(c1 + 0.5*(6.0*pl1)*c2)*xx;
+
+            const real defacdr1 = -2.0*b1D*(dROH1 - reoh)*efac*xx;
+            const real defacdr2 = -2.0*b1D*(dROH2 - reoh)*efac*xx;
+
+            dp1dr1 = dp1dr1*efac + p1*defacdr1 + dpc0dr1;
+            dp1dr2 = dp1dr2*efac + p1*defacdr2 + dpc0dr2;
+            dp1dcabc = dp1dcabc*efac + dpc0dcabc;
+            dp2dr1 = dp2dr1*efac + p2*defacdr1 + dpc0dr1;
+            dp2dr2 = dp2dr2*efac + p2*defacdr2 + dpc0dr2;
+            dp2dcabc = dp2dcabc*efac + dpc0dcabc;
+
+            p1 = coefD[0] + p1*efac + pc0*xx; // q^H1 in TTM2-F
+            p2 = coefD[0] + p2*efac + pc0*xx; // q^H2 paper
+
+            real chargeO= -(p1 + p2);  // Oxygen
+            real chargeH1 = p1; // Hydrogen-1
+            real chargeH2 = p2;  // Hydrogen-2
+            real gamma2div1 = gamma2/gamma1;
+
+            posq[O].w = 0.;
+            posq[H1].w = chargeH1 + gamma2div1*(chargeH1 + chargeH2);
+            posq[H2].w = chargeH2 + gamma2div1*(chargeH1 + chargeH2);
+            posq[M].w = chargeO/gamma1;
+
+                printf("H1 %d charge %.6g\n", H1, posq[H1].w);
+                printf("H2 %d charge %.6g\n", H2, posq[H2].w);
+                printf("M %d charge %.6g\n", M, posq[M].w);
+
+            //dp1dr1 /= xx;
+            //dp1dr2 /= xx;
+            //dp2dr1 /= xx;
+            //dp2dr2 /= xx;
+
+            //const real f1q1r13 = (dp1dr1 - (dp1dcabc*costh/dROH1))/dROH1;
+            //const real f1q1r23 = dp1dcabc/(dROH1*dROH2);
+            //const real f2q1r23 = (dp1dr2 - (dp1dcabc*costh/dROH2))/dROH2;
+            //const real f2q1r13 = dp1dcabc/(dROH2*dROH1);
+            //const real f1q2r13 = (dp2dr1 - (dp2dcabc*costh/dROH1))/dROH1;
+            //const real f1q2r23 = dp2dcabc/(dROH1*dROH2);
+            //const real f2q2r23 = (dp2dr2 - (dp2dcabc*costh/dROH2))/dROH2;
+            //const real f2q2r13 = dp2dcabc/(dROH2*dROH1);
+
+            //// first index is atom w.r.t. to which the derivative is
+            //// second index is the charge being differentiated
+
+            //enum ChargeDerivativesIndices { vsH1, vsH2, vsO };
+
+            //std:vector<RealVec> chargeDerivativesH1;
+            //chargeDerivativesH1.resize(3);
+
+            ////gradient of charge h1(second index) wrt displacement of h1(first index)
+            //for (size_t i = 0; i < 3; ++i) {
+            //    chargeDerivativesH1[vsH1][i] = f1q1r13*ROH1[i] + f1q1r23*ROH2[i];
+            //    chargeDerivativesH1[vsH2][i] = f2q1r13*ROH1[i] + f2q1r23*ROH2[i];
+            //    chargeDerivativesH1[vsO][i] = -(chargeDerivativesH1[vsH1][i]+chargeDerivativesH1[vsH2][i]);
+            //}
+
+            //std::vector<RealVec> chargeDerivativesH2;
+            //chargeDerivativesH2.resize(3);
+
+            //    //gradient of charge h1(second index) wrt displacement of h1(first index)
+            //for (size_t i = 0; i < 3; ++i) {
+            //        chargeDerivativesH2[vsH1][i] = f1q2r13*ROH1[i] + f1q2r23*ROH2[i];
+            //        chargeDerivativesH2[vsH2][i] = f2q2r13*ROH1[i] + f2q2r23*ROH2[i];
+            //        chargeDerivativesH2[vsO][i] = -(chargeDerivativesH2[vsH1][i]+chargeDerivativesH2[vsH2][i]);
+            //}
+
+            //std::vector<RealVec> chargeDerivativesO;
+            //chargeDerivativesO.resize(3);
+
+            //    //gradient of charge h1(second index) wrt displacement of h1(first index)
+            //for (size_t i = 0; i < 3; ++i) {
+            //        chargeDerivativesO[vsH1][i] = -(chargeDerivativesH1[vsH1][i]+ chargeDerivativesH2[vsH1][i]);
+            //        chargeDerivativesO[vsH2][i] =  -(chargeDerivativesH1[vsH2][i]+ chargeDerivativesH2[vsH2][i]);
+            //        chargeDerivativesO[vsO][i] =  -(chargeDerivativesH1[vsO][i]+ chargeDerivativesH2[vsO][i]);
+            //}
+
+            //real sumH1, sumH2, sumO;
+
+            //for (size_t i = 0; i < 3; ++i) {
+            //    particleM.chargeDerivatives[vsH1f][i] = 0.;
+            //    particleM.chargeDerivatives[vsH2f][i] = 0.;
+            //    particleM.chargeDerivatives[vsMf][i] = 0.;
+
+            //    sumH1 = gamma2div1*(chargeDerivativesH1[vsH1][i]+chargeDerivativesH2[vsH1][i]);
+            //    sumH2 = gamma2div1*(chargeDerivativesH1[vsH2][i]+chargeDerivativesH2[vsH2][i]);
+            //    sumO = gamma2div1*(chargeDerivativesH1[vsO][i]+chargeDerivativesH2[vsO][i]);
+
+            //    particleH1.chargeDerivatives[vsH1f][i] = chargeDerivativesH1[vsH1][i] + sumH1;
+            //    particleH2.chargeDerivatives[vsH1f][i] = chargeDerivativesH1[vsH2][i] + sumH2;
+            //    particleO.chargeDerivatives[vsH1f][i]  = chargeDerivativesH1[vsO][i] + sumO;
+
+            //    particleH1.chargeDerivatives[vsH2f][i] = chargeDerivativesH2[vsH1][i] + sumH1;
+            //    particleH2.chargeDerivatives[vsH2f][i] = chargeDerivativesH2[vsH2][i] + sumH2;
+            //    particleO.chargeDerivatives[vsH2f][i]  = chargeDerivativesH2[vsO][i] +  sumO;
+
+            //    particleH1.chargeDerivatives[vsMf][i] = chargeDerivativesO[vsH1][i] - 2*sumH1;
+            //    particleH2.chargeDerivatives[vsMf][i] = chargeDerivativesO[vsH2][i] - 2*sumH2;
+            //    particleO.chargeDerivatives[vsMf][i]  = chargeDerivativesO[vsO][i]  - 2*sumO;
+
+            //}
+
+            //// convert from q/A to q/nm
+            //for (unsigned int i = 0; i < 3; ++i) {
+            //    for (unsigned int s = 0; s < 3; ++s) {
+            //        particleH1.chargeDerivatives[s][i] *= 10;
+            //        particleH2.chargeDerivatives[s][i] *= 10;
+            //        particleO.chargeDerivatives[s][i] *= 10;
+            //    }
+
+            //}
+
+        }
+
+}
