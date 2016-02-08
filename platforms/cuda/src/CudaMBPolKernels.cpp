@@ -586,6 +586,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		}
 	}
 
+    includeChargeRedistribution = force.getIncludeChargeRedistribution();
 	// Record other options.
 
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Mutual) {
@@ -663,6 +664,10 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
     defines["FPMIN"] = cu.doubleToString(cu.getUseDoublePrecision() ? std::numeric_limits<double>::min()/std::numeric_limits<double>::epsilon() : std::numeric_limits<float>::min()/std::numeric_limits<float>::epsilon());
 
 	int maxThreads = cu.getNonbondedUtilities().getForceThreadBlockSize();
+
+    // 1 thread per water molecule, numMultipoles / 4 should be enough, some extra threads will just do nothing
+    // the best would be to have the number of molecules that need charge redistribution
+	computeWaterChargeThreads = numMultipoles;
 	fixedFieldThreads = min(maxThreads,
 			cu.computeThreadBlockSize(fixedThreadMemory));
 	inducedFieldThreads = min(maxThreads,
@@ -672,6 +677,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 			defines);
 	recordInducedDipolesKernel = cu.getKernel(module, "recordInducedDipoles");
 	computePotentialKernel = cu.getKernel(module, "computePotentialAtPoints");
+	computeWaterChargeKernel = cu.getKernel(module, "computeWaterCharge");
 	defines["THREAD_BLOCK_SIZE"] = cu.intToString(fixedFieldThreads);
 	module = cu.createModule(
 			CudaKernelSources::vectorOps
@@ -1002,6 +1008,18 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 	int elementSize = (
 			cu.getUseDoublePrecision() ? sizeof(double) : sizeof(float));
 	void* npt = NULL;
+
+	// Compute water charge
+
+    if (includeChargeRedistribution) {
+        void* computeWaterChargeArgs[] = { &cu.getPosq().getDevicePointer(),
+        &numMultipoles,
+        &moleculeIndex->getDevicePointer(),
+        &atomType->getDevicePointer()  };
+        cu.executeKernel(computeWaterChargeKernel, computeWaterChargeArgs,
+                1 * computeWaterChargeThreads, computeWaterChargeThreads);
+    }
+
 	if (pmeGrid == NULL) {
 		// Compute induced dipoles.
 

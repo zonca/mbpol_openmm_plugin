@@ -210,8 +210,10 @@ private:
     template <class T, class T4, class M4> void computeSystemMultipoleMoments(ContextImpl& context, std::vector<double>& outputMultipoleMoments);
     int numMultipoles, maxInducedIterations;
     int fixedFieldThreads, inducedFieldThreads, electrostaticsThreads;
+    int computeWaterChargeThreads;
     double inducedEpsilon;
     bool hasInitializedScaleFactors, hasInitializedFFT, multipolesAreValid;
+    bool includeChargeRedistribution;
     CudaContext& cu;
     const System& system;
     std::vector<int3> covalentFlagValues;
@@ -255,7 +257,7 @@ private:
     CudaArray* atomTypes;
     CudaSort* sort;
     cufftHandle fft;
-    CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;
+    CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeWaterChargeKernel, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;
     CUfunction pmeGridIndexKernel, pmeSpreadFixedMultipolesKernel, pmeSpreadInducedDipolesKernel, pmeFinishSpreadChargeKernel, pmeConvolutionKernel;
     CUfunction pmeFixedPotentialKernel, pmeInducedPotentialKernel, pmeFixedForceKernel, pmeInducedForceKernel, pmeRecordInducedFieldDipolesKernel, computePotentialKernel;
     CUfunction pmeTransformMultipolesKernel, pmeTransformPotentialKernel;
