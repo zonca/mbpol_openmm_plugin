@@ -36,9 +36,11 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     // if isSameWater set gl0 to zero
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
-    gl0  *= !isSameWater;
-    gli1 *= !isSameWater;
-    glip1 *= !isSameWater;
+    if (isSameWater) {
+        gl0  = 0;
+        gli1 = 0;
+        glip1 = 0;
+    }
 
     // real scale1CC = getAndScaleInverseRs( particleI, particleK, r, true, 1, TCC);
     // real scale3CD = getAndScaleInverseRs( particleI, particleK, r, true, 3, TCD);
@@ -51,11 +53,17 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     real dampForExpCC = -1 * thole[TCC] * ratio;
     // EXP(ttm::gammln(3.0/4.0)) = 1.2254167024651776
-    real scale3CC = ( 1.0 - do_scaling*EXP(dampForExpCC) ); // needed for force
-    real scale1CC = scale3CC + do_scaling*(POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC));
+    real scale3CC = 1.0;
+    if (do_scaling)
+        scale3CC -= EXP(dampForExpCC); // needed for force
+    real scale1CC = scale3CC;
+    if (do_scaling)
+        scale1CC += POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC);
 
     real dampForExpCD = -1 * thole[TCD] * ratio;
-    real scale3CD = ( 1.0 - do_scaling*EXP(dampForExpCD) );
+    real scale3CD = 1.0;
+    if (do_scaling)
+        scale3CD -= do_scaling*EXP(dampForExpCD);
 
     real em = rr1 * gl0 * scale1CC;
     real ei = 0.5f * gli1 * rr3 * scale3CD;
@@ -68,7 +76,9 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     // RealOpenMM scale5DD = getAndScaleInverseRs( particleI, particleK, r, true, 5, TDD);
     // RealOpenMM scale7DD = getAndScaleInverseRs( particleI, particleK, r, true, 7, TDD);
 
-    real scale5CD = scale3CD - do_scaling * (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
+    real scale5CD = scale3CD;
+    if (do_scaling)
+        scale5CD -= (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
 
     int tdd = TDD;
     if (isSameWater) {
@@ -79,8 +89,12 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
         }
     }
     real dampForExpDD = -1 * thole[tdd] * ratio;
-    real scale5DD =  1.0 - do_scaling * EXP(dampForExpDD) *  (1. + (4./3.) * thole[tdd] * ratio);
-    real scale7DD = scale5DD - do_scaling * ((4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4.0f) * POW(r, 4));
+    real scale5DD =  1.0;
+    if (do_scaling)
+        scale5DD -= EXP(dampForExpDD) *  (1. + (4./3.) * thole[tdd] * ratio);
+    real scale7DD = scale5DD;
+    if (do_scaling)
+        scale7DD -= (4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4.0f) * POW(r, 4);
 
     real gf1 = rr3*gl0*scale3CC;
 
