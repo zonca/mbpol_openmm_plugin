@@ -1233,7 +1233,7 @@ void runTest( double boxDimension ) {
     std::cout << "Total Energy: " << energy << " Kcal/mol "<< std::endl;
     std::cout << "Expected energy: " << expectedEnergy << " Kcal/mol "<< std::endl;
 
-    for ( unsigned int ii = 0; ii < 5; ii++ ){
+    for ( unsigned int ii = 0; ii < 4; ii++ ){
         state                      = context.getState(State::Energy, false, pow(2, ii));
         std::cout << "Energy " << forceLabels[ii] << ": " << state.getPotentialEnergy() / CalToJoule << " Kcal/mol "<< std::endl;
     }
