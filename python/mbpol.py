@@ -368,7 +368,6 @@ class MBPolElectrostaticsForceGenerator:
             sys.addForce(force)
         else:
             force = existing[0]
-        print("HERE")
         print(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
         force.setNonbondedMethod(methodMap[nonbondedMethod])
 
