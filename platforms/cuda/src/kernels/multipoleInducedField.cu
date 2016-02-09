@@ -75,7 +75,15 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         real ratio       = POW(r/damp, 4); // rA4 in MBPol
 
         // FIXME identify if we need to use TDDOH and so on
-        real pgamma = thole[TDD];
+        int tdd = TDD;
+        if (isSameWater) {
+            if ((atom1.atomType == 0) | (atom2.atomType == 0)) { // one is oxygen
+                tdd = TDDOH;
+            } else { // both hydrogens
+                tdd = TDDHH;
+            }
+        }
+        real pgamma = thole[tdd];
         real dampForExp = -1 * pgamma * ratio;
 
         real scale3 = 1.0;
