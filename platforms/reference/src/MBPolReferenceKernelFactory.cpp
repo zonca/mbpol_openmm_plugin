@@ -55,7 +55,6 @@ extern "C" void initMBPolReferenceKernels() {
              platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(),           factory);
              platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
              platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
-             platform.registerKernelFactory(CalcMBPolDispersionForceKernel::Name(),                   factory);
              platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
         }
     }
@@ -74,9 +73,6 @@ KernelImpl* MBPolReferenceKernelFactory::createKernelImpl(std::string name, cons
 
     if (name == CalcMBPolThreeBodyForceKernel::Name())
             return new ReferenceCalcMBPolThreeBodyForceKernel(name, platform, context.getSystem());
-
-    if (name == CalcMBPolDispersionForceKernel::Name())
-            return new ReferenceCalcMBPolDispersionForceKernel(name, platform, context.getSystem());
 
     if (name == CalcMBPolElectrostaticsForceKernel::Name())
         return new ReferenceCalcMBPolElectrostaticsForceKernel(name, platform, context.getSystem());

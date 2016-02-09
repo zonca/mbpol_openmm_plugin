@@ -18,11 +18,12 @@ namespace std {
 #include "openmm/MBPolOneBodyForce.h"
 #include "openmm/MBPolTwoBodyForce.h"
 #include "openmm/MBPolThreeBodyForce.h"
-#include "openmm/MBPolDispersionForce.h"
 #include "OpenMM.h"
 #include "OpenMMAmoeba.h"
 #include "OpenMMDrude.h"
+
 #include "openmm/RPMDIntegrator.h"
+
 #include "openmm/RPMDMonteCarloBarostat.h"
 %}
 
@@ -167,30 +168,6 @@ public:
     void setNonbondedMethod(NonbondedMethod method);
 
     void updateParametersInContext(Context& context);
-};
-
-class MBPolDispersionForce : public Force {
-public:
-    MBPolDispersionForce();
-
-    int getNumParticles() const;
-    void setParticleParameters(int particleIndex, std::string atomElement);
-
-    enum NonbondedMethod { NoCutoff, CutoffPeriodic, CutoffNonPeriodic };
-    NonbondedMethod getNonbondedMethod() const;
-    void setNonbondedMethod(NonbondedMethod method);
-
-    void getParticleParameters(int particleIndex, std::string & atomElement) const;
-
-    int addParticle(std::string atomElement);
-
-    void addDispersionParameters(std::string firstElement, std::string secondElement, double c6, double d6);
-
-    int getNumMolecules(void) const;
-    void setCutoff(double cutoff);
-
-    double getCutoff(void) const;
-
 };
 
 } // namespace
