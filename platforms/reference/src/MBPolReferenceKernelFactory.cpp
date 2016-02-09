@@ -55,7 +55,6 @@ extern "C" void initMBPolReferenceKernels() {
              platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(),           factory);
              platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
              platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
-             platform.registerKernelFactory(CalcMBPolDispersionForceKernel::Name(),                   factory);
              platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
         }
     }
