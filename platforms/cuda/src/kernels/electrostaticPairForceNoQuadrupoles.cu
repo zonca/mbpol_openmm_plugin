@@ -1,4 +1,4 @@
-__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce) {
+__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce, real2& potential) {
 
     // FIXME thole copy in unique location
     const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
@@ -116,13 +116,28 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     // Same water atoms have no induced-dipole/charge interaction
     if (not( isSameWater )) {
-    ftm2i += (
+        ftm2i += (
                    ( atom1.inducedDipole +
              atom1.inducedDipolePolar )*-atom2.posq.w +
                    ( atom2.inducedDipole +
              atom2.inducedDipolePolar )* atom1.posq.w
                  ) * 0.5 * rr3 * scale3CD;
+
+    #ifdef INCLUDE_CHARGE_REDISTRIBUTION
+    // Reference PME
+    // electrostaticPotential[iIndex] += ck * (bn0 - rr1 * (1 - scale1CC)); // /2.;
+    // electrostaticPotential[jIndex] += ci * (bn0 - rr1 * (1 - scale1CC));//  /2.;
+    // electrostaticPotential[iIndex] -= sci4 * (bn1 - rr3 * (1 - scale3CD)); // /2.;
+    // electrostaticPotential[jIndex] += sci3 * (bn1 - rr3 * (1 - scale3CD));//  /2.;
+
+        // electrostaticPotential[atom2] += atom1.posq.w * rr1 * scale1CC;
+        potential.x = atom2.posq.w * rr1 * scale1CC - sci4 * rr3 * scale3CD;
+        potential.y = atom1.posq.w * rr1 * scale1CC + sci3 * rr3 * scale3CD;
+        // electrostaticPotential[atom2] += sci3 * rr3 * scale3CD;
+    #endif
+
     }
+
 
     outputForce = - ENERGY_SCALE_FACTOR * (ftm2+ftm2i);
 }

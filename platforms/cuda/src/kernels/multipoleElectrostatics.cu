@@ -3,12 +3,13 @@
 typedef struct {
     real4 posq;
     real3 force, dipole, inducedDipole, inducedDipolePolar;
+    real potential;
     float damp;
     int moleculeIndex;
     int atomType;
 } AtomData;
 
-__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce);
+__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce, real2& potential);
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq,
 const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar, const float* __restrict__ damping, const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
@@ -78,6 +79,7 @@ extern "C" __global__ void computeElectrostatics(
         unsigned int atom1 = x*TILE_SIZE + tgx;
         loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
         data.force = make_real3(0);
+        data.potential = 0;
         uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
         unsigned int polarizationGroup = polarizationGroupFlags[pos*TILE_SIZE+tgx];
         if (x == y) {
@@ -99,11 +101,13 @@ extern "C" __global__ void computeElectrostatics(
                 if (atom1 != atom2 && atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 tempForce;
                     real tempEnergy;
+                    real2 tempPotential;
                     float d = 1.;
                     float p = 1.;
                     float m = 1.;
-                    computeOneInteractionF1(data, localData[tbx+j], d, p, m, tempEnergy, tempForce);
+                    computeOneInteractionF1(data, localData[tbx+j], d, p, m, tempEnergy, tempForce, tempPotential);
                     data.force += tempForce;
+                    data.potential += tempPotential.x; // FIXME divide by 2??
                     energy += 0.5f*tempEnergy;
                 }
             }
@@ -124,12 +128,15 @@ extern "C" __global__ void computeElectrostatics(
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 tempForce;
                     real tempEnergy;
+                    real2 tempPotential;
                     float d = 1.;
                     float p = 1.;
                     float m = 1.;
-                    computeOneInteractionF1(data, localData[tbx+tj], d, p, m, tempEnergy, tempForce);
+                    computeOneInteractionF1(data, localData[tbx+tj], d, p, m, tempEnergy, tempForce, tempPotential);
                     data.force += tempForce;
+                    data.potential += tempPotential.x;
                     localData[tbx+tj].force -= tempForce;
+                    localData[tbx+tj].potential += tempPotential.y;
                     energy += tempEnergy;
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
@@ -224,9 +231,12 @@ extern "C" __global__ void computeElectrostatics(
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
                     real3 tempForce;
                     real tempEnergy;
-                    computeOneInteractionF1(data, localData[tbx+tj], 1, 1, 1, tempEnergy, tempForce);
+                    real2 tempPotential;
+                    computeOneInteractionF1(data, localData[tbx+tj], 1, 1, 1, tempEnergy, tempForce, tempPotential);
                     data.force += tempForce;
+                    data.potential += tempPotential.x;
                     localData[tbx+tj].force -= tempForce;
+                    localData[tbx+tj].potential -= tempPotential.y;
                     energy += tempEnergy;
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
