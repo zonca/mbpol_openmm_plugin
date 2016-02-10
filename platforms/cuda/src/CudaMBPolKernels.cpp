@@ -368,7 +368,7 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(
 				system), hasInitializedScaleFactors(false), hasInitializedFFT(
 				false), multipolesAreValid(false),
 		field(NULL), fieldPolar(
-		NULL), inducedField(NULL), inducedFieldPolar(NULL), damping(NULL), inducedDipole(
+		NULL), inducedField(NULL), inducedFieldPolar(NULL), potentialBuffers(NULL), damping(NULL), inducedDipole(
 		NULL), inducedDipolePolar(
 		NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(
 		NULL), prevErrors(NULL), polarizability(NULL), covalentFlags(
@@ -390,6 +390,8 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
 		delete inducedField;
 	if (inducedFieldPolar != NULL)
 		delete inducedFieldPolar;
+	if (potentialBuffers != NULL)
+		delete potentialBuffers;
 	if (damping != NULL)
 		delete damping;
 	if (inducedDipole != NULL)
@@ -600,6 +602,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		maxInducedIterations = 0;
 	bool usePME = (force.getNonbondedMethod() == MBPolElectrostaticsForce::PME);
 
+    potentialBuffers = new CudaArray(cu, paddedNumAtoms, sizeof(long long), "potentialBuffers");
+    cu.addAutoclearBuffer(*potentialBuffers);
 	// Create the kernels.
 
 	bool useShuffle = (cu.getComputeCapability() >= 3.0
@@ -1075,6 +1079,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		// Compute electrostatic force.
 
 		void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
+				&potentialBuffers->getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
 				&covalentFlags->getDevicePointer(),

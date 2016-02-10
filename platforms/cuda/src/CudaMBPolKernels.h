@@ -255,6 +255,7 @@ private:
     CudaArray* lastPositions;
     CudaArray* waterMoleculeIndices;
     CudaArray* atomTypes;
+    CudaArray* potentialBuffers;
     CudaSort* sort;
     cufftHandle fft;
     CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeWaterChargeKernel, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;

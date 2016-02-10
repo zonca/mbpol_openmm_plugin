@@ -49,7 +49,7 @@ __device__ float computePScaleFactor(uint2 covalent, unsigned int polarizationGr
  * Compute electrostatic interactions.
  */
 extern "C" __global__ void computeElectrostatics(
-        unsigned long long* __restrict__ forceBuffers, real* __restrict__ energyBuffer,
+        unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ potentialBuffers, real* __restrict__ energyBuffer,
         const real4* __restrict__ posq, const uint2* __restrict__ covalentFlags, const unsigned int* __restrict__ polarizationGroupFlags,
         const ushort2* __restrict__ exclusionTiles, unsigned int startTileIndex, unsigned int numTileIndices,
 #ifdef USE_CUTOFF
@@ -114,6 +114,7 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[atom1], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[atom1], static_cast<unsigned long long>((long long) (data.potential*0x100000000)));
 
         }
         else {
@@ -145,10 +146,12 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (data.potential*0x100000000)));
             offset = y*TILE_SIZE + tgx;
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].potential*0x100000000)));
 
         }
     }
@@ -245,6 +248,7 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (data.potential*0x100000000)));
 #ifdef USE_CUTOFF
             offset = atomIndices[threadIdx.x];
 #else
@@ -253,6 +257,7 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].potential*0x100000000)));
 
 #ifdef USE_CUTOFF
             offset = atomIndices[threadIdx.x];
