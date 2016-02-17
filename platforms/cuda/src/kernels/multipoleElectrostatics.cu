@@ -239,7 +239,7 @@ extern "C" __global__ void computeElectrostatics(
                     data.force += tempForce;
                     data.potential += tempPotential.x;
                     localData[tbx+tj].force -= tempForce;
-                    localData[tbx+tj].potential -= tempPotential.y;
+                    localData[tbx+tj].potential += tempPotential.y;
                     energy += tempEnergy;
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
