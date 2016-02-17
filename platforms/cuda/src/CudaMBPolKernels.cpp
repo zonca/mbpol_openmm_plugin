@@ -368,7 +368,7 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(
 				system), hasInitializedScaleFactors(false), hasInitializedFFT(
 				false), multipolesAreValid(false),
 		field(NULL), fieldPolar(
-		NULL), inducedField(NULL), inducedFieldPolar(NULL), potentialBuffers(NULL), damping(NULL), inducedDipole(
+		NULL), inducedField(NULL), inducedFieldPolar(NULL), potentialBuffers(NULL), chargeDerivatives(NULL), damping(NULL), inducedDipole(
 		NULL), inducedDipolePolar(
 		NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(
 		NULL), prevErrors(NULL), polarizability(NULL), covalentFlags(
@@ -392,6 +392,8 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
 		delete inducedFieldPolar;
 	if (potentialBuffers != NULL)
 		delete potentialBuffers;
+	if (chargeDerivatives != NULL)
+		delete chargeDerivatives;
 	if (damping != NULL)
 		delete damping;
 	if (inducedDipole != NULL)
@@ -604,6 +606,9 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 
     potentialBuffers = new CudaArray(cu, paddedNumAtoms, sizeof(long long), "potentialBuffers");
     cu.addAutoclearBuffer(*potentialBuffers);
+
+    // 3 vectors for each atom
+    chargeDerivatives = new CudaArray(cu, 9*paddedNumAtoms, elementSize, "chargeDerivatives");
 	// Create the kernels.
 
 	bool useShuffle = (cu.getComputeCapability() >= 3.0
@@ -1020,6 +1025,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 
     if (includeChargeRedistribution) {
         void* computeWaterChargeArgs[] = { &cu.getPosq().getDevicePointer(),
+        &chargeDerivatives->getDevicePointer(),
         &numMultipoles,
         &moleculeIndex->getDevicePointer(),
         &atomType->getDevicePointer()  };

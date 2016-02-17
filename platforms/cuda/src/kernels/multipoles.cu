@@ -68,7 +68,8 @@ extern "C" __global__ void computePotentialAtPoints(const real4* __restrict__ po
 }
 
 extern "C" __global__ void computeWaterCharge(
-        real4* __restrict__ posq, unsigned int numMultipoles,
+        real4* __restrict__ posq,
+        real3* __restrict__ chargeDerivatives, unsigned int numMultipoles,
         const int* __restrict__ moleculeIndex, const int* __restrict__ atomType) {
 
         const unsigned int moleculeId = blockIdx.x*blockDim.x+threadIdx.x;
