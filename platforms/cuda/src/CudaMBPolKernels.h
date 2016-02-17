@@ -259,7 +259,7 @@ private:
     CudaArray* chargeDerivatives;
     CudaSort* sort;
     cufftHandle fft;
-    CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeWaterChargeKernel, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;
+    CUfunction computeMomentsKernel, recordInducedDipolesKernel, computeFixedFieldKernel, computeWaterChargeKernel, computeChargeDerivativesForces, computeInducedFieldKernel, updateInducedFieldKernel, electrostaticsKernel, mapTorqueKernel;
     CUfunction pmeGridIndexKernel, pmeSpreadFixedMultipolesKernel, pmeSpreadInducedDipolesKernel, pmeFinishSpreadChargeKernel, pmeConvolutionKernel;
     CUfunction pmeFixedPotentialKernel, pmeInducedPotentialKernel, pmeFixedForceKernel, pmeInducedForceKernel, pmeRecordInducedFieldDipolesKernel, computePotentialKernel;
     CUfunction pmeTransformMultipolesKernel, pmeTransformPotentialKernel;

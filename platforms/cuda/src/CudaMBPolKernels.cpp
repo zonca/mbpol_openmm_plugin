@@ -690,6 +690,7 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	recordInducedDipolesKernel = cu.getKernel(module, "recordInducedDipoles");
 	computePotentialKernel = cu.getKernel(module, "computePotentialAtPoints");
 	computeWaterChargeKernel = cu.getKernel(module, "computeWaterCharge");
+	computeChargeDerivativesForces = cu.getKernel(module, "computeChargeDerivativesForces");
 	defines["THREAD_BLOCK_SIZE"] = cu.intToString(fixedFieldThreads);
 	module = cu.createModule(
 			CudaKernelSources::vectorOps
@@ -1403,6 +1404,17 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				cu.getNumAtoms());
 	}
 
+    // compute force contribution from charge derivatives
+    if (includeChargeRedistribution) {
+        void* computeChargeDerivativesForcesArgs[] = {
+        &chargeDerivatives->getDevicePointer(),
+        &numMultipoles,
+		&cu.getForce().getDevicePointer(),
+		&potentialBuffers->getDevicePointer()
+        };
+        cu.executeKernel(computeChargeDerivativesForces, computeChargeDerivativesForcesArgs,
+                1 * computeWaterChargeThreads, computeWaterChargeThreads);
+    }
 
 	// Record the current atom positions so we can tell later if they have changed.
 

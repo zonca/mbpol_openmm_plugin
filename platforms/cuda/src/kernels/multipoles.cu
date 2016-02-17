@@ -80,7 +80,7 @@ extern "C" __global__ void computeWaterCharge(
         const unsigned int H2 = O + 2;
         const unsigned int M  = O + 3;
 
-        if (M <= numMultipoles) {
+        if (M <= NUM_ATOMS) {
             const real Bohr_A = 0.52917721092; // CODATA 2010
             // M-site positioning (TTM2.1-F)
             const real gammaM = 0.426706882;
@@ -107,7 +107,7 @@ extern "C" __global__ void computeWaterCharge(
 
             const real CHARGECON = SQRT(E_cc*Na/kcal_J);
 
-            const size_t idxD0[84] = {
+            const unsigned int idxD0[84] = {
                    1, 1, 1, 2, 1, 1, 1, 2, 2, 3, 1, 1, 1, 1, 2, 2, 2, 3, 3, 4,
                    1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 4, 4, 5, 1, 1, 1, 1, 1,
                    1, 2, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 5, 5, 6, 1, 1, 1, 1,
@@ -115,7 +115,7 @@ extern "C" __global__ void computeWaterCharge(
                    5, 6, 6, 7
             };
 
-            const size_t idxD1[84] = {
+            const unsigned int idxD1[84] = {
                    1, 1, 2, 1, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1,
                    1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4, 5,
                    6, 1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 2, 3, 1, 2, 1, 1, 2, 3, 4,
@@ -123,7 +123,7 @@ extern "C" __global__ void computeWaterCharge(
                    3, 1, 2, 1
             };
 
-            const size_t idxD2[84] = {
+            const unsigned int idxD2[84] = {
                    1, 2, 1, 1, 3, 2, 1, 2, 1, 1, 4, 3, 2, 1, 3, 2, 1, 2, 1, 1,
                    5, 4, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1, 2, 1, 1, 6, 5, 4, 3, 2,
                    1, 5, 4, 3, 2, 1, 4, 3, 2, 1, 3, 2, 1, 2, 1, 1, 7, 6, 5, 4,
@@ -182,12 +182,12 @@ extern "C" __global__ void computeWaterCharge(
 
             real fmat[3][16];
 
-            for (size_t i = 0; i < 3; ++i) {
+            for (unsigned int i = 0; i < 3; ++i) {
                 fmat[i][0] = 0.0;
                 fmat[i][1] = 1.0;
             }
 
-            for (size_t j = 2; j < 16; ++j) {
+            for (unsigned int j = 2; j < 16; ++j) {
                 fmat[0][j] = fmat[0][j - 1]*x1;
                 fmat[1][j] = fmat[1][j - 1]*x2;
                 fmat[2][j] = fmat[2][j - 1]*x3;
@@ -206,10 +206,10 @@ extern "C" __global__ void computeWaterCharge(
             real dp2dr2(0);
             real dp2dcabc(0);
 
-            for (size_t j = 1; j < 84; ++j) {
-                const size_t inI = idxD0[j];
-                const size_t inJ = idxD1[j];
-                const size_t inK = idxD2[j];
+            for (unsigned int j = 1; j < 84; ++j) {
+                const unsigned int inI = idxD0[j];
+                const unsigned int inJ = idxD1[j];
+                const unsigned int inK = idxD2[j];
 
                 p1 += coefD[j]*fmat[0][inI]*fmat[1][inJ]*fmat[2][inK];
                 p2 += coefD[j]*fmat[0][inJ]*fmat[1][inI]*fmat[2][inK];
@@ -231,6 +231,11 @@ extern "C" __global__ void computeWaterCharge(
             const real xx = Bohr_A;
             const real xx2 = xx*xx;
 
+        if (O == 0) {
+            int a = O;
+            //printf("der: %.4g %.4g %.4g\n", chargeDerivatives[3*a].x, chargeDerivatives[3*a].y,chargeDerivatives[3*a].z);
+            printf("efac: %d: %.4g \n", 1, dp2dcabc);
+        }
             dp1dr1 /= reoh/xx;
             dp1dr2 /= reoh/xx;
             dp2dr1 /= reoh/xx;
@@ -269,94 +274,124 @@ extern "C" __global__ void computeWaterCharge(
             posq[H2].w = chargeH2 + gamma2div1*(chargeH1 + chargeH2);
             posq[M].w = chargeO/gamma1;
 
-                printf("H1 %d charge %.6g\n", H1, posq[H1].w);
-                printf("H2 %d charge %.6g\n", H2, posq[H2].w);
-                printf("M %d charge %.6g\n", M, posq[M].w);
+            //    printf("H1 %d charge %.6g\n", H1, posq[H1].w);
+            //    printf("H2 %d charge %.6g\n", H2, posq[H2].w);
+            //    printf("M %d charge %.6g\n", M, posq[M].w);
 
-            //dp1dr1 /= xx;
-            //dp1dr2 /= xx;
-            //dp2dr1 /= xx;
-            //dp2dr2 /= xx;
+            dp1dr1 /= xx;
+            dp1dr2 /= xx;
+            dp2dr1 /= xx;
+            dp2dr2 /= xx;
 
-            //const real f1q1r13 = (dp1dr1 - (dp1dcabc*costh/dROH1))/dROH1;
-            //const real f1q1r23 = dp1dcabc/(dROH1*dROH2);
-            //const real f2q1r23 = (dp1dr2 - (dp1dcabc*costh/dROH2))/dROH2;
-            //const real f2q1r13 = dp1dcabc/(dROH2*dROH1);
-            //const real f1q2r13 = (dp2dr1 - (dp2dcabc*costh/dROH1))/dROH1;
-            //const real f1q2r23 = dp2dcabc/(dROH1*dROH2);
-            //const real f2q2r23 = (dp2dr2 - (dp2dcabc*costh/dROH2))/dROH2;
-            //const real f2q2r13 = dp2dcabc/(dROH2*dROH1);
+            const real f1q1r13 = (dp1dr1 - (dp1dcabc*costh/dROH1))/dROH1;
+            const real f1q1r23 = dp1dcabc/(dROH1*dROH2);
+            const real f2q1r23 = (dp1dr2 - (dp1dcabc*costh/dROH2))/dROH2;
+            const real f2q1r13 = dp1dcabc/(dROH2*dROH1);
+            const real f1q2r13 = (dp2dr1 - (dp2dcabc*costh/dROH1))/dROH1;
+            const real f1q2r23 = dp2dcabc/(dROH1*dROH2);
+            const real f2q2r23 = (dp2dr2 - (dp2dcabc*costh/dROH2))/dROH2;
+            const real f2q2r13 = dp2dcabc/(dROH2*dROH1);
 
-            //// first index is atom w.r.t. to which the derivative is
-            //// second index is the charge being differentiated
+            // first index is atom w.r.t. to which the derivative is
+            // second index is the charge being differentiated
 
-            //enum ChargeDerivativesIndices { vsH1, vsH2, vsO };
+            real3 chargeDerivativesH1vsH1;
+            real3 chargeDerivativesH1vsH2;
+            real3 chargeDerivativesH1vsO;
+            //gradient of charge h1(second index) wrt displacement of h1(first index)
+            chargeDerivativesH1vsH1 = f1q1r13*ROH1 + f1q1r23*ROH2;
+            chargeDerivativesH1vsH2 = f2q1r13*ROH1 + f2q1r23*ROH2;
+            chargeDerivativesH1vsO = -(chargeDerivativesH1vsH1+chargeDerivativesH1vsH2);
 
-            //std:vector<RealVec> chargeDerivativesH1;
-            //chargeDerivativesH1.resize(3);
-
-            ////gradient of charge h1(second index) wrt displacement of h1(first index)
-            //for (size_t i = 0; i < 3; ++i) {
-            //    chargeDerivativesH1[vsH1][i] = f1q1r13*ROH1[i] + f1q1r23*ROH2[i];
-            //    chargeDerivativesH1[vsH2][i] = f2q1r13*ROH1[i] + f2q1r23*ROH2[i];
-            //    chargeDerivativesH1[vsO][i] = -(chargeDerivativesH1[vsH1][i]+chargeDerivativesH1[vsH2][i]);
-            //}
-
-            //std::vector<RealVec> chargeDerivativesH2;
-            //chargeDerivativesH2.resize(3);
+            real3 chargeDerivativesH2vsH1;
+            real3 chargeDerivativesH2vsH2;
+            real3 chargeDerivativesH2vsO;
 
             //    //gradient of charge h1(second index) wrt displacement of h1(first index)
-            //for (size_t i = 0; i < 3; ++i) {
-            //        chargeDerivativesH2[vsH1][i] = f1q2r13*ROH1[i] + f1q2r23*ROH2[i];
-            //        chargeDerivativesH2[vsH2][i] = f2q2r13*ROH1[i] + f2q2r23*ROH2[i];
-            //        chargeDerivativesH2[vsO][i] = -(chargeDerivativesH2[vsH1][i]+chargeDerivativesH2[vsH2][i]);
-            //}
+            chargeDerivativesH2vsH1 = f1q2r13*ROH1 + f1q2r23*ROH2;
+            chargeDerivativesH2vsH2 = f2q2r13*ROH1 + f2q2r23*ROH2;
+            chargeDerivativesH2vsO = -(chargeDerivativesH2vsH1+chargeDerivativesH2vsH2);
 
-            //std::vector<RealVec> chargeDerivativesO;
-            //chargeDerivativesO.resize(3);
+            real3 chargeDerivativesOvsH1;
+            real3 chargeDerivativesOvsH2;
+            real3 chargeDerivativesOvsO;
 
-            //    //gradient of charge h1(second index) wrt displacement of h1(first index)
-            //for (size_t i = 0; i < 3; ++i) {
-            //        chargeDerivativesO[vsH1][i] = -(chargeDerivativesH1[vsH1][i]+ chargeDerivativesH2[vsH1][i]);
-            //        chargeDerivativesO[vsH2][i] =  -(chargeDerivativesH1[vsH2][i]+ chargeDerivativesH2[vsH2][i]);
-            //        chargeDerivativesO[vsO][i] =  -(chargeDerivativesH1[vsO][i]+ chargeDerivativesH2[vsO][i]);
-            //}
 
-            //real sumH1, sumH2, sumO;
+            chargeDerivativesOvsH1 = -(chargeDerivativesH1vsH1+ chargeDerivativesH2vsH1);
+            chargeDerivativesOvsH2 =  -(chargeDerivativesH1vsH2+ chargeDerivativesH2vsH2);
+            chargeDerivativesOvsO =  -(chargeDerivativesH1vsO+ chargeDerivativesH2vsO);
 
-            //for (size_t i = 0; i < 3; ++i) {
-            //    particleM.chargeDerivatives[vsH1f][i] = 0.;
-            //    particleM.chargeDerivatives[vsH2f][i] = 0.;
-            //    particleM.chargeDerivatives[vsMf][i] = 0.;
+            chargeDerivatives[3*M]   = make_real3(0, 0, 0);
+            chargeDerivatives[3*M+1] = make_real3(0, 0, 0);
+            chargeDerivatives[3*M+2] = make_real3(0, 0, 0);
 
-            //    sumH1 = gamma2div1*(chargeDerivativesH1[vsH1][i]+chargeDerivativesH2[vsH1][i]);
-            //    sumH2 = gamma2div1*(chargeDerivativesH1[vsH2][i]+chargeDerivativesH2[vsH2][i]);
-            //    sumO = gamma2div1*(chargeDerivativesH1[vsO][i]+chargeDerivativesH2[vsO][i]);
+            real3 sumH1 = gamma2div1*(chargeDerivativesH1vsH1+chargeDerivativesH2vsH1);
+            real3 sumH2 = gamma2div1*(chargeDerivativesH1vsH2+chargeDerivativesH2vsH2);
+            real3 sumO = gamma2div1*(chargeDerivativesH1vsO+chargeDerivativesH2vsO);
 
-            //    particleH1.chargeDerivatives[vsH1f][i] = chargeDerivativesH1[vsH1][i] + sumH1;
-            //    particleH2.chargeDerivatives[vsH1f][i] = chargeDerivativesH1[vsH2][i] + sumH2;
-            //    particleO.chargeDerivatives[vsH1f][i]  = chargeDerivativesH1[vsO][i] + sumO;
+            // vs H1
+            chargeDerivatives[3*H1] = chargeDerivativesH1vsH1 + sumH1;
+            chargeDerivatives[3*H2] = chargeDerivativesH1vsH2 + sumH2;
+            chargeDerivatives[3*O]  = chargeDerivativesH1vsO + sumO;
 
-            //    particleH1.chargeDerivatives[vsH2f][i] = chargeDerivativesH2[vsH1][i] + sumH1;
-            //    particleH2.chargeDerivatives[vsH2f][i] = chargeDerivativesH2[vsH2][i] + sumH2;
-            //    particleO.chargeDerivatives[vsH2f][i]  = chargeDerivativesH2[vsO][i] +  sumO;
+            // vs H2
+            chargeDerivatives[3*H1+1] = chargeDerivativesH2vsH1 + sumH1;
+            chargeDerivatives[3*H2+1] = chargeDerivativesH2vsH2 + sumH2;
+            chargeDerivatives[3*O+1]  = chargeDerivativesH2vsO +  sumO;
 
-            //    particleH1.chargeDerivatives[vsMf][i] = chargeDerivativesO[vsH1][i] - 2*sumH1;
-            //    particleH2.chargeDerivatives[vsMf][i] = chargeDerivativesO[vsH2][i] - 2*sumH2;
-            //    particleO.chargeDerivatives[vsMf][i]  = chargeDerivativesO[vsO][i]  - 2*sumO;
-
-            //}
+            // vs M
+            chargeDerivatives[3*H1+2] = chargeDerivativesOvsH1 - 2*sumH1;
+            chargeDerivatives[3*H2+2] = chargeDerivativesOvsH2 - 2*sumH2;
+            chargeDerivatives[3*O+2 ] = chargeDerivativesOvsO  - 2*sumO;
 
             //// convert from q/A to q/nm
-            //for (unsigned int i = 0; i < 3; ++i) {
-            //    for (unsigned int s = 0; s < 3; ++s) {
-            //        particleH1.chargeDerivatives[s][i] *= 10;
-            //        particleH2.chargeDerivatives[s][i] *= 10;
-            //        particleO.chargeDerivatives[s][i] *= 10;
-            //    }
+            for (unsigned int i = O; i <= H2; ++i) {
+                for (unsigned int s = 0; s < 3; ++s) {
+                    chargeDerivatives[3*i+s] *= 10;
+                }
 
-            //}
+            }
+        if (O == 8) {
+            for (int a=O; a<=H2; a++){
+            printf("der: %.6g %.6g %.6g\n", chargeDerivatives[3*a].x, chargeDerivatives[3*a].y,chargeDerivatives[3*a].z);
+            printf("der: %.6g %.6g %.6g\n", chargeDerivatives[3*a+1].x, chargeDerivatives[3*a+1].y,chargeDerivatives[3*a+1].z);
+            printf("der: %.6g %.6g %.6g\n", chargeDerivatives[3*a+2].x, chargeDerivatives[3*a+2].y,chargeDerivatives[3*a+2].z);
+            }
+        }
 
         }
 
+}
+
+extern "C" __global__ void computeChargeDerivativesForces(
+        const real3* __restrict__ chargeDerivatives, unsigned int numMultipoles,
+        unsigned long long* __restrict__ forceBuffers, const unsigned long long* __restrict__ potentialBuffers) {
+
+        const unsigned int moleculeId = blockIdx.x*blockDim.x+threadIdx.x;
+
+        // TODO make this flexible based on moleculeIndex and atomType
+        const unsigned int O  = moleculeId * 4;
+        const unsigned int H1 = O + 1;
+        const unsigned int H2 = O + 2;
+        const unsigned int M  = O + 3;
+
+
+        if (M <= numMultipoles) {
+
+        const real scale = RECIP((real) 0x100000000);
+
+            real3 f;
+            for( unsigned int a = O; a <= H2; a++ ){
+                //f =   chargeDerivatives[3*a] * ((real) potentialBuffers[H1])*scale;
+                f =  chargeDerivatives[3*a]   * ((real) potentialBuffers[H1])*scale +
+                     chargeDerivatives[3*a+1] * ((real) potentialBuffers[H2])*scale +
+                     chargeDerivatives[3*a+2] * ((real) potentialBuffers[M])*scale;
+        real potH1 = (real) potentialBuffers[H1]*scale;
+        printf("pot %d: %.6f %.6g \n", 0, potH1, f.x);
+                forceBuffers[a]                    += static_cast<unsigned long long>((long long) (f.x*ENERGY_SCALE_FACTOR*0x100000000));
+                forceBuffers[a+PADDED_NUM_ATOMS]   += static_cast<unsigned long long>((long long) (f.y*ENERGY_SCALE_FACTOR*0x100000000));
+                forceBuffers[a+2*PADDED_NUM_ATOMS] += static_cast<unsigned long long>((long long) (f.z*ENERGY_SCALE_FACTOR*0x100000000));
+            }
+
+        }
 }
