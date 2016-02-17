@@ -131,8 +131,7 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
     // electrostaticPotential[jIndex] += sci3 * (bn1 - rr3 * (1 - scale3CD));//  /2.;
 
         // electrostaticPotential[atom2] += atom1.posq.w * rr1 * scale1CC;
-        potential.x = atom2.posq.w * rr1 * scale1CC - sci4 * rr3 * scale3CD;
-        potential.y = atom1.posq.w * rr1 * scale1CC + sci3 * rr3 * scale3CD;
+        potential = make_real2(atom2.posq.w * rr1 * scale1CC - sci4 * rr3 * scale3CD, atom1.posq.w * rr1 * scale1CC + sci3 * rr3 * scale3CD);
         // electrostaticPotential[atom2] += sci3 * rr3 * scale3CD;
     #endif
 
