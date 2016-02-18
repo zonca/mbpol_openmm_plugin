@@ -100,13 +100,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
         scale1 = rr3 - bn1;
         scale2 = bn2 - rr5;
-        //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex == 2) & (atom2.atomType==1))
-        //{
-        //    printf("r: %.8g\n", r);
-        //    printf("dampForExp: %.8g\n", dampForExp);
-        //    printf("scale1: %.8g\n", scale1);
-        //    printf("scale2: %.8g\n", scale2);
-        //}
     }
     else {
         scale1 = 0;
@@ -139,9 +132,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     real rr5 = -3*rr3*r2I;
 
     real damp      = pow(atom1.damp*atom2.damp, 1.0f/6.0f); // AA in MBPol
-    if ((atom1.moleculeIndex == 0) & (atom1.atomType == 0)){
-        //printf("damp %d,%d = %f\n", atom1.atomType, atom2.atomType, damp);
-    }
 
     bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
@@ -163,9 +153,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
     real dDotDelta = rr5*dot(deltaR, atom2.inducedDipole);
     atom1.field += rr3*atom2.inducedDipole + dDotDelta*deltaR;
-    if ((atom1.moleculeIndex == 0) & (atom1.atomType == 0) & (atom2.atomType ==0) & (atom2.moleculeIndex == 2)) {
-        //printf("rr3 %f %f %f\n", atom1.field.x, atom1.field.y, atom1.field.z);
-}
 
     dDotDelta = rr5*dot(deltaR, atom2.inducedDipolePolar);
     atom1.fieldPolar += rr3*atom2.inducedDipolePolar + dDotDelta*deltaR;
