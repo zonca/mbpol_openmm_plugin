@@ -123,6 +123,7 @@ extern "C" __global__ void computeElectrostatics(
             unsigned int j = y*TILE_SIZE + tgx;
             loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
+            localData[threadIdx.x].potential = 0;
             unsigned int tj = tgx;
             for (j = 0; j < TILE_SIZE; j++) {
                 int atom2 = y*TILE_SIZE+tj;
@@ -217,6 +218,7 @@ extern "C" __global__ void computeElectrostatics(
             AtomData data;
             loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             data.force = make_real3(0);
+            data.potential = 0;
 #ifdef USE_CUTOFF
             unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
 #else
@@ -225,6 +227,7 @@ extern "C" __global__ void computeElectrostatics(
             atomIndices[threadIdx.x] = j;
             loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
+            localData[threadIdx.x].potential = 0;
 
             // Compute forces.
 
