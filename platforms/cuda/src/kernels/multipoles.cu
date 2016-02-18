@@ -365,7 +365,7 @@ extern "C" __global__ void computeWaterCharge(
 
 extern "C" __global__ void computeChargeDerivativesForces(
         const real3* __restrict__ chargeDerivatives, unsigned int numMultipoles,
-        unsigned long long* __restrict__ forceBuffers, const unsigned long long* __restrict__ potentialBuffers) {
+        unsigned long long* __restrict__ forceBuffers, const long long* __restrict__ potentialBuffers) {
 
         const unsigned int moleculeId = blockIdx.x*blockDim.x+threadIdx.x;
 
