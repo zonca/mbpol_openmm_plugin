@@ -114,6 +114,7 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
                atom2.inducedDipolePolar *  sci3 + // iPdipole_k * idipole_i
                atom2.inducedDipole * scip3  ) * 0.5 * rr5 * scale5DD;
 
+    potential = make_real2(0, 0);
     // Same water atoms have no induced-dipole/charge interaction
     if (not( isSameWater )) {
         ftm2i += (
