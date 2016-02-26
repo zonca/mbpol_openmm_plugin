@@ -66,6 +66,7 @@ static void testWater3VirtualSite() {
 	//mbpolElectrostaticsForce->setPolarizationType( polarizationType );
 	//mbpolElectrostaticsForce->setCutoffDistance( cutoff );
 	//mbpolElectrostaticsForce->setMutualInducedTargetEpsilon( 1.0e-06 );
+    mbpolElectrostaticsForce->setMutualInducedTargetEpsilon( 1.0e-12 );
 	//mbpolElectrostaticsForce->setMutualInducedMaxIterations( 500 );
 	//mbpolElectrostaticsForce->setAEwald( 5.4459052e+00 );
 	//mbpolElectrostaticsForce->setEwaldErrorTolerance( 1.0e-04 );
@@ -115,20 +116,20 @@ static void testWater3VirtualSite() {
 	static std::vector<Vec3> positions; // Static to work around bug in Visual Studio that makes compilation very very slow.
 	positions.resize(numberOfParticles);
 
-	positions[0] = Vec3(-1.516074336e+00, -2.023167650e-01, 1.454672917e+00);
-	positions[1] = Vec3(-6.218989773e-01, -6.009430735e-01, 1.572437625e+00);
-	positions[2] = Vec3(-2.017613812e+00, -4.190350349e-01, 2.239642849e+00);
-	positions[3] = Vec3(-1.43230412, -0.33360265, 1.64727446);
+      positions[0]             = Vec3( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
+      positions[1]             = Vec3( -6.218989773e-01, -6.009430735e-01,  1.572437625e+00  );
+      positions[2]             = Vec3( -2.017613812e+00, -4.190350349e-01,  2.239642849e+00  );
+      positions[3]             = Vec3( -1.43230412, -0.33360265,  1.64727446 );
 
-	positions[4] = Vec3(-1.763651687e+00, -3.816594649e-01, -1.300353949e+00);
-	positions[5] = Vec3(-1.903851736e+00, -4.935677617e-01, -3.457810126e-01);
-	positions[6] = Vec3(-2.527904158e+00, -7.613550077e-01, -1.733803676e+00);
-	positions[7] = Vec3(-1.95661974, -0.48654484, -1.18917052);
+      positions[4]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
+      positions[5]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
+      positions[6]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
+      positions[7]             = Vec3( -1.95661974, -0.48654484, -1.18917052 );
 
-	positions[8] = Vec3(-5.588472140e-01, 2.006699172e+00, -1.392786582e-01);
-	positions[9] = Vec3(-9.411558180e-01, 1.541226676e+00, 6.163293071e-01);
-	positions[10] = Vec3(-9.858551734e-01, 1.567124294e+00, -8.830970941e-01);
-	positions[11] = Vec3(-0.73151769, 1.8136042, -0.13676332);
+      positions[8]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
+      positions[9]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
+      positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
+      positions[11]            = Vec3( -0.73151769,  1.8136042 , -0.13676332 );
 
 	for (int i = 0; i < numberOfParticles; i++) {
 		for (int j = 0; j < 3; j++) {
@@ -145,7 +146,7 @@ static void testWater3VirtualSite() {
 			Platform::getPlatformByName(platformName));
 
 	context.setPositions(positions);
-	context.applyConstraints(1e-4); // update position of virtual site
+	context.applyConstraints(1e-7); // update position of virtual site
 	double tolerance = 1.0e-04;
 
 //    // test energy and forces
@@ -155,21 +156,21 @@ static void testWater3VirtualSite() {
 	double energy = state.getPotentialEnergy();
 	double cal2joule = 4.184;
 
-	double expectedEnergy = -15.818784 * cal2joule;
+	double expectedEnergy = -15.994 * cal2joule;
 	std::cout << "Energy: " << energy / cal2joule << " Kcal/mol " << std::endl;
 	std::cout << "Expected energy: " << expectedEnergy / cal2joule
 			<< " Kcal/mol " << std::endl;
 
 	std::vector<Vec3> expectedForces(numberOfParticles);
-	expectedForces[0] = Vec3(2.38799956, 0.126835228, 8.86189407);
-	expectedForces[1] = Vec3(-4.21263312, -0.72316292, 3.37076777);
-	expectedForces[2] = Vec3(2.19240288, -2.24806806, 1.96210789);
-	expectedForces[4] = Vec3(3.59486021, -2.16710895, 3.57138432);
-	expectedForces[5] = Vec3(-4.54547068, -4.58639226, -17.4258666);
-	expectedForces[6] = Vec3(-3.27239433, -1.96722979, 1.1170853);
-	expectedForces[8] = Vec3(-1.44387205, -3.22471108, -2.61329967);
-	expectedForces[9] = Vec3(3.35011312, 6.07136704, -0.197008793);
-	expectedForces[10] = Vec3(1.94899441, 8.7184708, 1.35293571);
+	expectedForces[0] = Vec3(-2.93352, -0.493367, -9.87077);
+	expectedForces[1] = Vec3(3.96612, 0.855513, -3.52678);
+	expectedForces[2] = Vec3(-1.86126, 2.40496, -2.44826);
+	expectedForces[4] = Vec3(-3.7535, 2.23087, -3.11939);
+	expectedForces[5] = Vec3(5.12736, 5.05156, 18.4337);
+	expectedForces[6] = Vec3(3.39746, 1.97813, -0.927277);
+	expectedForces[8] = Vec3(1.14459, 3.11796, 2.42504);
+	expectedForces[9] = Vec3(-3.2682, -6.39417, 0.112708);
+	expectedForces[10] =Vec3(-1.81905, -8.75146, -1.079);
 
 	// gradient -> forces
 	for (int i = 0; i < numberOfParticles; i++) {
@@ -180,15 +181,9 @@ static void testWater3VirtualSite() {
 			}
 		}
 	}
-
-	for (int i = 0; i < numberOfParticles; i++) {
-		for (int j = 0; j < 3; j++) {
-			expectedForces[i][j] *= -1;
-		}
-	}
 	std::cout << std::endl << "Forces:" << std::endl;
 
-	const double eps = 1.0e-4;
+	const double eps = 1.0e-5;
 
 	double x_orig;
 
@@ -243,20 +238,20 @@ static void testWater3VirtualSite() {
 				<< " Kcal/mol/A <mbpol>" << std::endl;
 		std::cout << "Force atom " << i << ": " << forces[i]
 				<< " Kcal/mol/A <openmm-mbpol>" << std::endl;
-		std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i]
-				<< " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl
-				<< std::endl;
+		//std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i]
+		//		<< " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl
+		std::cout << std::endl;
 	}
 
 	std::cout << "Comparison of energy and forces with tolerance: " << tolerance
 			<< std::endl << std::endl;
 
-	//ASSERT_EQUAL_TOL_MOD(expectedEnergy, energy, tolerance, testName);
+	ASSERT_EQUAL_TOL_MOD(expectedEnergy, energy, tolerance, testName);
 
-	//for (unsigned int ii = 0; ii < forces.size(); ii++) {
-	//	ASSERT_EQUAL_VEC_MOD(expectedForces[ii], forces[ii], tolerance,
-	//			testName);
-	//}
+	for (unsigned int ii = 0; ii < forces.size(); ii++) {
+		ASSERT_EQUAL_VEC_MOD(expectedForces[ii], forces[ii], tolerance,
+				testName);
+	}
 
 	std::cout << "Test Successful: " << testName << std::endl << std::endl;
 
@@ -582,8 +577,8 @@ int main(int numberOfArguments, char* argv[]) {
 	try {
 		std::cout << "TestReferenceMBPolElectrostaticsForce running test..."
 				<< std::endl;
-        //testWater3VirtualSite();
-        testWater3();
+        testWater3VirtualSite();
+        //testWater3();
 		// testWater3PMESmallBox();
 	} catch (const std::exception& e) {
 		std::cout << "exception: " << e.what() << std::endl;
