@@ -375,22 +375,19 @@ extern "C" __global__ void computeChargeDerivativesForces(
         const unsigned int H2 = O + 2;
         const unsigned int M  = O + 3;
 
+        const real scale = RECIP((real) 0x100000000);
 
         if (M <= numMultipoles) {
 
-        const real scale = RECIP((real) 0x100000000);
-
             real3 f;
             for( unsigned int a = O; a <= H2; a++ ){
-                //f =   chargeDerivatives[3*a] * ((real) potentialBuffers[H1])*scale;
-                f =  chargeDerivatives[3*a]   * ((real) potentialBuffers[H1])*scale +
+                f = chargeDerivatives[3*a]   * ((real) potentialBuffers[H1])*scale +
                      chargeDerivatives[3*a+1] * ((real) potentialBuffers[H2])*scale +
                      chargeDerivatives[3*a+2] * ((real) potentialBuffers[M])*scale;
-        real potH1 = (real) potentialBuffers[H1]*scale;
-        printf("pot %d: %.6f %.6g \n", 0, potH1, f.x);
-                forceBuffers[a]                    += static_cast<unsigned long long>((long long) (f.x*ENERGY_SCALE_FACTOR*0x100000000));
-                forceBuffers[a+PADDED_NUM_ATOMS]   += static_cast<unsigned long long>((long long) (f.y*ENERGY_SCALE_FACTOR*0x100000000));
-                forceBuffers[a+2*PADDED_NUM_ATOMS] += static_cast<unsigned long long>((long long) (f.z*ENERGY_SCALE_FACTOR*0x100000000));
+                f *= - ENERGY_SCALE_FACTOR;
+                forceBuffers[a]                    += static_cast<unsigned long long>((long long) (f.x*0x100000000));
+                forceBuffers[a+PADDED_NUM_ATOMS]   += static_cast<unsigned long long>((long long) (f.y*0x100000000));
+                forceBuffers[a+2*PADDED_NUM_ATOMS] += static_cast<unsigned long long>((long long) (f.z*0x100000000));
             }
 
         }
