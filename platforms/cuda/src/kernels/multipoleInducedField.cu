@@ -34,6 +34,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         return;
     real scale1, scale2;
     real r2 = dot(deltaR, deltaR);
+    bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
     if (r2 < CUTOFF_SQUARED) {
         real rI = RSQRT(r2);
         real r = RECIP(rI);
