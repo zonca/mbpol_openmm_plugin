@@ -578,8 +578,8 @@ int main(int numberOfArguments, char* argv[]) {
 		std::cout << "TestReferenceMBPolElectrostaticsForce running test..."
 				<< std::endl;
         testWater3VirtualSite();
-        //testWater3();
-		// testWater3PMESmallBox();
+        testWater3();
+		testWater3PMESmallBox();
 	} catch (const std::exception& e) {
 		std::cout << "exception: " << e.what() << std::endl;
 		std::cout << "FAIL - ERROR.  Test failed." << std::endl;
