@@ -60,9 +60,11 @@ computeOneInteractionF1(
     // but the scale factors are set to 0.
 
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
-    scale1CC *= !isSameWater;
-    scale3CD *= !isSameWater;
-    scale3CC *= !isSameWater;
+    if (isSameWater) {
+        scale1CC = 0.;
+        scale3CD = 0.;
+        scale3CC = 0.;
+    }
 
     energy += -forceFactor*(rr1*gl0*(1 - scale1CC));
 
@@ -146,8 +148,10 @@ computeOneInteractionF2(
     // but the scale factors are set to 0.
 
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
-    scale3CD *= !isSameWater;
-    scale5CD *= !isSameWater;
+    if (isSameWater) {
+        scale3CD = 0.;
+        scale5CD = 0.;
+    }
 
     real sci4 = atom2.inducedDipole.x*xr + atom2.inducedDipole.y*yr + atom2.inducedDipole.z*zr;
     energy += forceFactor*0.5f*sci4*(rr3 * (1 - scale3CD) - bn1)*ci;
