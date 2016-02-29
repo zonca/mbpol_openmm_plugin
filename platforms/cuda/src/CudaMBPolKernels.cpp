@@ -1034,7 +1034,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
                 1 * computeWaterChargeThreads, computeWaterChargeThreads);
     }
 
-	if (pmeGrid == NULL) {
+	if (pmeGrid == NULL) { // Cluster code
 		// Compute induced dipoles.
 
 		void* computeFixedFieldArgs[] = { &field->getDevicePointer(),
@@ -1103,7 +1103,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				numForceThreadBlocks * electrostaticsThreads,
 				electrostaticsThreads);
 
-	} else {
+	} else { // PME code
 		// Compute reciprocal box vectors.
 
 		Vec3 boxVectors[3];
