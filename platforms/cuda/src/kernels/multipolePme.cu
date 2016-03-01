@@ -794,7 +794,7 @@ extern "C" __global__ void computeInducedPotentialFromGrid(const real2* __restri
     }
 }
 
-extern "C" __global__ void computeFixedMultipoleForceAndEnergy(real4* __restrict__ posq, unsigned long long* __restrict__ forceBuffers,
+extern "C" __global__ void computeFixedMultipoleForceAndEnergy(real4* __restrict__ posq, unsigned long long* __restrict__ forceBuffers, unsigned long   long* __restrict__ potentialBuffers,
         real* __restrict__ energyBuffer,
         const real* __restrict__ phi_global, const real* __restrict__ cphi_global, real3 recipBoxVecX, real3 recipBoxVecY, real3 recipBoxVecZ) {
     real multipole[1];
@@ -838,11 +838,15 @@ extern "C" __global__ void computeFixedMultipoleForceAndEnergy(real4* __restrict
         forceBuffers[i] -= static_cast<unsigned long long>((long long) (f.x*0x100000000));
         forceBuffers[i+PADDED_NUM_ATOMS] -= static_cast<unsigned long long>((long long) (f.y*0x100000000));
         forceBuffers[i+PADDED_NUM_ATOMS*2] -= static_cast<unsigned long long>((long long) (f.z*0x100000000));
+        #ifdef INCLUDE_CHARGE_REDISTRIBUTION
+            potentialBuffers[i] += static_cast<unsigned long long>((long long) (phi[0]*0x100000000));
+        #endif
+
     }
     energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += 0.5f*EPSILON_FACTOR*energy;
 }
 
-extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict__ posq, unsigned long long* __restrict__ forceBuffers,
+extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict__ posq, unsigned long long* __restrict__ forceBuffers, unsigned long    long* __restrict__ potentialBuffers,
         real* __restrict__ energyBuffer,
         const real* __restrict__ inducedDipole_global, const real* __restrict__ inducedDipolePolar_global,
         const real* __restrict__ phi_global, const real* __restrict__ phid_global, const real* __restrict__ phip_global,
@@ -926,6 +930,9 @@ extern "C" __global__ void computeInducedDipoleForceAndEnergy(real4* __restrict_
         forceBuffers[i] -= static_cast<unsigned long long>((long long) (f.x*0x100000000));
         forceBuffers[i+PADDED_NUM_ATOMS] -= static_cast<unsigned long long>((long long) (f.y*0x100000000));
         forceBuffers[i+PADDED_NUM_ATOMS*2] -= static_cast<unsigned long long>((long long) (f.z*0x100000000));
+        #ifdef INCLUDE_CHARGE_REDISTRIBUTION
+            potentialBuffers[i] += static_cast<unsigned long long>((long long) (.5 * phidp[0]*0x100000000));
+        #endif
     }
     energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += 0.5f*EPSILON_FACTOR*energy;
 }
