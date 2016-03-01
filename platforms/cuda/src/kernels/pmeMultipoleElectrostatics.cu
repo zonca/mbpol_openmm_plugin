@@ -1,9 +1,10 @@
 #define WARPS_PER_GROUP (THREAD_BLOCK_SIZE/TILE_SIZE)
 
 typedef struct {
-    real3 pos, force, torque, dipole, inducedDipole, inducedDipolePolar;
+    real3 pos, force, dipole, inducedDipole, inducedDipolePolar;
     real q;
     float damp;
+    real potential;
     int moleculeIndex;
     int atomType;
 } AtomData;
@@ -149,7 +150,7 @@ extern "C" __global__ void computeElectrostatics(
         unsigned int atom1 = x*TILE_SIZE + tgx;
         loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
         data.force = make_real3(0);
-        data.torque = make_real3(0);
+        data.potential = 0.;
         uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
         unsigned int polarizationGroup = polarizationGroupFlags[pos*TILE_SIZE+tgx];
         if (x == y) {
@@ -177,7 +178,6 @@ extern "C" __global__ void computeElectrostatics(
             if (atom1 < NUM_ATOMS)
                 computeSelfEnergyAndTorque(data, energy);
             data.force *= -ENERGY_SCALE_FACTOR;
-            data.torque *= ENERGY_SCALE_FACTOR;
             atomicAdd(&forceBuffers[atom1], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
@@ -188,7 +188,7 @@ extern "C" __global__ void computeElectrostatics(
             unsigned int j = y*TILE_SIZE + tgx;
             loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
-            localData[threadIdx.x].torque = make_real3(0);
+            localData[threadIdx.x].potential = 0.;
             unsigned int tj = tgx;
             for (j = 0; j < TILE_SIZE; j++) {
                 int atom2 = y*TILE_SIZE+tj;
@@ -201,9 +201,7 @@ extern "C" __global__ void computeElectrostatics(
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
             data.force *= -ENERGY_SCALE_FACTOR;
-            data.torque *= ENERGY_SCALE_FACTOR;
             localData[threadIdx.x].force *= -ENERGY_SCALE_FACTOR;
-            localData[threadIdx.x].torque *= ENERGY_SCALE_FACTOR;
             unsigned int offset = x*TILE_SIZE + tgx;
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
@@ -276,7 +274,7 @@ extern "C" __global__ void computeElectrostatics(
             AtomData data;
             loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             data.force = make_real3(0);
-            data.torque = make_real3(0);
+            data.potential = 0.;
 #ifdef USE_CUTOFF
             unsigned int j = (numTiles <= maxTiles ? interactingAtoms[pos*TILE_SIZE+tgx] : y*TILE_SIZE + tgx);
 #else
@@ -285,7 +283,7 @@ extern "C" __global__ void computeElectrostatics(
             atomIndices[threadIdx.x] = j;
             loadAtomData(localData[threadIdx.x], j, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
             localData[threadIdx.x].force = make_real3(0);
-            localData[threadIdx.x].torque = make_real3(0);
+            localData[threadIdx.x].potential = 0.;
 
             // Compute forces.
 
@@ -298,9 +296,7 @@ extern "C" __global__ void computeElectrostatics(
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
             data.force *= -ENERGY_SCALE_FACTOR;
-            data.torque *= ENERGY_SCALE_FACTOR;
             localData[threadIdx.x].force *= -ENERGY_SCALE_FACTOR;
-            localData[threadIdx.x].torque *= ENERGY_SCALE_FACTOR;
 
             // Write results.
 
