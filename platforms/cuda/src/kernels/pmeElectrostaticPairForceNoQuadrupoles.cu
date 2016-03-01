@@ -2,7 +2,7 @@ __device__ void
 computeOneInteractionF1(
         AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor,
         float dScale, float pScale, float mScale,
-        real3& force, real& energy) {
+        real3& force, real& energy, real2& potential) {
     // FIXME thole copy in unique location
     const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
     const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
@@ -92,7 +92,7 @@ __device__ void
 computeOneInteractionF2(
         AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor,
         float dScale, float pScale, float mScale,
-        real3& force, real& energy) {
+        real3& force, real& energy, real2& potential) {
     // FIXME thole copy in unique location
     const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
     const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };

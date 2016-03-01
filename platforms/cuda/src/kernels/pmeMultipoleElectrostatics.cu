@@ -8,8 +8,8 @@ typedef struct {
     int atomType;
 } AtomData;
 
-__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy);
-__device__ void computeOneInteractionF2(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy);
+__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy, real2& potential);
+__device__ void computeOneInteractionF2(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy, real2& potential);
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq,
         const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar,
@@ -85,9 +85,10 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     real bn5 = (9*bn.w+alsq2n*exp2a)*rr2;
 
     real3 force;
+    real2 potential;
 
-    computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, dScale, pScale, mScale, force, energy);
-    computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy);
+    computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, dScale, pScale, mScale, force, energy, potential);
+    computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy, potential);
 
     //if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex==0))
     //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.176) < 0.001))
