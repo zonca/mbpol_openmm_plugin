@@ -66,6 +66,12 @@ extern "C" __global__ void computeElectrostatics(
     real energy = 0;
     __shared__ AtomData localData[THREAD_BLOCK_SIZE];
     
+    const real scale = RECIP((real) 0x100000000);
+//    if (threadIdx.x == 0) {
+//    for (int i=0; i<NUM_ATOMS;i++)
+//    printf("initial value potentialbuffer %lld\n", potentialBuffers[i]);
+//}
+
 
     // First loop: process tiles that contain exclusions.
     
@@ -155,6 +161,8 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].potential*0x100000000)));
 
         }
+        if (atom1 < NUM_ATOMS)
+            printf("final data.potential %d %d %.4g\n", data.moleculeIndex, data.atomType, data.potential/4.184);
     }
 
     // Second loop: tiles without exclusions, either from the neighbor list (with cutoff) or just enumerating all
