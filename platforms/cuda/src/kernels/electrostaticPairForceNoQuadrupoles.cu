@@ -1,11 +1,8 @@
 __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce, real2& potential) {
 
-    // FIXME thole copy in unique location
-    const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-    const double thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
-	// thole[TDD] = 0.055;
-	// thole[TDDOH] = 0.626;
-	// thole[TDDHH] = 0.055;
+	// TDD = 0.055;
+	// TDDOH = 0.626;
+	// TDDHH = 0.055;
 
 	// deltas
     real3 delta = make_real3(atom2.posq.x - atom1.posq.x, atom2.posq.y - atom1.posq.y, atom2.posq.z - atom1.posq.z);
@@ -51,16 +48,16 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     real ratio       = POW(r/damp, 4.); // rA4 in MBPol
 
-    real dampForExpCC = -1 * thole[TCC] * ratio;
+    real dampForExpCC = -1 * TCC * ratio;
     // EXP(ttm::gammln(3.0/4.0)) = 1.2254167024651776
     real scale3CC = 1.0;
     if (do_scaling)
         scale3CC -= EXP(dampForExpCC); // needed for force
     real scale1CC = scale3CC;
     if (do_scaling)
-        scale1CC += POW(thole[TCC], 1.0/4.0)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC);
+        scale1CC += POW(TCC, 1.0/4.0)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC);
 
-    real dampForExpCD = -1 * thole[TCD] * ratio;
+    real dampForExpCD = -1 * TCD * ratio;
     real scale3CD = 1.0;
     if (do_scaling)
         scale3CD -= do_scaling*EXP(dampForExpCD);
@@ -78,9 +75,9 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
 
     real scale5CD = scale3CD;
     if (do_scaling)
-        scale5CD -= (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
+        scale5CD -= (4./3.) * TCD * EXP(dampForExpCD) * ratio;
 
-    int tdd = TDD;
+    double tdd = TDD;
     if (isSameWater) {
         if ((atom1.atomType == 0) | (atom2.atomType == 0)) { // one is oxygen
             tdd = TDDOH;
@@ -88,13 +85,13 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
             tdd = TDDHH;
         }
     }
-    real dampForExpDD = -1 * thole[tdd] * ratio;
+    real dampForExpDD = -1 * tdd * ratio;
     real scale5DD =  1.0;
     if (do_scaling)
-        scale5DD -= EXP(dampForExpDD) *  (1. + (4./3.) * thole[tdd] * ratio);
+        scale5DD -= EXP(dampForExpDD) *  (1. + (4./3.) * tdd * ratio);
     real scale7DD = scale5DD;
     if (do_scaling)
-        scale7DD -= (4./15.) * thole[tdd] * (4. * thole[tdd] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4.0) * POW(r, 4);
+        scale7DD -= (4./15.) * tdd * (4. * tdd * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4.0) * POW(r, 4);
 
     real gf1 = rr3*gl0*scale3CC;
 

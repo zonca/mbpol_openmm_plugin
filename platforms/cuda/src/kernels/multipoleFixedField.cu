@@ -25,9 +25,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     fields[3] = make_real3(0);
     if (r2 <= CUTOFF_SQUARED) {
         // calculate the error function damping terms
-        // FIXME thole copy in unique location
-        const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-        const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
 
         real r = SQRT(r2);
         real ralpha = EWALD_ALPHA*r;
@@ -57,7 +54,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
         real ratio       = POW(r/damp, 4); // rA4 in MBPol
-        real pgamma = thole[TCC];
+        real pgamma = TCC;
         real dampForExp = -1 * pgamma * ratio;
 
         real s3 = 1.0;
@@ -83,9 +80,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 #else
 __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 deltaR, float dScale, float pScale, real3* fields) {
 
-    // FIXME thole copy in unique location
-    const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-    const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
 
     real rI = RSQRT(dot(deltaR, deltaR));
     real r = RECIP(rI);
@@ -102,7 +96,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
     bool do_scaling = (damp != 0.0) & ( damp > -50.0 ); // damp or not
 
     real ratio       = POW(r/damp, 4); // rA4 in MBPol
-    real pgamma = thole[TCC];
+    real pgamma = TCC;
     real dampForExp = -1 * pgamma * ratio;
 
     if (do_scaling)

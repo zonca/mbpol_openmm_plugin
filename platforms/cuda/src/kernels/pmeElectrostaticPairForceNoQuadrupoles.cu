@@ -3,12 +3,9 @@ computeOneInteractionF1(
         AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor,
         float dScale, float pScale, float mScale,
         real3& force, real& energy, real2& potential) {
-    // FIXME thole copy in unique location
-    const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-    const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
-	// thole[TDD] = 0.055;
-	// thole[TDDOH] = 0.626;
-	// thole[TDDHH] = 0.055;
+	// TDD = 0.055;
+	// TDDOH = 0.626;
+	// TDDHH = 0.055;
     real xr = delta.x;
     real yr = delta.y;
     real zr = delta.z;
@@ -42,16 +39,16 @@ computeOneInteractionF1(
 
     real ratio       = POW(r/damp, 4.); // rA4 in MBPol
 
-    real dampForExpCC = -1 * thole[TCC] * ratio;
+    real dampForExpCC = -1 * TCC * ratio;
     // EXP(ttm::gammln(3.0/4.0)) = 1.2254167024651776
     real scale3CC = 1.0;
     if (do_scaling)
         scale3CC -= EXP(dampForExpCC); // needed for force
     real scale1CC = scale3CC;
     if (do_scaling)
-        scale1CC += POW(thole[TCC], 1.0f/4.0f)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC);
+        scale1CC += POW(TCC, 1.0/4.0)*(r/damp)*1.2254167024651776*gammq(3.0/4.0, -dampForExpCC);
 
-    real dampForExpCD = -1 * thole[TCD] * ratio;
+    real dampForExpCD = -1 * TCD * ratio;
     real scale3CD = 1.0;
     if (do_scaling)
         scale3CD -= do_scaling*EXP(dampForExpCD);
@@ -97,12 +94,9 @@ computeOneInteractionF2(
         AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor,
         float dScale, float pScale, float mScale,
         real3& force, real& energy, real2& potential) {
-    // FIXME thole copy in unique location
-    const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-    const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
-	// thole[TDD] = 0.055;
-	// thole[TDDOH] = 0.626;
-	// thole[TDDHH] = 0.055;
+	// TDD = 0.055;
+	// TDDOH = 0.626;
+	// TDDHH = 0.055;
     const float uScale = 1;
     real xr = delta.x;
     real yr = delta.y;
@@ -140,13 +134,13 @@ computeOneInteractionF2(
     real r = SQRT(xr*xr + yr*yr + zr*zr);
     real ratio       = POW(r/damp, 4.); // rA4 in MBPol
 
-    real dampForExpCD = -1 * thole[TCD] * ratio;
+    real dampForExpCD = -1 * TCD * ratio;
     real scale3CD = 1.0;
     if (do_scaling)
         scale3CD -= EXP(dampForExpCD);
     real scale5CD = scale3CD;
     if (do_scaling)
-        scale5CD -= (4./3.) * thole[TCD] * EXP(dampForExpCD) * ratio;
+        scale5CD -= (4./3.) * TCD * EXP(dampForExpCD) * ratio;
 
     // in PME same water interactions are not excluded,
     // but the scale factors are set to 0.
@@ -197,20 +191,20 @@ computeOneInteractionF2(
 
     // get the induced force without screening
 
-    int t = TDD;
+    double t = TDD;
     if ((isSameWater) & ((atom1.atomType == 0) | (atom2.atomType == 0)))
         t = TDDOH;
 
     if ((isSameWater) & ((atom1.atomType == 1) & (atom2.atomType == 1)))
         t = TDDHH;
 
-    real dampForExpDD = -1 * thole[t] * ratio;
+    real dampForExpDD = -1 * t * ratio;
     real scale5DD = 1.0;
     if (do_scaling)
-        scale5DD -= EXP(dampForExpDD) + (4./3.) * thole[t] * EXP(dampForExpDD) * ratio;
+        scale5DD -= EXP(dampForExpDD) + (4./3.) * t * EXP(dampForExpDD) * ratio;
     real scale7DD = scale5DD;
     if (do_scaling)
-        scale7DD -= (4./15.) * thole[t] * (4. * thole[t] * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4) * POW(r, 4);
+        scale7DD -= (4./15.) * t * (4. * t * ratio - 1.) * EXP(dampForExpDD) / POW(damp, 4) * POW(r, 4);
 
     real gfri1 = 0.5f*(rr5 * ( gli1  * (1 - scale5CD)   // charge - inddip
                         + glip1 * (1 - scale5CD)   // charge - inddip
