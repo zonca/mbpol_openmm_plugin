@@ -53,9 +53,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         const real t = RECIP(1.0f+0.3275911f*ralpha);
         const real erfcAlphaR = (0.254829592f+(-0.284496736f+(1.421413741f+(-1.453152027f+1.061405429f*t)*t)*t)*t)*t*exp2a;
 #endif
-        // FIXME thole copy in unique location
-        const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-        const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
         real bn0 = erfcAlphaR*rI;
         real alsq2 = 2*EWALD_ALPHA*EWALD_ALPHA;
         real alsq2n = RECIP(SQRT_PI*EWALD_ALPHA);
@@ -76,7 +73,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
         real ratio       = POW(r/damp, 4); // rA4 in MBPol
 
         // FIXME identify if we need to use TDDOH and so on
-        int tdd = TDD;
+        double tdd = TDD;
         if ((isSameWater) && (atom1.atomType != 2) && (atom2.atomType != 2)) {
             if ((atom1.atomType == 0) | (atom2.atomType == 0)) { // one is oxygen
                 tdd = TDDOH;
@@ -84,7 +81,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
                 tdd = TDDHH;
             }
         }
-        real pgamma = thole[tdd];
+        real pgamma = tdd;
         real dampForExp = -1 * pgamma * ratio;
 
         real scale3 = 1.0;
@@ -119,9 +116,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 deltaR, bool isSelfInteraction) {
     if (isSelfInteraction)
         return;
-    // FIXME thole copy in unique location
-    const enum TholeIndices { TCC, TCD, TDD, TDDOH, TDDHH };
-    const float thole[5] =  { 0.4, 0.4, 0.4,   0.4,   0.4 };
 
     // RealOpenMM scale3 = getAndScaleInverseRs( particleI, particleJ, r, false, 3, TDD);
     // RealOpenMM scale5 = getAndScaleInverseRs( particleI, particleJ, r, false, 5, TDD);
@@ -138,7 +132,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
     real ratio       = pow(r/damp, 4); // rA4 in MBPol
 
-    int tdd = TDD;
+    double tdd = TDD;
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
     if ((isSameWater) && (atom1.atomType != 2) && (atom2.atomType != 2)) {
         if ((atom1.atomType == 0) | (atom2.atomType == 0)) { // one is oxygen
@@ -147,7 +141,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
             tdd = TDDHH;
         }
     }
-    real pgamma = thole[TDD];
+    real pgamma = TDD;
     real dampForExp = -1 * pgamma * ratio;
 
     real rr3_factor = 1.0;
