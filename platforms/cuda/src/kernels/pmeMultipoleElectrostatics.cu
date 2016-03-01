@@ -116,7 +116,7 @@ __device__ void computeSelfEnergyAndTorque(AtomData& atom1, real& energy) {
 
     energy += selfEnergy;
     #ifdef INCLUDE_CHARGE_REDISTRIBUTION
-        //atom1.potential += atom1.q * fterm * 2;
+        atom1.potential += atom1.q * fterm * 2;
     #endif
 
 }
