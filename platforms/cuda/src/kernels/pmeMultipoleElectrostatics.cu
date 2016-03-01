@@ -117,7 +117,7 @@ __device__ void computeSelfEnergyAndTorque(AtomData& atom1, real& energy) {
  * Compute electrostatic interactions.
  */
 extern "C" __global__ void computeElectrostatics(
-        unsigned long long* __restrict__ forceBuffers, real* __restrict__ energyBuffer,
+        unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ potentialBuffers,real* __restrict__ energyBuffer,
         const real4* __restrict__ posq, const uint2* __restrict__ covalentFlags, const unsigned int* __restrict__ polarizationGroupFlags,
         const ushort2* __restrict__ exclusionTiles, unsigned int startTileIndex, unsigned int numTileIndices,
 #ifdef USE_CUTOFF
