@@ -24,7 +24,7 @@ computeOneInteractionF1(
     real bn1 = bn.x;
     real bn2 = bn.y;
     real bn3 = bn.z;
-    real bn4 = bn.w;
+    real bn0 = bn.w;
 
     real rr3 = rr1*rr1*rr1;
     real3 ftm2 = make_real3(0);
@@ -75,6 +75,10 @@ computeOneInteractionF1(
     ftm2 += gf1*delta3;
 
     force = ftm2;
+
+    #ifdef INCLUDE_CHARGE_REDISTRIBUTION
+        potential += make_real2(ck * (bn0 - rr1 * (1 - scale1CC)), ci * (bn0 - rr1 * (1 - scale1CC)));
+    #endif
     //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.0621) < 0.01))
     if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex ==1) & (atom2.atomType == 0))
     {
@@ -117,7 +121,7 @@ computeOneInteractionF2(
     real bn1 = bn.x;
     real bn2 = bn.y;
     real bn3 = bn.z;
-    real bn4 = bn.w;
+    real bn0 = bn.w;
 
     real rr5 = rr1*rr1;
     rr5 = 3*rr1*rr5*rr5;
@@ -222,6 +226,10 @@ computeOneInteractionF2(
 
     ftm2 -= 0.5f * rr3*(1 - scale3CD) *(-(atom1.inducedDipole + atom1.inducedDipolePolar) * ck +
                                          (atom2.inducedDipole + atom2.inducedDipolePolar) * ci);
+
+    #ifdef INCLUDE_CHARGE_REDISTRIBUTION
+        potential += make_real2(-1 * sci4 * (bn1 - rr3 * (1 - scale3CD)), sci3 * (bn1 - rr3 * (1 - scale3CD)));
+    #endif
 
     // if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.19) < 0.001))
     // {

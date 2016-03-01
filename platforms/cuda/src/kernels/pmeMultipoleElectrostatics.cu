@@ -79,8 +79,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     alsq2n *= alsq2;
     bn.z = (5*bn.y+alsq2n*exp2a)*rr2;
 
-    alsq2n *= alsq2;
-    bn.w = (7*bn.z+alsq2n*exp2a)*rr2;
+    bn.w = bn0; // bn4 is not used, so we store bn0
 
     alsq2n *= alsq2;
     real bn5 = (9*bn.w+alsq2n*exp2a)*rr2;
