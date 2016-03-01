@@ -756,6 +756,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		pmeDefines["GRID_SIZE_Z"] = cu.intToString(gridSizeZ);
 		pmeDefines["M_PI"] = cu.doubleToString(M_PI);
 		pmeDefines["SQRT_PI"] = cu.doubleToString(sqrt(M_PI));
+        if (includeChargeRedistribution)
+            pmeDefines["INCLUDE_CHARGE_REDISTRIBUTION"] = "1";
 		if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
 			pmeDefines["DIRECT_POLARIZATION"] = "";
 		CUmodule module = cu.createModule(
