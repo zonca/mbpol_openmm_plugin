@@ -591,6 +591,8 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	}
 
     includeChargeRedistribution = force.getIncludeChargeRedistribution();
+
+    std::vector<double> thole = force.getTholeParameters();
 	// Record other options.
 
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Mutual) {
@@ -625,6 +627,11 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
     if (includeChargeRedistribution)
         defines["INCLUDE_CHARGE_REDISTRIBUTION"] = "1";
+    defines["TCC"]   = cu.doubleToString(thole[0]);
+    defines["TCD"]   = cu.doubleToString(thole[1]);
+    defines["TDD"]   = cu.doubleToString(thole[2]);
+    defines["TDDOH"] = cu.doubleToString(thole[3]);
+    defines["TDDHH"] = cu.doubleToString(thole[4]);
 
 	defines["ENERGY_SCALE_FACTOR"] = cu.doubleToString(138.9354558456);
 	if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
