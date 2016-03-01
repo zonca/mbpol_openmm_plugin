@@ -31,6 +31,9 @@ using namespace std;
 const double TOL = 1e-4;
 const double cal2joule = 4.184;
 
+static double fixedTholeArray[] = { 0.4, 0.4, 0.4, 0.4, 0.4 };
+static vector<double> fixedThole(fixedTholeArray, fixedTholeArray + sizeof fixedTholeArray / sizeof fixedTholeArray[ 0 ]);
+
 extern "C" OPENMM_EXPORT void registerMBPolCudaKernelFactories();
 
 static void testWater3VirtualSite() {
@@ -61,7 +64,9 @@ static void testWater3VirtualSite() {
 
 	MBPolElectrostaticsForce* mbpolElectrostaticsForce =
 			new MBPolElectrostaticsForce();
-	;
+
+    mbpolElectrostaticsForce->setTholeParameters(fixedThole);
+
 	mbpolElectrostaticsForce->setNonbondedMethod(nonbondedMethod);
 	//mbpolElectrostaticsForce->setPolarizationType( polarizationType );
 	//mbpolElectrostaticsForce->setCutoffDistance( cutoff );
@@ -84,19 +89,6 @@ static void testWater3VirtualSite() {
 						virtualSiteWeightH));
 
 	}
-
-	std::vector<double> zeroDipole(3);
-	std::vector<double> zeroQuadrupole(9);
-	std::vector<double> thole(5);
-
-	std::fill(zeroDipole.begin(), zeroDipole.end(), 0.);
-	std::fill(zeroQuadrupole.begin(), zeroQuadrupole.end(), 0.);
-
-	thole[TCC] = 0.4;
-	thole[TCD] = 0.4;
-	thole[TDD] = 0.055;
-	thole[TDDOH] = 0.626;
-	thole[TDDHH] = 0.055;
 
     int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
@@ -296,6 +288,7 @@ static void testWater3VirtualSitePMESmallBox() {
 	//mbpolElectrostaticsForce->setAEwald( 5.4459052e+00 );
 	//mbpolElectrostaticsForce->setEwaldErrorTolerance( 1.0e-04 );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(true);
+    mbpolElectrostaticsForce->setTholeParameters(fixedThole);
 
     // disable Ewald by setting alpha to very low value
     std::vector<int> pmeGridDimension( 3 );
@@ -511,6 +504,7 @@ static void testWater3PMESmallBox() {
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setCutoffDistance( cutoff );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
+    mbpolElectrostaticsForce->setTholeParameters(fixedThole);
 
     // disable Ewald by setting alpha to very low value
     std::vector<int> pmeGridDimension( 3 );
@@ -671,6 +665,7 @@ static void testWater3() {
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setCutoffDistance( cutoff );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(false);
+    mbpolElectrostaticsForce->setTholeParameters(fixedThole);
 
     unsigned int particlesPerMolecule = 3;
 
