@@ -803,9 +803,9 @@ int main(int numberOfArguments, char* argv[]) {
 	try {
 		std::cout << "TestReferenceMBPolElectrostaticsForce running test..."
 				<< std::endl;
-        //testWater3VirtualSite();
-        //testWater3();
-		//testWater3PMESmallBox();
+        testWater3VirtualSite();
+        testWater3();
+		testWater3PMESmallBox();
         testWater3VirtualSitePMESmallBox();
 	} catch (const std::exception& e) {
 		std::cout << "exception: " << e.what() << std::endl;
