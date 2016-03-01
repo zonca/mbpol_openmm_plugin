@@ -99,8 +99,11 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     //    printf("total force[%d, %d] [%d, %d]: %.8f\n",  atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType,force.x);
 
     atom1.force += force;
-    if (forceFactor == 1)
+    atom1.potential += potential.x;
+    if (forceFactor == 1) {
         atom2.force -= force;
+        atom2.potential += potential.y;
+    }
 }
 
 /**
