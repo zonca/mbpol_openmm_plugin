@@ -376,6 +376,10 @@ extern "C" __global__ void computeChargeDerivativesForces(
         const unsigned int M  = O + 3;
 
         const real scale = RECIP((real) 0x100000000);
+    if (threadIdx.x == 0) {
+    for (int i=0; i<NUM_ATOMS;i++)
+    printf("final value potentialbuffer %.4g\n", ((real) potentialBuffers[i]*scale)/4.184);
+}
 
         if (M <= numMultipoles) {
 

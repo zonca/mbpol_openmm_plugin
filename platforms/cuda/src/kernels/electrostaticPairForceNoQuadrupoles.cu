@@ -134,6 +134,10 @@ __device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom
         // electrostaticPotential[atom2] += atom1.posq.w * rr1 * scale1CC;
         potential = make_real2(atom2.posq.w * rr1 * scale1CC - sci4 * rr3 * scale3CD, atom1.posq.w * rr1 * scale1CC + sci3 * rr3 * scale3CD);
         // electrostaticPotential[atom2] += sci3 * rr3 * scale3CD;
+
+        if ((atom1.moleculeIndex==0) && (atom1.atomType==0))
+            printf("%d %d %.4g\n", atom2.moleculeIndex, atom2.atomType, potential.x/4.184);
+        //printf("pot: %d %d %d %d %.4g\n", atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType, potential.x/4.184);
     #endif
 
     }
