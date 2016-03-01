@@ -1364,6 +1364,7 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		//// Compute electrostatic force.
 
 		void* electrostaticsArgs[] = { &cu.getForce().getDevicePointer(),
+                &potentialBuffers->getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
 				&covalentFlags->getDevicePointer(),
