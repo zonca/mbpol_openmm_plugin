@@ -85,7 +85,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     real bn5 = (9*bn.w+alsq2n*exp2a)*rr2;
 
     real3 force;
-    real2 potential;
+    real2 potential = make_real2(0., 0.);
 
     computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, dScale, pScale, mScale, force, energy, potential);
     computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy, potential);
@@ -183,6 +183,7 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[atom1], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[atom1+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[atom1+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[atom1], static_cast<unsigned long long>((long long) (data.potential*0x100000000)));
         }
         else {
             // This is an off-diagonal tile.
@@ -208,10 +209,12 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (data.potential*0x100000000)));
             offset = y*TILE_SIZE + tgx;
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].potential*0x100000000)));
         }
     }
 
@@ -306,6 +309,7 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (data.force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (data.force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (data.potential*0x100000000)));
 #ifdef USE_CUTOFF
             offset = atomIndices[threadIdx.x];
 #else
@@ -314,6 +318,7 @@ extern "C" __global__ void computeElectrostatics(
             atomicAdd(&forceBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.x*0x100000000)));
             atomicAdd(&forceBuffers[offset+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.y*0x100000000)));
             atomicAdd(&forceBuffers[offset+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (localData[threadIdx.x].force.z*0x100000000)));
+            atomicAdd(&potentialBuffers[offset], static_cast<unsigned long long>((long long) (localData[threadIdx.x].potential*0x100000000)));
         }
         pos++;
     }
