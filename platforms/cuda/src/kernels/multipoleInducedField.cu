@@ -141,7 +141,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
             tdd = TDDHH;
         }
     }
-    real pgamma = TDD;
+    real pgamma = tdd;
     real dampForExp = -1 * pgamma * ratio;
 
     real rr3_factor = 1.0;
