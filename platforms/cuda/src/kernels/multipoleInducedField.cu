@@ -74,7 +74,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
         // FIXME identify if we need to use TDDOH and so on
         double tdd = TDD;
-        if ((isSameWater) && (atom1.atomType != 2) && (atom2.atomType != 2)) {
+        if (isSameWater) {
             if ((atom1.atomType == 0) | (atom2.atomType == 0)) { // one is oxygen
                 tdd = TDDOH;
             } else { // both hydrogens
@@ -134,7 +134,7 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 
     double tdd = TDD;
     bool isSameWater = atom1.moleculeIndex == atom2.moleculeIndex;
-    if ((isSameWater) && (atom1.atomType != 2) && (atom2.atomType != 2)) {
+    if (isSameWater) {
         if ((atom1.atomType == 0) | (atom2.atomType == 0)) { // one is oxygen
             tdd = TDDOH;
         } else { // both hydrogens
