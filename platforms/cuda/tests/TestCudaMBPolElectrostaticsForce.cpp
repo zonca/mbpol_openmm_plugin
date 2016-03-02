@@ -65,8 +65,6 @@ static void testWater3VirtualSite() {
 	MBPolElectrostaticsForce* mbpolElectrostaticsForce =
 			new MBPolElectrostaticsForce();
 
-    mbpolElectrostaticsForce->setTholeParameters(fixedThole);
-
 	mbpolElectrostaticsForce->setNonbondedMethod(nonbondedMethod);
 	//mbpolElectrostaticsForce->setPolarizationType( polarizationType );
 	//mbpolElectrostaticsForce->setCutoffDistance( cutoff );
@@ -148,21 +146,21 @@ static void testWater3VirtualSite() {
 	double energy = state.getPotentialEnergy();
 	double cal2joule = 4.184;
 
-	double expectedEnergy = -15.994 * cal2joule;
+	double expectedEnergy = -15.8188 * cal2joule;
 	std::cout << "Energy: " << energy / cal2joule << " Kcal/mol " << std::endl;
 	std::cout << "Expected energy: " << expectedEnergy / cal2joule
 			<< " Kcal/mol " << std::endl;
 
 	std::vector<Vec3> expectedForces(numberOfParticles);
-	expectedForces[0] = Vec3(-2.93352, -0.493367, -9.87077);
-	expectedForces[1] = Vec3(3.96612, 0.855513, -3.52678);
-	expectedForces[2] = Vec3(-1.86126, 2.40496, -2.44826);
-	expectedForces[4] = Vec3(-3.7535, 2.23087, -3.11939);
-	expectedForces[5] = Vec3(5.12736, 5.05156, 18.4337);
-	expectedForces[6] = Vec3(3.39746, 1.97813, -0.927277);
-	expectedForces[8] = Vec3(1.14459, 3.11796, 2.42504);
-	expectedForces[9] = Vec3(-3.2682, -6.39417, 0.112708);
-	expectedForces[10] =Vec3(-1.81905, -8.75146, -1.079);
+	expectedForces[0] = Vec3(-2.388, -0.126835, -8.86189);
+	expectedForces[1] = Vec3(4.21263, 0.723163, -3.37077);
+	expectedForces[2] = Vec3(-2.1924, 2.24807, -1.96211);
+	expectedForces[4] = Vec3(-3.59486, 2.16711, -3.57138);
+	expectedForces[5] = Vec3(4.54547, 4.58639, 17.4259);
+	expectedForces[6] = Vec3(3.27239, 1.96723, -1.11709);
+	expectedForces[8] = Vec3(1.44387, 3.22471, 2.6133);
+	expectedForces[9] = Vec3(-3.35011, -6.07137, 0.197009);
+	expectedForces[10] =Vec3(-1.94899, -8.71847, -1.35294);
 
 	// gradient -> forces
 	for (int i = 0; i < numberOfParticles; i++) {
@@ -288,7 +286,6 @@ static void testWater3VirtualSitePMESmallBox() {
 	//mbpolElectrostaticsForce->setAEwald( 5.4459052e+00 );
 	//mbpolElectrostaticsForce->setEwaldErrorTolerance( 1.0e-04 );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(true);
-    mbpolElectrostaticsForce->setTholeParameters(fixedThole);
 
     // disable Ewald by setting alpha to very low value
     std::vector<int> pmeGridDimension( 3 );
@@ -375,22 +372,22 @@ static void testWater3VirtualSitePMESmallBox() {
 	double energy = state.getPotentialEnergy();
 	double cal2joule = 4.184;
 
-	double expectedEnergy = -16.13 * cal2joule;
+	double expectedEnergy = -15.9519 * cal2joule;
 	std::cout << "Energy: " << energy / cal2joule << " Kcal/mol " << std::endl;
 	std::cout << "Expected energy: " << expectedEnergy / cal2joule
 			<< " Kcal/mol " << std::endl;
 
 	std::vector<Vec3> expectedForces(numberOfParticles);
 
-	expectedForces[0] = Vec3( -2.8808, -0.389807, -9.9458);
-	expectedForces[1] = Vec3( 3.92819, 0.797758, -3.49146);
-	expectedForces[2] = Vec3( -1.87975, 2.36679, -2.44226);
-	expectedForces[4] = Vec3( -3.73281, 2.34219, -3.20428);
-	expectedForces[5] = Vec3( 5.12801, 5.01606, 18.4841);
-	expectedForces[6] = Vec3( 3.39526, 1.93566, -0.863488);
-	expectedForces[8] = Vec3( 1.16539, 3.19682, 2.35104);
-	expectedForces[9] = Vec3( -3.28117, -6.45969, 0.145237);
-	expectedForces[10] =Vec3( -1.83939, -8.80613, -1.0311);
+	expectedForces[0] = Vec3( -2.32414, -0.019711, -8.9339);
+	expectedForces[1] = Vec3( 4.1735, 0.664072, -3.33561);
+	expectedForces[2] = Vec3( -2.21923, 2.20524, -1.94369);
+	expectedForces[4] = Vec3( -3.57206, 2.27611, -3.66779);
+	expectedForces[5] = Vec3( 4.54038, 4.54451, 17.475);
+	expectedForces[6] = Vec3( 3.26762, 1.92352, -1.05576);
+	expectedForces[8] = Vec3( 1.471, 3.3121, 2.5388);
+	expectedForces[9] = Vec3( -3.36363, -6.13307, 0.229984);
+	expectedForces[10]= Vec3( -1.9704, -8.77319, -1.30522);
 
 	// gradient -> forces
 	for (int i = 0; i < numberOfParticles; i++) {
