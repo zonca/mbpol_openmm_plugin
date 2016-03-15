@@ -131,24 +131,12 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 ///     printf("factor %f\n", factor);
 /// }
 
-__device__ real computeDScaleFactor(unsigned int polarizationGroup, int index) {
-    return (polarizationGroup & 1<<index ? 0 : 1);
-}
-
-__device__ float computePScaleFactor(uint2 covalent, unsigned int polarizationGroup, int index) {
-    int mask = 1<<index;
-    bool x = (covalent.x & mask);
-    bool y = (covalent.y & mask);
-    bool p = (polarizationGroup & mask);
-    return (x && y ? 0.0f : (x && p ? 0.5f : 1.0f));
-}
-
 /**
  * Compute nonbonded interactions.
  */
 extern "C" __global__ void computeFixedField(
         unsigned long long* __restrict__ fieldBuffers, unsigned long long* __restrict__ fieldPolarBuffers, const real4* __restrict__ posq,
-        const uint2* __restrict__ covalentFlags, const unsigned int* __restrict__ polarizationGroupFlags, const ushort2* __restrict__ exclusionTiles,
+        const ushort2* __restrict__ exclusionTiles,
         unsigned int startTileIndex, unsigned int numTileIndices,
 #ifdef USE_CUTOFF
         const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize,
@@ -175,8 +163,6 @@ extern "C" __global__ void computeFixedField(
         data.fieldPolar = make_real3(0);
         unsigned int atom1 = x*TILE_SIZE + tgx;
         loadAtomData(data, atom1, posq, damping, moleculeIndex, atomType);
-        uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
-        unsigned int polarizationGroup = polarizationGroupFlags[pos*TILE_SIZE+tgx];
         if (x == y) {
             // This tile is on the diagonal.
 

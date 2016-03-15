@@ -321,18 +321,15 @@ public:
 	}
 	bool areParticlesIdentical(int particle1, int particle2) {
 		double charge1, charge2, damping1, damping2, polarity1, polarity2;
-		int axis1, axis2, multipole11, multipole12, multipole21, multipole22,
-				multipole31, multipole32;
         int moleculeIndex1, moleculeIndex2, atomType1, atomType2;
 		vector<double> dipole1, dipole2;
-		force.getElectrostaticsParameters(particle1, charge1, axis1,
-				multipole11, multipole21, multipole31, moleculeIndex1, atomType1, damping1,
+		force.getElectrostaticsParameters(particle1, charge1,
+				moleculeIndex1, atomType1, damping1,
 				polarity1);
-		force.getElectrostaticsParameters(particle2, charge2, axis2,
-				multipole12, multipole22, multipole32, moleculeIndex2, atomType2, damping2,
+		force.getElectrostaticsParameters(particle2, charge2,
+				moleculeIndex2, atomType2, damping2,
 				polarity2);
-		if (charge1 != charge2 || damping1 != damping2
-				|| polarity1 != polarity2 || axis1 != axis2) {
+		if (charge1 != charge2 || damping1 != damping2 || polarity1 != polarity2) {
 			return false;
 		}
 		for (int i = 0; i < (int) dipole1.size(); ++i) {
@@ -351,8 +348,6 @@ public:
 	void getParticlesInGroup(int index, vector<int>& particles) {
 		int particle = index / 7;
 		int type = index - 7 * particle;
-		force.getCovalentMap(particle,
-				MBPolElectrostaticsForce::CovalentType(type), particles);
 	}
 	bool areGroupsIdentical(int group1, int group2) {
 		return false;
@@ -371,8 +366,8 @@ CudaCalcMBPolElectrostaticsForceKernel::CudaCalcMBPolElectrostaticsForceKernel(
 		NULL), inducedField(NULL), inducedFieldPolar(NULL), potentialBuffers(NULL), chargeDerivatives(NULL), damping(NULL), inducedDipole(
 		NULL), inducedDipolePolar(
 		NULL), inducedDipoleErrors(NULL), prevDipoles(NULL), prevDipolesPolar(
-		NULL), prevErrors(NULL), polarizability(NULL), covalentFlags(
-		NULL), polarizationGroupFlags(NULL), pmeGrid(NULL), pmeBsplineModuliX(
+		NULL), prevErrors(NULL), polarizability(NULL),
+		pmeGrid(NULL), pmeBsplineModuliX(
 		NULL), pmeBsplineModuliY(NULL), pmeBsplineModuliZ(NULL), pmeIgrid(
 		NULL), pmePhi(NULL), pmePhid(NULL), pmePhip(NULL), pmePhidp(
 		NULL), pmeCphi(NULL), pmeAtomGridIndex(NULL), lastPositions(
@@ -410,10 +405,6 @@ CudaCalcMBPolElectrostaticsForceKernel::~CudaCalcMBPolElectrostaticsForceKernel(
 		delete prevErrors;
 	if (polarizability != NULL)
 		delete polarizability;
-	if (covalentFlags != NULL)
-		delete covalentFlags;
-	if (polarizationGroupFlags != NULL)
-		delete polarizationGroupFlags;
 	if (pmeGrid != NULL)
 		delete pmeGrid;
 	if (pmeBsplineModuliX != NULL)
@@ -485,10 +476,9 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	vector<float> polarizabilityVec;
 	for (int i = 0; i < numMultipoles; i++) {
 		double charge, damping, polarity;
-		int axisType, atomX, atomY, atomZ;
         int moleculeIndex, atomType;
-		force.getElectrostaticsParameters(i, charge, axisType, atomZ, atomX,
-				atomY, moleculeIndex, atomType, damping, polarity);
+		force.getElectrostaticsParameters(i, charge,
+				moleculeIndex, atomType, damping, polarity);
 		if (cu.getUseDoublePrecision())
 			posqd[i] = make_double4(0, 0, 0, charge);
 		else
@@ -541,44 +531,14 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 	cu.addAutoclearBuffer(*field);
 	cu.addAutoclearBuffer(*fieldPolar);
 
-	// Record which atoms should be flagged as exclusions based on covalent groups, and determine
-	// the values for the covalent group flags.
-
 	vector<vector<int> > exclusions(numMultipoles);
 	for (int i = 0; i < numMultipoles; i++) {
 		vector<int> atoms;
 		set<int> allAtoms;
 		allAtoms.insert(i);
-		force.getCovalentMap(i, MBPolElectrostaticsForce::Covalent12, atoms);
-		allAtoms.insert(atoms.begin(), atoms.end());
-		force.getCovalentMap(i, MBPolElectrostaticsForce::Covalent13, atoms);
-		allAtoms.insert(atoms.begin(), atoms.end());
-		for (set<int>::const_iterator iter = allAtoms.begin();
-				iter != allAtoms.end(); ++iter)
-			covalentFlagValues.push_back(make_int3(i, *iter, 0));
-		force.getCovalentMap(i, MBPolElectrostaticsForce::Covalent14, atoms);
-		allAtoms.insert(atoms.begin(), atoms.end());
-		for (int j = 0; j < (int) atoms.size(); j++)
-			covalentFlagValues.push_back(make_int3(i, atoms[j], 1));
-		force.getCovalentMap(i, MBPolElectrostaticsForce::Covalent15, atoms);
-		for (int j = 0; j < (int) atoms.size(); j++)
-			covalentFlagValues.push_back(make_int3(i, atoms[j], 2));
-		allAtoms.insert(atoms.begin(), atoms.end());
-		force.getCovalentMap(i,
-				MBPolElectrostaticsForce::PolarizationCovalent11, atoms);
-		allAtoms.insert(atoms.begin(), atoms.end());
 		exclusions[i].insert(exclusions[i].end(), allAtoms.begin(),
 				allAtoms.end());
 
-		// Workaround for bug in TINKER: if an atom is listed in both the PolarizationCovalent11
-		// and PolarizationCovalent12 maps, the latter takes precedence.
-
-		vector<int> atoms12;
-		force.getCovalentMap(i,
-				MBPolElectrostaticsForce::PolarizationCovalent12, atoms12);
-		for (int j = 0; j < (int) atoms.size(); j++)
-			if (find(atoms12.begin(), atoms12.end(), atoms[j]) == atoms12.end())
-				polarizationFlagValues.push_back(make_int2(i, atoms[j]));
 	}
 	set<pair<int, int> > tilesWithExclusions;
 	for (int atom1 = 0; atom1 < (int) exclusions.size(); ++atom1) {
@@ -595,15 +555,12 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
     std::vector<double> thole = force.getTholeParameters();
 	// Record other options.
 
-	if (force.getPolarizationType() == MBPolElectrostaticsForce::Mutual) {
-		maxInducedIterations = force.getMutualInducedMaxIterations();
-		inducedEpsilon = force.getMutualInducedTargetEpsilon();
-		inducedField = new CudaArray(cu, 3 * paddedNumAtoms, sizeof(long long),
-				"inducedField");
-		inducedFieldPolar = new CudaArray(cu, 3 * paddedNumAtoms,
-				sizeof(long long), "inducedFieldPolar");
-	} else
-		maxInducedIterations = 0;
+    maxInducedIterations = force.getMutualInducedMaxIterations();
+    inducedEpsilon = force.getMutualInducedTargetEpsilon();
+    inducedField = new CudaArray(cu, 3 * paddedNumAtoms, sizeof(long long),
+            "inducedField");
+    inducedFieldPolar = new CudaArray(cu, 3 * paddedNumAtoms,
+            sizeof(long long), "inducedFieldPolar");
 	bool usePME = (force.getNonbondedMethod() == MBPolElectrostaticsForce::PME);
 
     potentialBuffers = new CudaArray(cu, paddedNumAtoms, sizeof(long long), "potentialBuffers");
@@ -634,8 +591,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
     defines["TDDHH"] = cu.doubleToString(thole[4]);
 
 	defines["ENERGY_SCALE_FACTOR"] = cu.doubleToString(138.9354558456);
-	if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
-		defines["DIRECT_POLARIZATION"] = "";
 	if (useShuffle)
 		defines["USE_SHUFFLE"] = "";
 	defines["TILE_SIZE"] = cu.intToString(CudaContext::TileSize);
@@ -765,8 +720,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initialize(const System& system,
 		pmeDefines["SQRT_PI"] = cu.doubleToString(sqrt(M_PI));
         if (includeChargeRedistribution)
             pmeDefines["INCLUDE_CHARGE_REDISTRIBUTION"] = "1";
-		if (force.getPolarizationType() == MBPolElectrostaticsForce::Direct)
-			pmeDefines["DIRECT_POLARIZATION"] = "";
 		CUmodule module = cu.createModule(
 				CudaKernelSources::vectorOps
 						+ CudaMBPolKernelSources::multipolePme, pmeDefines);
@@ -942,8 +895,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initializeScaleFactors() {
 	hasInitializedScaleFactors = true;
 	CudaNonbondedUtilities& nb = cu.getNonbondedUtilities();
 
-	// Figure out the covalent flag values to use for each atom pair.
-
 	vector<ushort2> exclusionTiles;
 	nb.getExclusionTiles().download(exclusionTiles);
 	map<pair<int, int>, int> exclusionTileMap;
@@ -951,70 +902,6 @@ void CudaCalcMBPolElectrostaticsForceKernel::initializeScaleFactors() {
 		ushort2 tile = exclusionTiles[i];
 		exclusionTileMap[make_pair(tile.x, tile.y)] = i;
 	}
-	covalentFlags = CudaArray::create<uint2>(cu, nb.getExclusions().getSize(),
-			"covalentFlags");
-	vector<uint2> covalentFlagsVec(nb.getExclusions().getSize(),
-			make_uint2(0, 0));
-	for (int i = 0; i < (int) covalentFlagValues.size(); i++) {
-		int atom1 = covalentFlagValues[i].x;
-		int atom2 = covalentFlagValues[i].y;
-		int value = covalentFlagValues[i].z;
-		int x = atom1 / CudaContext::TileSize;
-		int offset1 = atom1 - x * CudaContext::TileSize;
-		int y = atom2 / CudaContext::TileSize;
-		int offset2 = atom2 - y * CudaContext::TileSize;
-		int f1 = (value == 0 || value == 1 ? 1 : 0);
-		int f2 = (value == 0 || value == 2 ? 1 : 0);
-		if (x == y) {
-			int index = exclusionTileMap[make_pair(x, y)]
-					* CudaContext::TileSize;
-			covalentFlagsVec[index + offset1].x |= f1 << offset2;
-			covalentFlagsVec[index + offset1].y |= f2 << offset2;
-			covalentFlagsVec[index + offset2].x |= f1 << offset1;
-			covalentFlagsVec[index + offset2].y |= f2 << offset1;
-		} else if (x > y) {
-			int index = exclusionTileMap[make_pair(x, y)]
-					* CudaContext::TileSize;
-			covalentFlagsVec[index + offset1].x |= f1 << offset2;
-			covalentFlagsVec[index + offset1].y |= f2 << offset2;
-		} else {
-			int index = exclusionTileMap[make_pair(y, x)]
-					* CudaContext::TileSize;
-			covalentFlagsVec[index + offset2].x |= f1 << offset1;
-			covalentFlagsVec[index + offset2].y |= f2 << offset1;
-		}
-	}
-	covalentFlags->upload(covalentFlagsVec);
-
-	// Do the same for the polarization flags.
-
-	polarizationGroupFlags = CudaArray::create<unsigned int>(cu,
-			nb.getExclusions().getSize(), "polarizationGroupFlags");
-	vector<unsigned int> polarizationGroupFlagsVec(nb.getExclusions().getSize(),
-			0);
-	for (int i = 0; i < (int) polarizationFlagValues.size(); i++) {
-		int atom1 = polarizationFlagValues[i].x;
-		int atom2 = polarizationFlagValues[i].y;
-		int x = atom1 / CudaContext::TileSize;
-		int offset1 = atom1 - x * CudaContext::TileSize;
-		int y = atom2 / CudaContext::TileSize;
-		int offset2 = atom2 - y * CudaContext::TileSize;
-		if (x == y) {
-			int index = exclusionTileMap[make_pair(x, y)]
-					* CudaContext::TileSize;
-			polarizationGroupFlagsVec[index + offset1] |= 1 << offset2;
-			polarizationGroupFlagsVec[index + offset2] |= 1 << offset1;
-		} else if (x > y) {
-			int index = exclusionTileMap[make_pair(x, y)]
-					* CudaContext::TileSize;
-			polarizationGroupFlagsVec[index + offset1] |= 1 << offset2;
-		} else {
-			int index = exclusionTileMap[make_pair(y, x)]
-					* CudaContext::TileSize;
-			polarizationGroupFlagsVec[index + offset2] |= 1 << offset1;
-		}
-	}
-	polarizationGroupFlags->upload(polarizationGroupFlagsVec);
 }
 
 double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
@@ -1049,8 +936,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		void* computeFixedFieldArgs[] = { &field->getDevicePointer(),
 				&fieldPolar->getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
-				&covalentFlags->getDevicePointer(),
-				&polarizationGroupFlags->getDevicePointer(),
 				&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
 				&numTileIndices,
 				&damping->getDevicePointer(),
@@ -1098,8 +983,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 				&potentialBuffers->getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
-				&covalentFlags->getDevicePointer(),
-				&polarizationGroupFlags->getDevicePointer(),
 				&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
 				&numTileIndices,
 				&inducedDipole->getDevicePointer(),
@@ -1229,8 +1112,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
 		void* computeFixedFieldArgs[] = { &field->getDevicePointer(),
 				&fieldPolar->getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
-				&covalentFlags->getDevicePointer(),
-				&polarizationGroupFlags->getDevicePointer(),
 				&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
 				&numTileIndices, &nb.getInteractingTiles().getDevicePointer(),
 				&nb.getInteractionCount().getDevicePointer(),
@@ -1377,8 +1258,6 @@ double CudaCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context,
                 &potentialBuffers->getDevicePointer(),
 				&cu.getEnergyBuffer().getDevicePointer(),
 				&cu.getPosq().getDevicePointer(),
-				&covalentFlags->getDevicePointer(),
-				&polarizationGroupFlags->getDevicePointer(),
 				&nb.getExclusionTiles().getDevicePointer(), &startTileIndex,
 				&numTileIndices, &nb.getInteractingTiles().getDevicePointer(),
 				&nb.getInteractionCount().getDevicePointer(),
@@ -1775,10 +1654,9 @@ void CudaCalcMBPolElectrostaticsForceKernel::copyParametersToContext(
 	vector<int> atomTypesVec;
 	for (int i = 0; i < force.getNumElectrostatics(); i++) {
 		double charge, damping, polarity;
-		int axisType, atomX, atomY, atomZ;
         int moleculeIndex, atomType;
-		force.getElectrostaticsParameters(i, charge, axisType, atomZ, atomX,
-				atomY, moleculeIndex, atomType, damping, polarity);
+		force.getElectrostaticsParameters(i, charge,
+				moleculeIndex, atomType, damping, polarity);
 		if (cu.getUseDoublePrecision())
 			posqd[i].w = charge;
 		else

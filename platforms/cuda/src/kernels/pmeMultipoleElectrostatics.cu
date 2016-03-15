@@ -9,8 +9,8 @@ typedef struct {
     int atomType;
 } AtomData;
 
-__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy, real2& potential);
-__device__ void computeOneInteractionF2(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor, float dScale, float pScale, float mScale, real3& force, real& energy, real2& potential);
+__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, real bn5, float forceFactor, real3& force, real& energy, real2& potential);
+__device__ void computeOneInteractionF2(AtomData& atom1, volatile AtomData& atom2, real4 delta, real4 bn, float forceFactor, real3& force, real& energy, real2& potential);
 
 inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __restrict__ posq,
         const real* __restrict__ inducedDipole, const real* __restrict__ inducedDipolePolar,
@@ -29,7 +29,7 @@ inline __device__ void loadAtomData(AtomData& data, int atom, const real4* __res
     data.atomType = atomType[atom];
 }
 
-__device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool hasExclusions, float dScale, float pScale, float mScale, float forceFactor,
+__device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool hasExclusions, float forceFactor,
                                       real& energy, real4 periodicBoxSize, real4 invPeriodicBoxSize, real4 periodicBoxVecX, real4 periodicBoxVecY, real4 periodicBoxVecZ) {
     real4 delta;
     delta.x = atom2.pos.x - atom1.pos.x;
@@ -87,8 +87,8 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, bool has
     real3 force;
     real2 potential = make_real2(0., 0.);
 
-    computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, dScale, pScale, mScale, force, energy, potential);
-    computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, dScale, pScale, mScale, force, energy, potential);
+    computeOneInteractionF1(atom1, atom2, delta, bn, bn5, forceFactor, force, energy, potential);
+    computeOneInteractionF2(atom1, atom2, delta, bn, forceFactor, force, energy, potential);
 
     //if ((atom1.moleculeIndex == 0) & (atom2.moleculeIndex==0))
     //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.176) < 0.001))
@@ -126,7 +126,7 @@ __device__ void computeSelfEnergyAndTorque(AtomData& atom1, real& energy) {
  */
 extern "C" __global__ void computeElectrostatics(
         unsigned long long* __restrict__ forceBuffers, unsigned long long* __restrict__ potentialBuffers,real* __restrict__ energyBuffer,
-        const real4* __restrict__ posq, const uint2* __restrict__ covalentFlags, const unsigned int* __restrict__ polarizationGroupFlags,
+        const real4* __restrict__ posq,
         const ushort2* __restrict__ exclusionTiles, unsigned int startTileIndex, unsigned int numTileIndices,
 #ifdef USE_CUTOFF
         const int* __restrict__ tiles, const unsigned int* __restrict__ interactionCount, real4 periodicBoxSize, real4 invPeriodicBoxSize,
@@ -157,8 +157,6 @@ extern "C" __global__ void computeElectrostatics(
         loadAtomData(data, atom1, posq, inducedDipole, inducedDipolePolar, damping, moleculeIndex, atomType);
         data.force = make_real3(0);
         data.potential = 0.;
-        uint2 covalent = covalentFlags[pos*TILE_SIZE+tgx];
-        unsigned int polarizationGroup = polarizationGroupFlags[pos*TILE_SIZE+tgx];
         if (x == y) {
             // This tile is on the diagonal.
 
@@ -178,7 +176,7 @@ extern "C" __global__ void computeElectrostatics(
                     float d = 1.;
                     float p = 1.;
                     float m = 1.;
-                    computeOneInteraction(data, localData[tbx+j], true, d, p, m, 0.5f, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
+                    computeOneInteraction(data, localData[tbx+j], true, 0.5f, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
                 }
             }
             if (atom1 < NUM_ATOMS)
@@ -203,7 +201,7 @@ extern "C" __global__ void computeElectrostatics(
                     float d = 1.;
                     float p = 1.;
                     float m = 1.;
-                    computeOneInteraction(data, localData[tbx+tj], true, d, p, m, 1, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
+                    computeOneInteraction(data, localData[tbx+tj], true, 1, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
@@ -300,7 +298,7 @@ extern "C" __global__ void computeElectrostatics(
             for (j = 0; j < TILE_SIZE; j++) {
                 int atom2 = atomIndices[tbx+tj];
                 if (atom1 < NUM_ATOMS && atom2 < NUM_ATOMS) {
-                    computeOneInteraction(data, localData[tbx+tj], false, 1, 1, 1, 1, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
+                    computeOneInteraction(data, localData[tbx+tj], false, 1, energy, periodicBoxSize, invPeriodicBoxSize, periodicBoxVecX, periodicBoxVecY, periodicBoxVecZ);
                 }
                 tj = (tj + 1) & (TILE_SIZE - 1);
             }
