@@ -72,25 +72,6 @@ public:
         PME = 1
     };
 
-    enum PolarizationType {
-
-        /**
-         * Mutual polarization
-         */
-        Mutual = 0,
-
-        /**
-         * Direct polarization
-         */
-        Direct = 1
-    };
-
-    enum ElectrostaticsAxisTypes { ZThenX = 0, Bisector = 1, ZBisect = 2, ThreeFold = 3, ZOnly = 4, NoAxisType = 5, LastAxisTypeIndex = 6 };
-
-    enum CovalentType {
-                          Covalent12 = 0, Covalent13 = 1, Covalent14 = 2, Covalent15 = 3,
-                          PolarizationCovalent11 = 4, PolarizationCovalent12 = 5, PolarizationCovalent13 = 6, PolarizationCovalent14 = 7, CovalentEnd = 8 };
-
     /**
      * Create an MBPolElectrostaticsForce.
      */
@@ -112,16 +93,6 @@ public:
      * Set the method used for handling long-range nonbonded interactions.
      */
     void setNonbondedMethod(NonbondedMethod method);
-
-    /**
-     * Get polarization type
-     */
-    PolarizationType getPolarizationType() const;
-
-    /**
-     * Set the polarization type
-     */
-    void setPolarizationType(PolarizationType type);
 
     /**
      * Get the cutoff distance (in nm) being used for nonbonded interactions.  If the NonbondedMethod in use
@@ -202,8 +173,8 @@ public:
      *
      * @return the index of the particle that was added
      */
-    int addElectrostatics(double charge, 
-                     int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity);
+    int addElectrostatics(double charge,
+                     int moleculeIndex, int atomType, double dampingFactor, double polarity);
 
     /**
      * Get the multipole parameters for a particle.
@@ -220,7 +191,7 @@ public:
      * @param polarity             polarity parameter
      */
 void getElectrostaticsParameters(int index, double& charge,
-                     int& axisType, int& multipoleAtomZ, int& multipoleAtomX, int& multipoleAtomY, int& moleculeIndex, int& atomType, double& dampingFactor, double& polarity ) const;
+                     int& moleculeIndex, int& atomType, double& dampingFactor, double& polarity ) const;
     /**
      * Set the multipole parameters for a particle.
      *
@@ -236,34 +207,7 @@ void getElectrostaticsParameters(int index, double& charge,
      */
 
     void setElectrostaticsParameters(int index, double charge,
-                     int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity );
-
-
-    /**
-     * Set the CovalentMap for an atom
-     *
-     * @param index                the index of the atom for which to set parameters
-     * @param typeId               CovalentTypes type
-     * @param covalentAtoms        vector of covalent atoms associated w/ the specfied CovalentType
-     */
-    void setCovalentMap(int index, CovalentType typeId, const std::vector<int>& covalentAtoms);
-
-    /**
-     * Get the CovalentMap for an atom
-     *
-     * @param index                the index of the atom for which to set parameters
-     * @param typeId               CovalentTypes type
-     * @param covalentAtoms        output vector of covalent atoms associated w/ the specfied CovalentType
-     */
-    void getCovalentMap(int index, CovalentType typeId, std::vector<int>& covalentAtoms) const;
-
-    /**
-     * Get the CovalentMap for an atom
-     *
-     * @param index                the index of the atom for which to set parameters
-     * @param covalentLists        output vector of covalent lists of atoms
-     */
-    void getCovalentMaps(int index, std::vector < std::vector<int> >& covalentLists) const;
+                     int moleculeIndex, int atomType, double dampingFactor, double polarity );
 
     /**
      * Get the max number of iterations to be used in calculating the mutual induced dipoles
@@ -324,23 +268,6 @@ void getElectrostaticsParameters(int index, double& charge,
                                     Context& context, std::vector< double >& outputElectrostaticPotential);
 
     /**
-     * Get the system multipole moments.
-     * 
-     * This method is most useful for non-periodic systems.  When called for a periodic system, only the
-     * <i>lowest nonvanishing moment</i> has a well defined value.  This means that if the system has a net
-     * nonzero charge, the dipole and quadrupole moments are not well defined and should be ignored.  If the
-     * net charge is zero, the dipole moment is well defined (and really represents a dipole density), but
-     * the quadrupole moment is still undefined and should be ignored.
-     *
-     * @param context      context
-     * @param outputElectrostaticsMonents (charge,
-                                      dipole_x, dipole_y, dipole_z,
-                                      quadrupole_xx, quadrupole_xy, quadrupole_xz,
-                                      quadrupole_yx, quadrupole_yy, quadrupole_yz,
-                                      quadrupole_zx, quadrupole_zy, quadrupole_zz)
-     */
-    void getSystemElectrostaticsMoments(Context& context, std::vector< double >& outputElectrostaticsMoments);
-    /**
      * Update the multipole parameters in a Context to match those stored in this Force object.  This method
      * provides an efficient method to update certain parameters in an existing Context without needing to reinitialize it.
      * Simply call setElectrostaticsParameters() to modify this object's parameters, then call updateParametersInState() to
@@ -357,7 +284,6 @@ protected:
     ForceImpl* createImpl() const;
 private:
     NonbondedMethod nonbondedMethod;
-    PolarizationType polarizationType;
     double cutoffDistance;
     double aewald;
     int pmeBSplineOrder;
@@ -376,25 +302,21 @@ private:
 class MBPolElectrostaticsForce::ElectrostaticsInfo {
 public:
 
-    int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
     int moleculeIndex, atomType;
     double charge, dampingFactor, polarity;
 
-    std::vector< std::vector<int> > covalentInfo;
-
     ElectrostaticsInfo() {
-        atomType = moleculeIndex = multipoleAtomZ = multipoleAtomX = multipoleAtomY = -1;
+        atomType = moleculeIndex = -1;
         charge = dampingFactor = polarity = 0.0;
 
 
     }
 
     ElectrostaticsInfo(double charge,
-                   int axisType, int multipoleAtomZ, int multipoleAtomX, int multipoleAtomY, int moleculeIndex, int atomType, double dampingFactor, double polarity) :
-        charge(charge), axisType(axisType), multipoleAtomZ(multipoleAtomZ), multipoleAtomX(multipoleAtomX), multipoleAtomY(multipoleAtomY), moleculeIndex(moleculeIndex), atomType(atomType),
+                   int moleculeIndex, int atomType, double dampingFactor, double polarity) :
+        charge(charge), moleculeIndex(moleculeIndex), atomType(atomType),
         dampingFactor(dampingFactor), polarity(polarity) {
 
-       covalentInfo.resize(CovalentEnd);
     }
 };
 
