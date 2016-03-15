@@ -90,13 +90,13 @@ static void testWater3VirtualSite() {
 
     int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01,
                                             waterMoleculeIndex, 0, 0.001310, 0.001310 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+2,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-		mbpolElectrostaticsForce->addElectrostatics(0., jj, jj + 1, jj + 2,
+		mbpolElectrostaticsForce->addElectrostatics(0.,
                                             waterMoleculeIndex, 2, 0.001310, 0.);
         waterMoleculeIndex++;
     }
@@ -316,13 +316,13 @@ static void testWater3VirtualSitePMESmallBox() {
 
     int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01,
                                             waterMoleculeIndex, 0, 0.001310, 0.001310 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+2,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-		mbpolElectrostaticsForce->addElectrostatics(0., jj, jj + 1, jj + 2,
+		mbpolElectrostaticsForce->addElectrostatics(0.,
                                             waterMoleculeIndex, 2, 0.001310, 0.);
         waterMoleculeIndex++;
     }
@@ -529,11 +529,11 @@ static void testWater3PMESmallBox() {
 
     int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, -1,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01,
                                             waterMoleculeIndex, 0, 0.001310, 0.001310 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, -1,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, -1,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
         waterMoleculeIndex++;
     }
@@ -677,11 +677,11 @@ static void testWater3() {
 
     int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, -1,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01,
                                             waterMoleculeIndex, 0, 0.001310, 0.001310 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, -1,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, -1,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
         waterMoleculeIndex++;
     }

@@ -1,4 +1,4 @@
-__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, float dScale, float pScale, float mScale, real& energy, real3& outputForce, real2& potential) {
+__device__ void computeOneInteractionF1(AtomData& atom1, volatile AtomData& atom2, real& energy, real3& outputForce, real2& potential) {
 
 	// TDD = 0.055;
 	// TDDOH = 0.626;
