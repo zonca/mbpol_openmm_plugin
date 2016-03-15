@@ -63,7 +63,6 @@ class WrappedMBPolReferenceElectrostaticsForce : public MBPolReferenceElectrosta
     public:
     void wrapGetAndScaleInverseRs(
             RealOpenMM dampI, RealOpenMM dampJ,
-            RealOpenMM tholeI, RealOpenMM tholeJ,
             RealOpenMM r, bool justScale, RealOpenMM & damp, MapIntRealOpenMM& rrI
             )   {
 
@@ -71,10 +70,6 @@ class WrappedMBPolReferenceElectrostaticsForce : public MBPolReferenceElectrosta
                     particleData.resize(2);
                     particleData[0].dampingFactor = dampI;
                     particleData[1].dampingFactor = dampJ;
-                    for (int i=0; i<5; i++) {
-                        particleData[0].thole[i] = tholeI;
-                        particleData[1].thole[i] = tholeJ;
-                    }
 
                     for (int order=1; order <=7; order+=2) {
                         rrI[order] = getAndScaleInverseRs(particleData[0], particleData[1], r, justScale, order, TCC);
@@ -93,12 +88,15 @@ static void testGetAndScaleInverseRs( ) {
     RealOpenMM dampH=0.000294;
     MapIntRealOpenMM rrI;
     RealOpenMM r=9.860634018e-02; // from Water3 test
-    RealOpenMM thole=0.400;
-
 
     WrappedMBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = new WrappedMBPolReferenceElectrostaticsForce();;
+    std::vector<RealOpenMM> tholes;
+    for (int j=0; j<5; j++){
+        tholes.push_back(0.4);
+    }
+    mbpolReferenceElectrostaticsForce->setTholeParameters(tholes);
     mbpolReferenceElectrostaticsForce->wrapGetAndScaleInverseRs( dampO, dampH,
-                          thole, thole, r, false, damp, rrI);
+                          r, false, damp, rrI);
 
     ASSERT_EQUAL_TOL_MOD(9.33047, rrI[1], 1e-5, testName); // from this plugin after integration testing with mbpol on water3
     ASSERT_EQUAL_TOL_MOD(5.324612470e+02, rrI[3], 1e-5, testName); // from mbpol
@@ -119,8 +117,13 @@ static void testGetAndScaleInverseRsInterMulecolar() {
     RealOpenMM thole=0.400;
 
     WrappedMBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = new WrappedMBPolReferenceElectrostaticsForce();;
+    std::vector<RealOpenMM> tholes;
+    for (int j=0; j<5; j++){
+        tholes.push_back(0.4);
+    }
+    mbpolReferenceElectrostaticsForce->setTholeParameters(tholes);
     mbpolReferenceElectrostaticsForce->wrapGetAndScaleInverseRs( dampO, dampO,
-                          thole, thole, r, false, damp, rrI);
+                          r, false, damp, rrI);
 
     ASSERT_EQUAL_TOL_MOD(3.607586381e-01*1e1, rrI[1], 1e-5, testName); // from mbpol
     ASSERT_EQUAL_TOL_MOD(4.695157736e-02*1e3, rrI[3], 1e-5, testName); // from mbpol
@@ -145,8 +148,7 @@ class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferen
              }
          }
 
-        std::vector<RealOpenMM> charges, dipoles, tholes, dampingFactors, polarity;
-        std::vector<RealOpenMM> quadrupoles;
+        std::vector<RealOpenMM> charges, tholes, dampingFactors, polarity;
         std::vector<int> intZeros;
 
         for (int i=0; i<numberOfParticles; i++){
@@ -156,12 +158,6 @@ class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferen
             }
             dampingFactors.push_back(0.001310);
             polarity.push_back(0.001310);
-            for (int j=0; j<3; j++){
-                dipoles.push_back(0.);
-            }
-            for (int j=0; j<6; j++){
-                quadrupoles.push_back(0.);
-            }
             intZeros.push_back(0);
         }
 
@@ -169,8 +165,8 @@ class WrappedMBPolReferenceElectrostaticsForceForIndDipole : public MBPolReferen
 
         std::vector<ElectrostaticsParticleData> particleData;
         _numParticles = numberOfParticles;
-        loadParticleData(positions, charges,
-                              tholes, dampingFactors, polarity, intZeros, intZeros, intZeros, particleData );
+        loadParticleData(positions, charges, intZeros, intZeros,
+                              tholes, dampingFactors, polarity, particleData );
 
         _fixedElectrostaticsField.resize( numberOfParticles );
         _fixedElectrostaticsFieldPolar.resize( numberOfParticles );
@@ -260,8 +256,8 @@ class WrappedMBPolReferenceElectrostaticsForceForPmeDipole: public MBPolReferenc
         setTholeParameters(tholes);
         std::vector<ElectrostaticsParticleData> particleData;
         _numParticles = numberOfParticles;
-        loadParticleData(positions, charges,
-                              tholes, dampingFactors, polarity, intZeros, intZeros, intZeros, particleData );
+        loadParticleData(positions, charges, intZeros, intZeros,
+                              tholes, dampingFactors, polarity, particleData );
 
         _fixedElectrostaticsField.resize( numberOfParticles );
         _fixedElectrostaticsFieldPolar.resize( numberOfParticles );
@@ -670,9 +666,6 @@ class WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn :
 
         for (int i=0; i<numberOfParticles; i++) {
             particleData[1].particleIndex = i;
-            particleData[i].multipoleAtomZs = -1;
-            particleData[i].multipoleAtomXs = -1;
-            particleData[i].multipoleAtomYs = -1;
             for (int j=0; j<3; j++) {
                 particleData[i].position[j] = positions[i][j] * 1e-1;
             }
@@ -1178,13 +1171,13 @@ static void testWater3VirtualSitePMEHugeBox() {
 
 	int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += 4 ){
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01,
                                             waterMoleculeIndex, 0, 0.001310, 0.0 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.0 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.0 );
-        mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
+        mbpolElectrostaticsForce->addElectrostatics(  0.,
                                             waterMoleculeIndex, 2, 0.001310,  0.);
 		waterMoleculeIndex++;
     }
@@ -1367,6 +1360,13 @@ static void testWater3VirtualSitePMESmallBox() {
     mbpolElectrostaticsForce->setNonbondedMethod( nonbondedMethod );
     mbpolElectrostaticsForce->setCutoffDistance( cutoff );
     mbpolElectrostaticsForce->setIncludeChargeRedistribution(includeChargeRedistribution);
+    mbpolElectrostaticsForce->setMutualInducedTargetEpsilon( 1.0e-12 );
+
+    std::vector<double> thole;
+
+    for( unsigned int jj = 0; jj < 5; jj++)
+        thole.push_back(0.4);
+
 
 
     // setting alpha of Ewald to zero triggers automatic estimation of alpha and grid sized based on error tolerance
@@ -1394,38 +1394,25 @@ static void testWater3VirtualSitePMESmallBox() {
 
     }
 
-    std::vector<double> zeroDipole(3);
-    std::vector<double> zeroQuadrupole(9);
-    std::vector<double> thole(5);
-
-    std::fill(zeroDipole.begin(), zeroDipole.end(), 0.);
-    std::fill(zeroQuadrupole.begin(), zeroQuadrupole.end(), 0.);
-
-    thole[TCC] = 0.4;
-    thole[TCD] = 0.4;
-    thole[TDD] = 0.055;
-    thole[TDDOH]  = 0.626;
-    thole[TDDHH] = 0.055;
-
 	int waterMoleculeIndex=0;
     for( unsigned int jj = 0; jj < numberOfParticles; jj += 4 ){
         if (zeroPolarizability) {
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01,
                                             waterMoleculeIndex, 0, 0.001310, 0.0 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.0 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.0 );
             std::cout << "POLARIZABILITY SET TO ZERO"<< std::endl;
         } else {
-        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01, jj+1, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics( -5.1966000e-01,
                                             waterMoleculeIndex, 0, 0.001310, 0.001310 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+2, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
-        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01, jj, jj+1, jj+3,
+        mbpolElectrostaticsForce->addElectrostatics(  2.5983000e-01,
                                             waterMoleculeIndex, 1, 0.000294, 0.000294 );
         }
-        mbpolElectrostaticsForce->addElectrostatics(  0., jj, jj+1, jj+2,
+        mbpolElectrostaticsForce->addElectrostatics(  0.,
                                             waterMoleculeIndex, 2, 0.001310,  0.);
 		waterMoleculeIndex++;
     }
@@ -1465,7 +1452,7 @@ static void testWater3VirtualSitePMESmallBox() {
     Context context(system, integrator, Platform::getPlatformByName( platformName ) );
 
     context.setPositions(positions);
-    context.applyConstraints(1e-4); // update position of virtual site
+    context.applyConstraints(1e-7); // update position of virtual site
 
     double tolerance          = 1.0e-02;
 
@@ -1684,9 +1671,6 @@ class WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrosta
 
         for (int i=0; i<numberOfParticles; i++) {
             particleData[1].particleIndex = i;
-            particleData[i].multipoleAtomZs = -1;
-            particleData[i].multipoleAtomXs = -1;
-            particleData[i].multipoleAtomYs = -1;
             for (int j=0; j<3; j++) {
                 particleData[i].position[j] = positions[i][j] * 1e-1;
             }
@@ -1735,54 +1719,59 @@ int main( int numberOfArguments, char* argv[] ) {
     try {
         std::cout << "TestReferenceMBPolElectrostaticsForce running test..." << std::endl;
 
-        //testGetAndScaleInverseRs();
-        //testGetAndScaleInverseRsInterMulecolar();
+        testGetAndScaleInverseRs();
+        testGetAndScaleInverseRsInterMulecolar();
 
-        //WrappedMBPolReferenceElectrostaticsForceForIndDipole* mbpolReferenceElectrostaticsForce = new WrappedMBPolReferenceElectrostaticsForceForIndDipole();
-        //mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon(1e-7);
-        //mbpolReferenceElectrostaticsForce->wrapCalculateInducedDipolePairIxns();
+        WrappedMBPolReferenceElectrostaticsForceForIndDipole* mbpolReferenceElectrostaticsForce = new WrappedMBPolReferenceElectrostaticsForceForIndDipole();
+        mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon(1e-7);
+        mbpolReferenceElectrostaticsForce->wrapCalculateInducedDipolePairIxns();
 
-        //WrappedMBPolReferenceElectrostaticsForceForPmeDipole* mbpolReferenceElectrostaticsForcePme = new WrappedMBPolReferenceElectrostaticsForceForPmeDipole();
-        //mbpolReferenceElectrostaticsForcePme->setMutualInducedDipoleTargetEpsilon(1e-7);
-        //mbpolReferenceElectrostaticsForcePme->setCutoffDistance( 10. );
-        //mbpolReferenceElectrostaticsForcePme->setAlphaEwald( 1e-15 );
-        //std::vector<int> pmeGrid(3);
-        //std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
-        //mbpolReferenceElectrostaticsForcePme->setPmeGridDimensions(pmeGrid);
-        //RealVec boxSize;
-        //boxSize[0] = boxSize[1] = boxSize[2] = 50;
-        //mbpolReferenceElectrostaticsForcePme->setPeriodicBoxSize(boxSize);
+        WrappedMBPolReferenceElectrostaticsForceForPmeDipole* mbpolReferenceElectrostaticsForcePme = new WrappedMBPolReferenceElectrostaticsForceForPmeDipole();
+        mbpolReferenceElectrostaticsForcePme->setMutualInducedDipoleTargetEpsilon(1e-7);
+        mbpolReferenceElectrostaticsForcePme->setCutoffDistance( 10. );
+        mbpolReferenceElectrostaticsForcePme->setAlphaEwald( 1e-15 );
+        std::vector<int> pmeGrid(3);
+        std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
+        mbpolReferenceElectrostaticsForcePme->setPmeGridDimensions(pmeGrid);
+        RealVec boxSize;
+        boxSize[0] = boxSize[1] = boxSize[2] = 50;
+        mbpolReferenceElectrostaticsForcePme->setPeriodicBoxSize(boxSize);
 
-        //mbpolReferenceElectrostaticsForcePme->wrapCalculateInducedDipolePairIxns();
-//
-        //WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn* wrapperForComputeElectrostaticPairIxn = new WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn();
-        //wrapperForComputeElectrostaticPairIxn->testCalculateElectrostaticPairIxn();
+        mbpolReferenceElectrostaticsForcePme->wrapCalculateInducedDipolePairIxns();
+        WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn* wrapperForComputeElectrostaticPairIxn = new WrappedMBPolReferenceElectrostaticsForceForCalculateElectrostaticPairIxn();
+        std::vector<RealOpenMM> tholes;
+        for (int j=0; j<5; j++){
+            tholes.push_back(0.4);
+        }
+        wrapperForComputeElectrostaticPairIxn->setTholeParameters(tholes);
+        wrapperForComputeElectrostaticPairIxn->testCalculateElectrostaticPairIxn();
 
-        //WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge* wrapperForComputeWaterCharge = new WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge();
-        //wrapperForComputeWaterCharge->testComputeWaterCharge();
+        WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge* wrapperForComputeWaterCharge = new WrappedMBPolReferenceElectrostaticsForceForComputeWaterCharge();
+        wrapperForComputeWaterCharge->testComputeWaterCharge();
 
         testWater3();
 
-        //testWater3VirtualSite();
+        testWater3VirtualSite();
 
-        //WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn* mbpolReferenceElectrostaticsForcePmePair = new WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn();
-        //mbpolReferenceElectrostaticsForcePmePair->setMutualInducedDipoleTargetEpsilon(1e-7);
-        //mbpolReferenceElectrostaticsForcePmePair->setCutoffDistance( 10. );
-        //mbpolReferenceElectrostaticsForcePmePair->setAlphaEwald( 1e-15 );
-        //// std::vector<int> pmeGrid(3);
-        //std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
-        //mbpolReferenceElectrostaticsForcePmePair->setPmeGridDimensions(pmeGrid);
-        //// RealVec boxSize;
-        //boxSize[0] = boxSize[1] = boxSize[2] = 50;
-        //mbpolReferenceElectrostaticsForcePmePair->setPeriodicBoxSize(boxSize);
+        WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn* mbpolReferenceElectrostaticsForcePmePair = new WrappedMBPolReferencePmeElectrostaticsForceForcalculatePmeDirectElectrostaticPairIxn();
+        mbpolReferenceElectrostaticsForcePmePair->setTholeParameters(tholes);
+        mbpolReferenceElectrostaticsForcePmePair->setMutualInducedDipoleTargetEpsilon(1e-7);
+        mbpolReferenceElectrostaticsForcePmePair->setCutoffDistance( 10. );
+        mbpolReferenceElectrostaticsForcePmePair->setAlphaEwald( 1e-15 );
+        // std::vector<int> pmeGrid(3);
+        std::fill(pmeGrid.begin(), pmeGrid.end(), 20.);
+        mbpolReferenceElectrostaticsForcePmePair->setPmeGridDimensions(pmeGrid);
+        // RealVec boxSize;
+        boxSize[0] = boxSize[1] = boxSize[2] = 50;
+        mbpolReferenceElectrostaticsForcePmePair->setPeriodicBoxSize(boxSize);
 
-        //mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
+        mbpolReferenceElectrostaticsForcePmePair->testCalculateElectrostaticPairIxn();
 
-        //testWater3PMEHugeBox();
+        testWater3PMEHugeBox();
 
-        //testWater3VirtualSitePMEHugeBox();
+        testWater3VirtualSitePMEHugeBox();
 
-        //testWater3VirtualSitePMESmallBox();
+        testWater3VirtualSitePMESmallBox();
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;

@@ -149,28 +149,17 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
 	atomTypes.resize(numElectrostatics);
     dampingFactors.resize(numElectrostatics);
     polarity.resize(numElectrostatics);
-    axisTypes.resize(numElectrostatics);
-    multipoleAtomZs.resize(numElectrostatics);
-    multipoleAtomXs.resize(numElectrostatics);
-    multipoleAtomYs.resize(numElectrostatics);
-    multipoleAtomCovalentInfo.resize(numElectrostatics);
 
     int tholeIndex       = 0;
     for( int ii = 0; ii < numElectrostatics; ii++ ){
 
         // multipoles
 
-        int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
         double charge, dampingFactorD, polarityD;
         std::vector<double> dipolesD;
 		int moleculeIndex, atomType;
-        force.getElectrostaticsParameters(ii, charge, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY,
+        force.getElectrostaticsParameters(ii, charge,
                                      moleculeIndex, atomType, dampingFactorD, polarityD );
-
-        axisTypes[ii]                      = axisType;
-        multipoleAtomZs[ii]                = multipoleAtomZ;
-        multipoleAtomXs[ii]                = multipoleAtomX;
-        multipoleAtomYs[ii]                = multipoleAtomY;
 
         charges[ii]                        = static_cast<RealOpenMM>(charge);
 
@@ -180,19 +169,10 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
 		moleculeIndices[ii] = moleculeIndex;
 		atomTypes[ii] = atomType;
 
-        // covalent info
-
-        std::vector< std::vector<int> > covalentLists;
-        force.getCovalentMaps(ii, covalentLists );
-        multipoleAtomCovalentInfo[ii] = covalentLists;
-
     }
 
-    polarizationType = force.getPolarizationType();
-    if( polarizationType == MBPolElectrostaticsForce::Mutual ){
-        mutualInducedMaxIterations = force.getMutualInducedMaxIterations();
-        mutualInducedTargetEpsilon = force.getMutualInducedTargetEpsilon();
-    }
+    mutualInducedMaxIterations = force.getMutualInducedMaxIterations();
+    mutualInducedTargetEpsilon = force.getMutualInducedTargetEpsilon();
 
     includeChargeRedistribution = force.getIncludeChargeRedistribution();
     tholeParameters = force.getTholeParameters();
@@ -249,17 +229,8 @@ MBPolReferenceElectrostaticsForce* ReferenceCalcMBPolElectrostaticsForceKernel::
          mbpolReferenceElectrostaticsForce = new MBPolReferenceElectrostaticsForce( MBPolReferenceElectrostaticsForce::NoCutoff );
     }
 
-    // set polarization type
-
-    if( polarizationType == MBPolElectrostaticsForce::Mutual ){
-        mbpolReferenceElectrostaticsForce->setPolarizationType( MBPolReferenceElectrostaticsForce::Mutual );
-        mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon( mutualInducedTargetEpsilon );
-        mbpolReferenceElectrostaticsForce->setMaximumMutualInducedDipoleIterations( mutualInducedMaxIterations );
-    } else if( polarizationType == MBPolElectrostaticsForce::Direct ){
-        mbpolReferenceElectrostaticsForce->setPolarizationType( MBPolReferenceElectrostaticsForce::Direct );
-    } else {
-        throw OpenMMException("Polarization type not recognzied." );
-    }
+    mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon( mutualInducedTargetEpsilon );
+    mbpolReferenceElectrostaticsForce->setMaximumMutualInducedDipoleIterations( mutualInducedMaxIterations );
 
     mbpolReferenceElectrostaticsForce->setIncludeChargeRedistribution(includeChargeRedistribution);
     if (tholeParameters.size() > 0)
@@ -275,10 +246,9 @@ double ReferenceCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context
 
     vector<RealVec>& posData   = extractPositions(context);
     vector<RealVec>& forceData = extractForces(context);
-    RealOpenMM energy          = mbpolReferenceElectrostaticsForce->calculateForceAndEnergy( posData, charges, tholes,
-                                                                                         dampingFactors, polarity, axisTypes, 
-                                                                                         multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
-                                                                                         multipoleAtomCovalentInfo, forceData);
+    RealOpenMM energy          = mbpolReferenceElectrostaticsForce->calculateForceAndEnergy( posData, charges, moleculeIndices, atomTypes, tholes,
+                                                                                         dampingFactors, polarity,
+                                                                                         forceData);
 
     delete mbpolReferenceElectrostaticsForce;
 
@@ -295,10 +265,9 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(Cont
     for( unsigned int ii = 0; ii < inputGrid.size(); ii++ ){
         grid[ii] = inputGrid[ii];
     }
-    mbpolReferenceElectrostaticsForce->calculateElectrostaticPotential( posData, charges, tholes,
-                                                                    dampingFactors, polarity, axisTypes, 
-                                                                    multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
-                                                                    multipoleAtomCovalentInfo, grid, potential );
+    mbpolReferenceElectrostaticsForce->calculateElectrostaticPotential( posData, charges,moleculeIndices, atomTypes,  tholes,
+                                                                    dampingFactors, polarity,
+                                                                    grid, potential );
 
     outputElectrostaticPotential.resize( inputGrid.size() );
     for( unsigned int ii = 0; ii < inputGrid.size(); ii++ ){
@@ -322,10 +291,9 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments
 
     MBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = setupMBPolReferenceElectrostaticsForce( context );
     vector<RealVec>& posData                                     = extractPositions(context);
-    mbpolReferenceElectrostaticsForce->calculateMBPolSystemElectrostaticsMoments( masses, posData, charges, tholes,
-                                                                          dampingFactors, polarity, axisTypes, 
-                                                                          multipoleAtomZs, multipoleAtomXs, multipoleAtomYs,
-                                                                          multipoleAtomCovalentInfo, outputElectrostaticsMoments );
+    mbpolReferenceElectrostaticsForce->calculateMBPolSystemElectrostaticsMoments( masses, posData, charges, moleculeIndices, atomTypes, tholes,
+                                                                          dampingFactors, polarity,
+                                                                          outputElectrostaticsMoments );
 
     delete mbpolReferenceElectrostaticsForce;
 
@@ -340,15 +308,10 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::copyParametersToContext(Contex
 
     int tholeIndex = 0;
     for (int i = 0; i < numElectrostatics; ++i) {
-        int axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY;
         double charge, dampingFactorD, polarityD;
         std::vector<double> tholeD;
 		int moleculeIndex, atomType;
-        force.getElectrostaticsParameters(i, charge, axisType, multipoleAtomZ, multipoleAtomX, multipoleAtomY, moleculeIndex, atomType, dampingFactorD, polarityD);
-        axisTypes[i] = axisType;
-        multipoleAtomZs[i] = multipoleAtomZ;
-        multipoleAtomXs[i] = multipoleAtomX;
-        multipoleAtomYs[i] = multipoleAtomY;
+        force.getElectrostaticsParameters(i, charge, moleculeIndex, atomType, dampingFactorD, polarityD);
         moleculeIndices[i] = moleculeIndex;
         atomTypes[i] = atomType;
         charges[i] = (RealOpenMM) charge;
