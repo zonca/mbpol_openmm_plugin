@@ -230,12 +230,6 @@ extern "C" __global__ void computeWaterCharge(
 
             const real xx = Bohr_A;
             const real xx2 = xx*xx;
-
-        if (O == 0) {
-            int a = O;
-            //printf("der: %.4g %.4g %.4g\n", chargeDerivatives[3*a].x, chargeDerivatives[3*a].y,chargeDerivatives[3*a].z);
-            printf("efac: %d: %.4g \n", 1, dp2dcabc);
-        }
             dp1dr1 /= reoh/xx;
             dp1dr2 /= reoh/xx;
             dp2dr1 /= reoh/xx;
@@ -273,10 +267,6 @@ extern "C" __global__ void computeWaterCharge(
             posq[H1].w = chargeH1 + gamma2div1*(chargeH1 + chargeH2);
             posq[H2].w = chargeH2 + gamma2div1*(chargeH1 + chargeH2);
             posq[M].w = chargeO/gamma1;
-
-            //    printf("H1 %d charge %.6g\n", H1, posq[H1].w);
-            //    printf("H2 %d charge %.6g\n", H2, posq[H2].w);
-            //    printf("M %d charge %.6g\n", M, posq[M].w);
 
             dp1dr1 /= xx;
             dp1dr2 /= xx;
@@ -351,13 +341,6 @@ extern "C" __global__ void computeWaterCharge(
                 }
 
             }
-        if (O == 8) {
-            for (int a=O; a<=H2; a++){
-            printf("der: %.6g %.6g %.6g\n", chargeDerivatives[3*a].x, chargeDerivatives[3*a].y,chargeDerivatives[3*a].z);
-            printf("der: %.6g %.6g %.6g\n", chargeDerivatives[3*a+1].x, chargeDerivatives[3*a+1].y,chargeDerivatives[3*a+1].z);
-            printf("der: %.6g %.6g %.6g\n", chargeDerivatives[3*a+2].x, chargeDerivatives[3*a+2].y,chargeDerivatives[3*a+2].z);
-            }
-        }
 
         }
 
@@ -376,10 +359,6 @@ extern "C" __global__ void computeChargeDerivativesForces(
         const unsigned int M  = O + 3;
 
         const real scale = RECIP((real) 0x100000000);
-    if (threadIdx.x == 0) {
-    for (int i=0; i<NUM_ATOMS;i++)
-    printf("final value potentialbuffer %.6g\n", ((real) potentialBuffers[i]*scale)/4.184);
-}
 
         if (M <= numMultipoles) {
 

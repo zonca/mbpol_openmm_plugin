@@ -75,16 +75,6 @@ computeOneInteractionF1(
     #ifdef INCLUDE_CHARGE_REDISTRIBUTION
         potential += make_real2(ck * (bn0 - rr1 * (1 - scale1CC)), ci * (bn0 - rr1 * (1 - scale1CC)));
     #endif
-    //if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.0621) < 0.01))
-    if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (atom2.moleculeIndex ==1) & (atom2.atomType == 0))
-    {
-        printf("atom1.pos.x: %.8g\n", atom1.pos.x-1.8);
-        printf("atom2.pos.x: %.8g\n", atom2.pos.x-1.8);
-        printf("gl0: %.8g\n", gl0);
-        printf("scale1CC: %.8g\n", scale1CC);
-        printf("gf1: %.8g\n", gf1);
-        printf("erl: %.8g\n", forceFactor*(rr1*gl0*(1 - scale1CC))/4.184*ENERGY_SCALE_FACTOR);
-    }
 }
 
 
@@ -223,24 +213,5 @@ computeOneInteractionF2(
         potential += make_real2(-1 * sci4 * (bn1 - rr3 * (1 - scale3CD)), sci3 * (bn1 - rr3 * (1 - scale3CD)));
     #endif
 
-    // if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-50+0.19) < 0.001))
-    // {
-    //     printf("scale3CD: %.8g\n", scale3CD);
-    //     printf("first part: %.8g\n", forceFactor*0.5f*sci4*(rr3 * (1 - scale3CD) - bn1)*ci);
-    //     printf("second part: %.8g\n", forceFactor*0.5f*sci3*(ck*(bn1-rr3 * (1 - scale3CD))));
-    // }
-
-    // if ((atom1.moleculeIndex ==0) & (atom1.atomType == 0) & (abs(atom2.pos.x-1.8+0.0621) < 0.001))
-    // {
-    //     printf("atom1.pos.x: %.8g\n", atom1.pos.x-1.8);
-    //     printf("atom2.pos.x: %.8g\n", atom2.pos.x-1.8);
-    //     printf("gfi1: %.8g\n", gfi1);
-    //     printf("bn2*(gli1+glip1+scip2): %.8g\n", bn2*(gli1+glip1+scip2));
-    //     printf("bn2: %.8g\n", bn2);
-    //     printf("gli1: %.8g\n", gli1);
-    //     printf("glip1: %.8g\n", glip1);
-    //     printf("scip2: %.8g\n", scip2);
-    //     printf("gfri1: %.8g\n", gfri1);
-    // }
     force += ftm2;
 }

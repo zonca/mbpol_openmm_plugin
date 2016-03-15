@@ -121,16 +121,6 @@ __device__ void computeOneInteraction(AtomData& atom1, AtomData& atom2, real3 de
 }
 #endif
 
-/// if ((atom1.moleculeIndex == 0) & (atom1.atomType == 0) & (atom2.atomType ==1) & (atom2.moleculeIndex == 2)) {
-///     printf("OneInteraction %d,%d %d,%d\n", atom1.moleculeIndex, atom1.atomType, atom2.moleculeIndex, atom2.atomType);
-///     printf("damp %f\n", damp);
-///     printf("field1 %f\n", field2.x);
-///     printf("field1 %f\n", field2.y);
-///     printf("field1 %f\n", field2.z);
-///     printf("deltaE %f\n", deltaR);
-///     printf("factor %f\n", factor);
-/// }
-
 /**
  * Compute nonbonded interactions.
  */
