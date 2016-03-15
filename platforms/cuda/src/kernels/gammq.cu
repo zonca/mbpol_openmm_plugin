@@ -135,10 +135,6 @@ __device__ real gcf(const real& a, const real& x) {
 __device__ real gammq(const real& a, const real &x) {
      const int ASWITCH = 100;
 
-     if (!(x >= 0.0 && a > 0.0)) {
-         printf("gammq: x = %lf, a = %lf\n", x, a);
-     }
-
      assert(x >= 0.0 && a > 0.0);
 
      if (x == 0.0)
