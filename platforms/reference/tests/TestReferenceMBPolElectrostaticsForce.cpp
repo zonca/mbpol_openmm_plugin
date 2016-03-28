@@ -913,7 +913,7 @@ static void testWater3PMEHugeBox() {
 
     System system;
 
-    double boxDimension                               = 1.8;
+    double boxDimension                               = 50;
     Vec3 a( boxDimension, 0.0, 0.0 );
     Vec3 b( 0.0, boxDimension, 0.0 );
     Vec3 c( 0.0, 0.0, boxDimension );
@@ -1000,7 +1000,7 @@ static void testWater3PMEHugeBox() {
     context.setPositions(positions);
     context.applyConstraints(1e-4); // update position of virtual site
 
-    double tolerance          = 1.0e-04;
+    double tolerance          = 1.0e-03;
 
 //    // test energy and forces
 //
@@ -1009,9 +1009,9 @@ static void testWater3PMEHugeBox() {
     double energy              = state.getPotentialEnergy();
     double cal2joule = 4.184;
 
-    double expectedEnergy = -13.0493*cal2joule;
+    double expectedEnergy = -7.08652*cal2joule;
     std::cout << "Energy: " << energy/cal2joule << " Kcal/mol "<< std::endl;
-    std::cout << "Expected energy: " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
+    std::cout << "Expected energy (from cluster computation): " << expectedEnergy/cal2joule << " Kcal/mol "<< std::endl;
 
     std::cout  << std::endl << "AEwald:" << mbpolElectrostaticsForce->getAEwald() << std::endl;
     mbpolElectrostaticsForce->getPmeGridDimensions(pmeGridDimension);
@@ -1020,15 +1020,15 @@ static void testWater3PMEHugeBox() {
 
     std::vector<Vec3> expectedForces(4*3);
 
-    expectedForces[0]         = Vec3( -1.4269, 0.448043, -5.04341   );
-    expectedForces[1]         = Vec3( 2.9682, 0.701196, -3.20899    );
-    expectedForces[2]         = Vec3( -1.63706, 1.94763, -1.8898    );
-    expectedForces[3]         = Vec3( -2.92071, 1.4094, -2.05605    );
-    expectedForces[4]         = Vec3( 3.38821, 2.85987, 11.0781     );
-    expectedForces[5]         = Vec3( 2.3639, 1.41592, -0.900715    );
-    expectedForces[6]         = Vec3( 0.537103, 2.18093, 1.70919    );
-    expectedForces[7]         = Vec3( -2.14789, -4.38903, 0.972416 );
-    expectedForces[8]         = Vec3(-1.12484, -6.57397, -0.660752  );
+    expectedForces[0]         = Vec3( -3.19433, 2.43239, -10.3645);
+    expectedForces[1]         = Vec3( 2.85289, -1.05713, 1.48109);
+    expectedForces[2]         = Vec3( 0.0173808, -0.452184, 2.42326);
+    expectedForces[3]         = Vec3( 1.70128, 3.95891, -3.18597);
+    expectedForces[4]         = Vec3( 0.245021, 0.703767, 8.78742);
+    expectedForces[5]         = Vec3( -0.131845, -0.335554, 0.790616);
+    expectedForces[6]         = Vec3( 2.88521, 4.3743, 1.63126);
+    expectedForces[7]         = Vec3( -2.57406, -4.43219, -0.234785);
+    expectedForces[8]         = Vec3( -1.80153, -5.1923, -1.32836);
 
     // gradient -> forces
     for (int i=0; i<numberOfParticles; i++) {
@@ -1083,22 +1083,22 @@ static void testWater3PMEHugeBox() {
         }
     #endif
         std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl;
-        //std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <precomputerd finite differences>" << std::endl;
+        std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <precomputerd finite differences>" << std::endl;
 #ifdef COMPUTE_FINITE_DIFFERENCES_FORCES
         std::cout << "Force atom " << i << ": " << finiteDifferenceForces[i] << " Kcal/mol/A <openmm-mbpol finite differences>" << std::endl;
 #endif
-        //std::cout << std::endl;
+        std::cout << std::endl;
     }
 
-//    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
-//
-//    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
-//
-//    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-//        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
-//    }
-//
-//    std::cout << "Test Successful: " << testName << std::endl << std::endl;
+    std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
+
+    ASSERT_EQUAL_TOL_MOD( expectedEnergy, energy, tolerance, testName );
+
+    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
+        ASSERT_EQUAL_VEC_MOD( expectedForces[ii], forces[ii], tolerance, testName );
+    }
+
+    std::cout << "Test Successful: " << testName << std::endl << std::endl;
 
 
     return;
