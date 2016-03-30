@@ -87,6 +87,8 @@ public:
                                      Context& context, std::vector< double >& outputElectrostaticPotential);
 
     void updateParametersInContext(Context& context);
+
+    void setTholeParameters( std::vector< double > tholeP);
 };
 
 class MBPolOneBodyForce : public OpenMM::Force {
