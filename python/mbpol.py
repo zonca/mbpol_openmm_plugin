@@ -330,11 +330,10 @@ class MBPolElectrostaticsForceGenerator:
                 raise ValueError(outputString)
 
         v = mbpolplugin.vectord()
-        thole_components = ['thole-charge-charge', 'thole-charge-dipole', 'thole-dipole-dipole', 'thole-dipole-dipole-singlebond']
+        thole_components = ['thole-charge-charge', 'thole-charge-dipole', 'thole-dipole-dipole', 'thole-dipole-dipole-singlebond', 'thole-dipole-dipole']
         for each in thole_components:
             v.push_back(float(element.attrib[each]))
         generator.thole = v
-        
         for residue in element.findall('Residue'):
         #<Residue name="HOH" class1="O" class2="H" class3="H" />
             name = residue.attrib["name"]
