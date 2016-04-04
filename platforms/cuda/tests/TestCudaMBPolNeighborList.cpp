@@ -28,10 +28,16 @@
  * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE  *
  * USE OR OTHER DEALINGS IN THE SOFTWARE.                                     *
  * -------------------------------------------------------------------------- */
-
 /**
  * This tests the Cuda implementation of MBPolOneBodyForce.
  */
+
+/* If you need to test the neighbor list you need to add
+ * std::cout << "Number of Neighbor Pairs: " << *numPairs << std::endl;
+ * at the end of double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy)
+ * in CudaMBPolKernels.cpp around line 572
+ * */
+
 
 #include "OpenMMMBPol.h"
 #include "openmm/internal/AssertionUtilities.h"
@@ -57,9 +63,9 @@ const double DegreesToRadians = 3.14159265/180.0;
 
 extern "C" OPENMM_EXPORT void registerMBPolCudaKernelFactories();
 
-void testNeighborListBody( double boxDimension, bool addPositionOffset ) {
+void testNeighborList3( double boxDimension ) {
 
-    std::string testName      = "testNeighborListBody";
+    std::string testName      = "testNeighborList3";
 
     System system;
     int numberOfParticles          = 9;   // only will run if there are more than 3 molecules
@@ -99,52 +105,23 @@ void testNeighborListBody( double boxDimension, bool addPositionOffset ) {
     std::vector<Vec3> expectedForces(numberOfParticles);
     double expectedEnergy;
 
-    positions[0]             = Vec3( 100, 0, 0  );
-    positions[1]             = Vec3( 101, 0, 0  );
-    positions[2]             = Vec3( 102, 0, 0  );
+    positions[0]             = Vec3( 0, 0, 0  );
+    positions[1]             = Vec3( 1, 0, 0  );
+    positions[2]             = Vec3( 2, 0, 0  );
 
-    positions[3]             = Vec3( 0, 100, 0  );
-    positions[4]             = Vec3( 0, 101, 0  );
-    positions[5]             = Vec3( 0, 102, 0  );
+    positions[3]             = Vec3( 0, 0, 0  );
+    positions[4]             = Vec3( 0, 1, 0  );
+    positions[5]             = Vec3( 0, 2, 0  );
 
-    positions[6]             = Vec3( 0, 0, 100 );
-    positions[7]             = Vec3( 0, 0, 101 );
-    positions[8]             = Vec3( 0, 0, 102  );
-
-//    positions[9]             = Vec3( 5.588472140e-01,  -2.006699172e+00, 1.392786582e-01  );
-//	positions[10]             = Vec3( 9.411558180e-01,  -1.541226676e+00,  -6.163293071e-01  );
-//	positions[11]             = Vec3( 9.858551734e-01,  -1.567124294e+00, 8.830970941e-01  );
+    positions[6]             = Vec3( 0, 0, 0 );
+    positions[7]             = Vec3( 0, 0, 1 );
+    positions[8]             = Vec3( 0, 0, 2  );
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
             positions[i][j] *= 1e-1;
         }
     }
-
-    if (addPositionOffset) {
-        // move second molecule 1 box dimension in Y direction
-        positions[3][1] += boxDimension;
-        positions[4][1] += boxDimension;
-        positions[5][1] += boxDimension;
-    }
-
-    expectedForces[0]     = Vec3(  0.29919011, -0.34960381, -0.16238472 );
-    expectedForces[1]     = Vec3(  0.34138467, -0.01255068, -0.00998383 );
-    expectedForces[2]     = Vec3( -0.44376649,  0.03687577,  0.54604510 );
-    expectedForces[3]     = Vec3( -0.01094164, -0.36171476, -0.05130395 );
-    expectedForces[4]     = Vec3(  0.24939202,  1.29382952,  0.22930712 );
-    expectedForces[5]     = Vec3( -0.13250943, -0.19313418, -0.34123592 );
-    expectedForces[6]     = Vec3(  0.56722869,  0.46036139, -0.39999973 );
-    expectedForces[7]     = Vec3( -0.75669111, -0.76132457, -0.29799486 );
-    expectedForces[8]     = Vec3( -0.11328682, -0.11273867,  0.48755080 );
-
-
-    // gradients => forces
-    for( unsigned int ii = 0; ii < expectedForces.size(); ii++ ){
-        expectedForces[ii] *= -1;
-    }
-
-    expectedEnergy        = 0.15586446;
 
     system.addForce(mbpolThreeBodyForce);
     std::string platformName;
@@ -158,38 +135,157 @@ void testNeighborListBody( double boxDimension, bool addPositionOffset ) {
     State state                      = context.getState(State::Forces | State::Energy);
     std::vector<Vec3> forces         = state.getForces();
 
-    for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-        forces[ii][0] /= CalToJoule*10;
-        forces[ii][1] /= CalToJoule*10;
-        forces[ii][2] /= CalToJoule*10;
+    std::cout << "Expected number of Neighbor Pairs: " << 3 << std::endl;
+}
+
+void testNeighborList1( double boxDimension ) {
+
+    std::string testName      = "testNeighborList1";
+
+    System system;
+    int numberOfParticles          = 9;   // only will run if there are more than 3 molecules
+    MBPolThreeBodyForce* mbpolThreeBodyForce = new MBPolThreeBodyForce();
+    double cutoff = 10;
+    mbpolThreeBodyForce->setCutoff( cutoff );
+
+    if( boxDimension > 0.0 ){
+            Vec3 a( boxDimension, 0.0, 0.0 );
+            Vec3 b( 0.0, boxDimension, 0.0 );
+            Vec3 c( 0.0, 0.0, boxDimension );
+            system.setDefaultPeriodicBoxVectors( a, b, c );
+            mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffPeriodic);
+        } else {
+            mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffNonPeriodic);
+        }
+
+    unsigned int particlesPerMolecule = 3;
+
+    std::vector<int> particleIndices(particlesPerMolecule);
+    for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
+        system.addParticle( 1.5999000e+01 );
+        system.addParticle( 1.0080000e+00 );
+        system.addParticle( 1.0080000e+00 );
+        particleIndices[0] = jj;
+        particleIndices[1] = jj+1;
+        particleIndices[2] = jj+2;
+        mbpolThreeBodyForce->addParticle( particleIndices);
+        mbpolThreeBodyForce->addParticle( particleIndices);
+        mbpolThreeBodyForce->addParticle( particleIndices);
     }
 
-    double tolerance = 1.0e-03;
 
+    LangevinIntegrator integrator(0.0, 0.1, 0.01);
 
-    double energy = state.getPotentialEnergy() / CalToJoule;
+    std::vector<Vec3> positions(numberOfParticles);
+    std::vector<Vec3> expectedForces(numberOfParticles);
+    double expectedEnergy;
 
-    std::cout << "Energy: " << energy << " Kcal/mol "<< std::endl;
-    std::cout << "Expected energy: " << expectedEnergy << " Kcal/mol "<< std::endl;
+    positions[0]             = Vec3( 0, 0, 0  );
+    positions[1]             = Vec3( 1, 0, 0  );
+    positions[2]             = Vec3( 2, 0, 0  );
 
-    std::cout  << std::endl << "Forces:" << std::endl;
+    positions[3]             = Vec3( 0, 0, 0  );
+    positions[4]             = Vec3( 0, 1, 0  );
+    positions[5]             = Vec3( 0, 2, 0  );
+
+    positions[6]             = Vec3( 0, 0, 100 );
+    positions[7]             = Vec3( 0, 0, 101 );
+    positions[8]             = Vec3( 0, 0, 102  );
 
     for (int i=0; i<numberOfParticles; i++) {
-           std::cout << "Force atom " << i << ": " << expectedForces[i] << " Kcal/mol/A <mbpol>" << std::endl;
-           std::cout << "Force atom " << i << ": " << forces[i] << " Kcal/mol/A <openmm-mbpol>" << std::endl << std::endl;
-       }
+        for (int j=0; j<3; j++) {
+            positions[i][j] *= 1e-1;
+        }
+    }
 
-       std::cout << "Comparison of energy and forces with tolerance: " << tolerance << std::endl << std::endl;
+    system.addForce(mbpolThreeBodyForce);
+    std::string platformName;
+    #define AngstromToNm 0.1
+    #define CalToJoule   4.184
 
+    platformName = "CUDA";
+    Context context(system, integrator, Platform::getPlatformByName( platformName ) );
 
+    context.setPositions(positions);
+    State state                      = context.getState(State::Forces | State::Energy);
+    std::vector<Vec3> forces         = state.getForces();
 
-   ASSERT_EQUAL_TOL( expectedEnergy, energy, tolerance );
-
-   for( unsigned int ii = 0; ii < forces.size(); ii++ ){
-       ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
-   }
-   std::cout << "Test Successful: " << testName << std::endl << std::endl;
+    std::cout << "Expected number of Neighbor Pairs: " << 1 << std::endl;
 }
+
+void testNeighborList0( double boxDimension ) {
+
+    std::string testName      = "testNeighborList0";
+
+    System system;
+    int numberOfParticles          = 9;   // only will run if there are more than 3 molecules
+    MBPolThreeBodyForce* mbpolThreeBodyForce = new MBPolThreeBodyForce();
+    double cutoff = 10;
+    mbpolThreeBodyForce->setCutoff( cutoff );
+
+    if( boxDimension > 0.0 ){
+            Vec3 a( boxDimension, 0.0, 0.0 );
+            Vec3 b( 0.0, boxDimension, 0.0 );
+            Vec3 c( 0.0, 0.0, boxDimension );
+            system.setDefaultPeriodicBoxVectors( a, b, c );
+            mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffPeriodic);
+        } else {
+            mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffNonPeriodic);
+        }
+
+    unsigned int particlesPerMolecule = 3;
+
+    std::vector<int> particleIndices(particlesPerMolecule);
+    for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
+        system.addParticle( 1.5999000e+01 );
+        system.addParticle( 1.0080000e+00 );
+        system.addParticle( 1.0080000e+00 );
+        particleIndices[0] = jj;
+        particleIndices[1] = jj+1;
+        particleIndices[2] = jj+2;
+        mbpolThreeBodyForce->addParticle( particleIndices);
+        mbpolThreeBodyForce->addParticle( particleIndices);
+        mbpolThreeBodyForce->addParticle( particleIndices);
+    }
+
+
+    LangevinIntegrator integrator(0.0, 0.1, 0.01);
+
+    std::vector<Vec3> positions(numberOfParticles);
+    std::vector<Vec3> expectedForces(numberOfParticles);
+    double expectedEnergy;
+
+    positions[0]             = Vec3( 0, 0, 0  );
+    positions[1]             = Vec3( 1, 0, 0  );
+    positions[2]             = Vec3( 2, 0, 0  );
+
+    positions[3]             = Vec3( 0, 100, 0  );
+    positions[4]             = Vec3( 0, 101, 0  );
+    positions[5]             = Vec3( 0, 102, 0  );
+
+    positions[6]             = Vec3( 0, 0, 100 );
+    positions[7]             = Vec3( 0, 0, 101 );
+    positions[8]             = Vec3( 0, 0, 102  );
+
+    for (int i=0; i<numberOfParticles; i++) {
+        for (int j=0; j<3; j++) {
+            positions[i][j] *= 1e-1;
+        }
+    }
+
+    system.addForce(mbpolThreeBodyForce);
+    std::string platformName;
+    #define AngstromToNm 0.1
+    #define CalToJoule   4.184
+
+    platformName = "CUDA";
+    Context context(system, integrator, Platform::getPlatformByName( platformName ) );
+
+    context.setPositions(positions);
+    State state                      = context.getState(State::Forces | State::Energy);
+    std::vector<Vec3> forces         = state.getForces();
+
+    std::cout << "Expected number of Neighbor Pairs: " << 0 << std::endl;}
 
 int main(int argc, char* argv[]) {
     try {
@@ -200,7 +296,9 @@ int main(int argc, char* argv[]) {
 
 
         double boxDimension = 0;
-        testNeighborListBody( boxDimension, false );
+        testNeighborList3( boxDimension );
+        testNeighborList1( boxDimension );
+        testNeighborList0( boxDimension );
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
