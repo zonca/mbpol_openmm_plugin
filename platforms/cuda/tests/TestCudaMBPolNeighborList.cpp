@@ -57,12 +57,12 @@ const double DegreesToRadians = 3.14159265/180.0;
 
 extern "C" OPENMM_EXPORT void registerMBPolCudaKernelFactories();
 
-void testThreeBody( double boxDimension, bool addPositionOffset ) {
+void testNeighborListBody( double boxDimension, bool addPositionOffset ) {
 
-    std::string testName      = "testMBPolThreeBodyInteraction";
+    std::string testName      = "testNeighborListBody";
 
     System system;
-    int numberOfParticles          = 9;
+    int numberOfParticles          = 9;   // only will run if there are more than 3 molecules
     MBPolThreeBodyForce* mbpolThreeBodyForce = new MBPolThreeBodyForce();
     double cutoff = 10;
     mbpolThreeBodyForce->setCutoff( cutoff );
@@ -88,6 +88,8 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
         particleIndices[1] = jj+1;
         particleIndices[2] = jj+2;
         mbpolThreeBodyForce->addParticle( particleIndices);
+        mbpolThreeBodyForce->addParticle( particleIndices);
+        mbpolThreeBodyForce->addParticle( particleIndices);
     }
 
 
@@ -97,22 +99,25 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
     std::vector<Vec3> expectedForces(numberOfParticles);
     double expectedEnergy;
 
-    positions[0]             = Vec3( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
-    positions[1]             = Vec3( -6.218989773e-01, -6.009430735e-01,  1.572437625e+00  );
-    positions[2]             = Vec3( -2.017613812e+00, -4.190350349e-01,  2.239642849e+00  );
+    positions[0]             = Vec3( 100, 0, 0  );
+    positions[1]             = Vec3( 101, 0, 0  );
+    positions[2]             = Vec3( 102, 0, 0  );
 
-    positions[3]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
-    positions[4]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
-    positions[5]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
+    positions[3]             = Vec3( 0, 100, 0  );
+    positions[4]             = Vec3( 0, 101, 0  );
+    positions[5]             = Vec3( 0, 102, 0  );
 
-    positions[6]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
-    positions[7]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
-    positions[8]             = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
+    positions[6]             = Vec3( 0, 0, 100 );
+    positions[7]             = Vec3( 0, 0, 101 );
+    positions[8]             = Vec3( 0, 0, 102  );
+
+//    positions[9]             = Vec3( 5.588472140e-01,  -2.006699172e+00, 1.392786582e-01  );
+//	positions[10]             = Vec3( 9.411558180e-01,  -1.541226676e+00,  -6.163293071e-01  );
+//	positions[11]             = Vec3( 9.858551734e-01,  -1.567124294e+00, 8.830970941e-01  );
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
-        	positions[i][j] = 1e-1*positions[i][j] + 25;
-        	//positions[i][j] *= 1e-1;
+            positions[i][j] *= 1e-1;
         }
     }
 
@@ -159,7 +164,7 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
         forces[ii][2] /= CalToJoule*10;
     }
 
-    double tolerance = 1.0e-01;
+    double tolerance = 1.0e-03;
 
 
     double energy = state.getPotentialEnergy() / CalToJoule;
@@ -184,85 +189,18 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
        ASSERT_EQUAL_VEC( expectedForces[ii], forces[ii], tolerance );
    }
    std::cout << "Test Successful: " << testName << std::endl << std::endl;
-
 }
-
-//void testImageMolecules( bool runTestWithAtomImaging, bool addPositionOffset) {
-//
-//    double boxDimension = 10.;
-//    RealVec box( boxDimension, boxDimension, boxDimension );
-//
-//    unsigned int numberOfParticles = 6;
-//    std::vector<RealVec> particlePositions(numberOfParticles);
-//
-//    particlePositions[0]             = RealVec( 0., 0., 0. );
-//    particlePositions[1]             = RealVec( 0., 1., 0. );
-//    particlePositions[2]             = RealVec( 0., 0., 0. );
-//
-//    particlePositions[3]             = RealVec( 4.5, 0., 0. );
-//    particlePositions[4]             = RealVec( 5.5, 0., 0. );
-//    particlePositions[5]             = RealVec( 4.5, 0., 0. );
-//
-//    std::vector<RealVec> originalParticlePositions(numberOfParticles);
-//    originalParticlePositions = particlePositions;
-//
-//    if (addPositionOffset) {
-//        // move second molecule 1 box dimension in Y direction
-//        particlePositions[3][0] += boxDimension;
-//        particlePositions[4][0] += boxDimension;
-//        particlePositions[5][0] += boxDimension;
-//    }
-//
-//    std::vector<std::vector<int> > allParticleIndices(6);
-//
-//    allParticleIndices[0].push_back(0);
-//    allParticleIndices[0].push_back(1);
-//    allParticleIndices[0].push_back(2);
-//
-//    allParticleIndices[3].push_back(3);
-//    allParticleIndices[3].push_back(4);
-//    allParticleIndices[3].push_back(5);
-//
-//    double imagedPositions[numberOfParticles*2];
-//    imageMolecules(box, particlePositions);
-//
-//    if (runTestWithAtomImaging)
-//    {
-//        // Check that making periodic images of everything with respect to the first oxygen fails
-//        imageParticles(box, particlePositions[0], particlePositions[4]);
-//        imageParticles(box, particlePositions[0], particlePositions[5]);
-//    }
-//
-//    RealVec tempPosition;
-//    for (int i=0; i<numberOfParticles; i++) {
-//        std::cout << "Position atom " << i << ": " << originalParticlePositions[i] << " A" << std::endl;
-//        std::cout << "Position atom " << i << ": " << particlePositions[i] << " A" << std::endl;
-//    }
-//
-//    for (int i=0; i<numberOfParticles; i++) {
-//        ASSERT_EQUAL_VEC( originalParticlePositions[i], particlePositions[i], 1e-6 );
-//    }
-//}
 
 int main(int argc, char* argv[]) {
     try {
         registerMBPolCudaKernelFactories();
         if (argc > 1)
             Platform::getPlatformByName("CUDA").setPropertyDefaultValue("CudaPrecision", string(argv[1]));
-        std::cout << "TestCudaMBPolThreeBodyForce running test..." << std::endl;
+        std::cout << "TestCudaMBPolNeighborList running test..." << std::endl;
 
 
         double boxDimension = 0;
-        std::cout << "TestCudaMBPolThreeBodyForce Cluster" << std::endl;
-        testThreeBody( boxDimension, false );
-
-        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions" << std::endl;
-        boxDimension = 50;
-        testThreeBody( boxDimension, false);
-
-        std::cout << "TestCudaMBPolThreeBodyForce  Periodic boundary conditions with boxDimension offset on second water molecule" << std::endl;
-        boxDimension = 50;
-        testThreeBody( boxDimension, true);
+        testNeighborListBody( boxDimension, false );
 
     } catch(const std::exception& e) {
         std::cout << "exception: " << e.what() << std::endl;
