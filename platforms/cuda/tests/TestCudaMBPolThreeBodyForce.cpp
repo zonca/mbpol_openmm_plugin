@@ -159,7 +159,7 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
         forces[ii][2] /= CalToJoule*10;
     }
 
-    double tolerance = 1.0e-01;
+    double tolerance = 1.0e-04;
 
 
     double energy = state.getPotentialEnergy() / CalToJoule;
