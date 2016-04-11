@@ -530,51 +530,51 @@ extern "C" __device__ real computeInteraction(
 			}
 				
 			//extern "C" __device__ void computeGVar(real g, real k, real r0, real3 * a1, real3 * a2, real3 * g1, real3 * g2)
-//			for (int n = 0; n < 9; ++n)
-//				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
+			for (int n = 0; n < 9; ++n)
+				printf("b4 forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
 
 			i = 0;
-        	computeGVar(g+i, kHH_intra, dHH_intra, positions +Ha1, positions +Ha2, forces +Ha1, forces +Ha2); ++i; //0
-        	computeGVar(g+i, kHH_intra, dHH_intra, positions +Hb1, positions +Hb2, forces +Hb1, forces +Hb2); ++i;
-        	computeGVar(g+i, kHH_intra, dHH_intra, positions +Hc1, positions +Hc2, forces +Hc1, forces +Hc2); ++i;
-        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oa, positions +Ha1, forces +Oa, forces +Ha1); ++i;
-        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oa, positions +Ha2, forces +Oa, forces +Ha1); ++i;
-        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Ob, positions +Hb1, forces +Ob, forces +Hb1); ++i; //5
-        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Ob, positions +Hb2, forces +Ob, forces +Hb2); ++i;
-        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oc, positions +Hc1, forces +Oc, forces +Hc1); ++i;
-        	computeGVar(g+i, kOH_intra, dOH_intra, positions +Oc, positions +Hc2, forces +Oc, forces +Hc2); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hb1, forces +Ha1, forces +Hb1); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hb2, forces +Ha1, forces +Hb2); ++i; //10
-        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hc1, forces +Ha1, forces +Hc1); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Ha1, positions +Hc2, forces +Ha1, forces +Hc2); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hb1, forces +Ha2, forces +Hb1); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hb2, forces +Ha2, forces +Hb2); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hc1, forces +Ha2, forces +Hc1); ++i; //15
-        	computeGVar(g+i, kHH, dHH, positions +Ha2, positions +Hc2, forces +Ha2, forces +Hc2); ++i;
-			computeGVar(g+i, kHH, dHH, positions +Hb1, positions +Hc1, forces +Hb1, forces +Hc1); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Hb1, positions +Hc2, forces +Hb1, forces +Hc2); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Hb2, positions +Hc1, forces +Hb2, forces +Hc1); ++i;
-        	computeGVar(g+i, kHH, dHH, positions +Hb2, positions +Hc2, forces +Hb2, forces +Hc2); ++i; //20
-        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hb1, forces +Oa, forces +Hb1); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hb2, forces +Oa, forces +Hb2); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hc1, forces +Oa, forces +Hc1); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Oa, positions +Hc2, forces +Oa, forces +Hc2); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Ha1, forces +Ob, forces +Ha1); ++i; //25
-        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Ha2, forces +Ob, forces +Ha2); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Hc1, forces +Ob, forces +Hc1); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Ob, positions +Hc2, forces +Ob, forces +Hc2); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Ha1, forces +Oc, forces +Ha1); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Ha2, forces +Oc, forces +Ha2); ++i; //30
-        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Hb1, forces +Oc, forces +Hb1); ++i;
-        	computeGVar(g+i, kOH, dOH, positions +Oc, positions +Hb2, forces +Oc, forces +Hb2); ++i;
-        	computeGVar(g+i, kOO, dOO, positions +Oa, positions +Ob, forces +Oa, forces +Ob); ++i;
-        	computeGVar(g+i, kOO, dOO, positions +Oa, positions +Oc, forces +Oa, forces +Oc); ++i;
-        	computeGVar(g+i, kOO, dOO, positions +Ob, positions +Oc, forces +Ob, forces +Oc); ++i; //35
+        	computeGVar(g+i, kHH_intra, dHH_intra, positions+ Ha1, positions+ Ha2, forces+ Ha1, forces+ Ha2); ++i; //0
+        	computeGVar(g+i, kHH_intra, dHH_intra, positions+ Hb1, positions+ Hb2, forces+ Hb1, forces+ Hb2); ++i;
+        	computeGVar(g+i, kHH_intra, dHH_intra, positions+ Hc1, positions+ Hc2, forces+ Hc1, forces+ Hc2); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions+  Oa, positions+ Ha1, forces+  Oa, forces+ Ha1); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions+  Oa, positions+ Ha2, forces+  Oa, forces+ Ha2); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions+  Ob, positions+ Hb1, forces+  Ob, forces+ Hb1); ++i; //5
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions+  Ob, positions+ Hb2, forces+  Ob, forces+ Hb2); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions+  Oc, positions+ Hc1, forces+  Oc, forces+ Hc1); ++i;
+        	computeGVar(g+i, kOH_intra, dOH_intra, positions+  Oc, positions+ Hc2, forces+  Oc, forces+ Hc2); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha1, positions+ Hb1, forces+ Ha1, forces+ Hb1); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha1, positions+ Hb2, forces+ Ha1, forces+ Hb2); ++i; //10
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha1, positions+ Hc1, forces+ Ha1, forces+ Hc1); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha1, positions+ Hc2, forces+ Ha1, forces+ Hc2); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha2, positions+ Hb1, forces+ Ha2, forces+ Hb1); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha2, positions+ Hb2, forces+ Ha2, forces+ Hb2); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha2, positions+ Hc1, forces+ Ha2, forces+ Hc1); ++i; //15
+        	computeGVar(g+i,       kHH,       dHH, positions+ Ha2, positions+ Hc2, forces+ Ha2, forces+ Hc2); ++i;
+			computeGVar(g+i,       kHH,       dHH, positions+ Hb1, positions+ Hc1, forces+ Hb1, forces+ Hc1); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Hb1, positions+ Hc2, forces+ Hb1, forces+ Hc2); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Hb2, positions+ Hc1, forces+ Hb2, forces+ Hc1); ++i;
+        	computeGVar(g+i,       kHH,       dHH, positions+ Hb2, positions+ Hc2, forces+ Hb2, forces+ Hc2); ++i; //20
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oa, positions+ Hb1, forces+  Oa, forces+ Hb1); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oa, positions+ Hb2, forces+  Oa, forces+ Hb2); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oa, positions+ Hc1, forces+  Oa, forces+ Hc1); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oa, positions+ Hc2, forces+  Oa, forces+ Hc2); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Ob, positions+ Ha1, forces+  Ob, forces+ Ha1); ++i; //25
+        	computeGVar(g+i,       kOH,       dOH, positions+  Ob, positions+ Ha2, forces+  Ob, forces+ Ha2); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Ob, positions+ Hc1, forces+  Ob, forces+ Hc1); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Ob, positions+ Hc2, forces+  Ob, forces+ Hc2); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oc, positions+ Ha1, forces+  Oc, forces+ Ha1); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oc, positions+ Ha2, forces+  Oc, forces+ Ha2); ++i; //30
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oc, positions+ Hb1, forces+  Oc, forces+ Hb1); ++i;
+        	computeGVar(g+i,       kOH,       dOH, positions+  Oc, positions+ Hb2, forces+  Oc, forces+ Hb2); ++i;
+        	computeGVar(g+i,       kOO,       dOO, positions+  Oa, positions+  Ob, forces+  Oa, forces+  Ob); ++i;
+        	computeGVar(g+i,       kOO,       dOO, positions+  Oa, positions+  Oc, forces+  Oa, forces+  Oc); ++i;
+        	computeGVar(g+i,       kOO,       dOO, positions+  Ob, positions+  Oc, forces+  Ob, forces+  Oc); ++i; //35
 			//degbuging gradients
-//        	for (int i = 0; i<36; i++)
-//        		printf("after computeGVar g[%d] = %lf\n", i, g[i]);
-//			for (int n = 0; n < 9; ++n)
-//				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
+//            for (int i = 0; i<36; i++)
+//          	  printf("after g_var g[%d] = %lf\n", i, g[i]);
+			for (int n = 0; n < 9; ++n)
+				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
         	gab *= (sac + sbc)*tempEnergy/drab;
             gac *= (sab + sbc)*tempEnergy/drac;
             gbc *= (sab + sac)*tempEnergy/drbc;
@@ -696,7 +696,7 @@ extern "C" __global__ void computeThreeBodyForce(
 //             LOAD_PARTICLE_DATA;
 //             COMPUTE_INTERACTION;
         	   real computed_energy = computeInteraction(atom1, atom2, atom3, posq, &periodicBoxSize, forces);
-        	   printf("computed energy = %lf for atoms { %d, %d, %d } in thread: %d\n", computed_energy, atom1, atom2, atom3, threadIdx.x);
+//        	   printf("computed energy = %lf for atoms { %d, %d, %d } in thread: %d\n", computed_energy, atom1, atom2, atom3, threadIdx.x);
         	   energy += computed_energy;
         	   int oxygens[] = {atom3, atom2, atom1}; // ordered to match ref
         	   for (int j = 0, k = 0; j<3; j++){// j used to select oxygen index, k for index in force array
