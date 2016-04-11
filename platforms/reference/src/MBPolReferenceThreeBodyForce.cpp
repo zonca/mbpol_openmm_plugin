@@ -30,8 +30,6 @@
 #include "mbpol_3body_constants.h"
 #include "poly-3b-v2x.h"
 #include <list>
-#include <iostream>
-#include <cstdio>
 
 using std::vector;
 using OpenMM::RealVec;
@@ -85,9 +83,6 @@ void g_var(const double& g,
            const OpenMM::RealVec& a1, const OpenMM::RealVec& a2,
            OpenMM::RealVec& g1,       OpenMM::RealVec& g2)
 {
-//	printf ("parameter check of computeGVar: g = %10lf, k = %10lf, r0 = %10lf, a1 = < %10lf, %10lf, %10lf>, a2 = < %10lf, %10lf, %10lf>, g1 = < %10lf, %10lf, %10lf> g2 = < %10lf, %10lf, %10lf>\n",
-//			g, k, r0, a1[0], a1[1], a1[2], a2[0], a2[1], a2[2], g1[0], g1[1], g1[2], g2[0], g2[1], g2[2]);
-
     const double dx[3] = {(a1[0] - a2[0])*nm_to_A,
                           (a1[1] - a2[1])*nm_to_A,
                           (a1[2] - a2[2])*nm_to_A};
@@ -146,14 +141,10 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
             for (unsigned int i=0; i < 3; i++)
                 allPositions.push_back(particlePositions[allParticleIndices[*it][i]]);
         }
-//	for (int i = 0; i<9; i++) {
-//		printf("before imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, allPositions[i][0], allPositions[i][1], allPositions[i][2]);
-//	}
+
         if( _nonbondedMethod == CutoffPeriodic )
             imageMolecules(_periodicBoxDimensions, allPositions);
-//	for (int i = 0; i<9; i++) {
-//		printf(" after imaging positions[%d] = <%10lf, %10lf, %10lf>\n", i, allPositions[i][0], allPositions[i][1], allPositions[i][2]);
-//	}
+
         RealVec rab, rac, rbc;
         double drab(0), drac(0), drbc(0);
 
@@ -165,14 +156,10 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
 
         rbc = (allPositions[Ob] - allPositions[Oc])*nm_to_A;
         drbc += rbc.dot(rbc);
-//		printf("rab = <%lf, %lf, %lf>\n",rab[0], rab[1], rab[2]);
-//		printf("rac = <%lf, %lf, %lf>\n",rac[0], rac[1], rac[2]);
-//		printf("rbc = <%lf, %lf, %lf>\n",rbc[0], rbc[1], rbc[2]);
 
         drab = std::sqrt(drab);
         drac = std::sqrt(drac);
         drbc = std::sqrt(drbc);
-//        std::cout << "drab = " << drab << ", drac = " << drac << ", drbc = " << drbc << std::endl;
 
         if ((drab < 2) or (drac < 2) or (drbc < 2))
              return 0.;
@@ -220,28 +207,19 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
           double g[36];
           double retval = poly_3b_v2x::eval(thefit, x, g);
 
-          for (int i = 0; i<36; i++)
-        	  printf("before g_var g[%d] = %lf\n", i, g[i]);
-
           double gab, gac, gbc;
 
           const double sab = threebody_f_switch(drab, gab);
           const double sac = threebody_f_switch(drac, gac);
           const double sbc = threebody_f_switch(drbc, gbc);
 
-//          std::cout << "sab = " << sab << ", sac = " << sac << ", sbc = " << sbc << std::endl;
-
           const double s = sab*sac + sab*sbc + sac*sbc;
-		  //printf("s = %lf\n", s);
 
-		  for (int n = 0; n < 36; ++n)
+          for (int n = 0; n < 36; ++n)
               g[n] *= s;
 
           std::vector<RealVec> allForces;
           allForces.resize(allPositions.size());
-
-		 for (int n = 0; n < 9; ++n)
-			 printf("allForces[%d] = <%lf, %lf, %lf>\n",n, allForces[n][0] ,allForces[n][1], allForces[n][2]);
 
           g_var(g[0], kHH_intra, dHH_intra, allPositions[Ha1], allPositions[Ha2], allForces[ Ha1], allForces[ Ha2]);
           g_var(g[1], kHH_intra, dHH_intra, allPositions[Hb1], allPositions[Hb2], allForces[ Hb1], allForces[ Hb2]);
@@ -279,19 +257,13 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
           g_var(g[33], kOO, dOO,            allPositions[ Oa], allPositions[ Ob], allForces[  Oa], allForces[  Ob]);
           g_var(g[34], kOO, dOO,            allPositions[ Oa], allPositions[ Oc], allForces[  Oa], allForces[  Oc]);
           g_var(g[35], kOO, dOO,            allPositions[ Ob], allPositions[ Oc], allForces[  Ob], allForces[  Oc]);
-          //degbuging gradients
-//          for (int i = 0; i<36; i++)
-//        	  printf("after g_var g[%d] = %lf\n", i, g[i]);
- 		 for (int n = 0; n < 9; ++n)
- 			 printf("allForces[%d] = <%lf, %lf, %lf>\n",n, allForces[n][0] ,allForces[n][1], allForces[n][2]);
+
+
           // gradients of the switching function
 
           gab *= (sac + sbc)*retval/drab;
           gac *= (sab + sbc)*retval/drac;
           gbc *= (sab + sac)*retval/drbc;
-//          std::cout << "gab " << gab << std::endl;
-//          std::cout << "gac " << gac << std::endl;
-//          std::cout << "gbc " << gbc << std::endl;
 
           retval *= s;
 
@@ -303,10 +275,6 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
               allForces[Oc][n] -= (gac*rac[n] + gbc*rbc[n]) * cal2joule * -nm_to_A;
           }
 
-          std::cout << "allForces[Oa] = <" << allForces[Oa][0] << ", " << allForces[Oa][1] << ", " << allForces[Oa][2] << ">" << std::endl;
-          std::cout << "allForces[Ob] = <" << allForces[Ob][0] << ", " << allForces[Ob][1] << ", " << allForces[Ob][2] << ">" << std::endl;
-          std::cout << "allForces[Oc] = <" << allForces[Oc][0] << ", " << allForces[Oc][1] << ", " << allForces[Oc][2] << ">" << std::endl;
-
           unsigned int j = 0;
           for (std::list<int>::iterator it = sites.begin(); it != sites.end(); it++)
           {
@@ -314,7 +282,6 @@ RealOpenMM MBPolReferenceThreeBodyForce::calculateTripletIxn( int siteI, int sit
               {
                   forces[allParticleIndices[*it][i]] += allForces[j];
                   j++;
-                 // std::cout << "forces[allParticleIndices[" << *it <<"][" << i<< "]] = " << forces[allParticleIndices[*it][i]] << std::endl;
               }
           }
 
