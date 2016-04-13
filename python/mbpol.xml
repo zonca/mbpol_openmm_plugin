@@ -15,8 +15,8 @@
             <Bond from="0" to="2" />
         </Residue>
     </Residues>
-    <MBPolElectrostaticsForce>
-        <Residue name="HOH" class1="O" class2="H" class3="H" thole-charge-charge="0.4" thole-charge-dipole="0.4" thole-dipole-dipole-intermolecules="0.055" thole-dipole-dipole-OH="0.626" thole-dipole-dipole-HH="0.055"/>
+    <MBPolElectrostaticsForce thole-charge-charge="0.4" thole-charge-dipole="0.4" thole-dipole-dipole="0.055" thole-dipole-dipole-singlebond="0.626">
+        <Residue name="HOH" class1="O" class2="H" class3="H" />
         <Atom type="MBPol-O" charge="-5.1966000e-01" damping-factor="0.00131" polarizability="0.00131" />
         <Atom type="MBPol-H" charge="2.5983000e-01" damping-factor="0.000294" polarizability="0.000294" />
         <Atom type="MBPol-M" charge="0" damping-factor="0.00131" polarizability="0" />

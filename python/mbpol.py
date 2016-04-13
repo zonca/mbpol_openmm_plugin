@@ -300,7 +300,7 @@ class MBPolElectrostaticsForceGenerator:
         self.types2 = []
         self.types3 = []
         self.typeMap = {}
-
+        self.thole = []
     @staticmethod
     def parseElement(element, forceField):
 
@@ -329,18 +329,14 @@ class MBPolElectrostaticsForceGenerator:
                                     MBPolElectrostaticsForce_template.attrib['class3'])
                 raise ValueError(outputString)
 
+        v = mbpolplugin.vectord()
+        thole_components = ['thole-charge-charge', 'thole-charge-dipole', 'thole-dipole-dipole', 'thole-dipole-dipole-singlebond', 'thole-dipole-dipole']
+        for each in thole_components:
+            v.push_back(float(element.attrib[each]))
+        generator.thole = v
         for residue in element.findall('Residue'):
-
-        #     <Residue name="HOH" class1="OW" class2="HW" class3="HW" thole-charge-charge="0.4" thole-charge-dipole="0.4" thole-dipole-dipole-intermolecules="0.055" thole-dipole-dipole-1-2="0.055" thole-dipole-dipole-1-3="0.626" thole-dipole-dipole-2-3="0.626" /> 
-
+        #<Residue name="HOH" class1="O" class2="H" class3="H" />
             name = residue.attrib["name"]
-
-            v = mbpolplugin.vectord()
-            thole_components = ["thole-charge-charge", "thole-charge-dipole", "thole-dipole-dipole-intermolecules", "thole-dipole-dipole-OH", "thole-dipole-dipole-HH", ]
-            for each in thole_components:
-                v.push_back(float(residue.attrib[each]))
-
-            generator.typeMap[name] = dict(thole = v)
 
         for atom in element.findall('Atom'):
         #     <Atom type="MBPol-H" charge="2.5983000e-01" damping-factor="0.000294" polarizability="0.000294" />
@@ -376,6 +372,7 @@ class MBPolElectrostaticsForceGenerator:
             force = existing[0]
 
         force.setNonbondedMethod(methodMap[nonbondedMethod])
+        force.setTholeParameters(self.thole)
 
         for i in range(len(data.angles)):
             angle = data.angles[i]
