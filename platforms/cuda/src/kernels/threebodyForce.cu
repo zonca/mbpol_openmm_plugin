@@ -573,8 +573,8 @@ extern "C" __device__ real computeInteraction(
 			//degbuging gradients
 //            for (int i = 0; i<36; i++)
 //          	  printf("after g_var g[%d] = %lf\n", i, g[i]);
-			for (int n = 0; n < 9; ++n)
-				printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
+			//for (int n = 0; n < 9; ++n)
+			//	printf("forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
         	gab *= (sac + sbc)*tempEnergy/drab;
             gac *= (sab + sbc)*tempEnergy/drac;
             gbc *= (sab + sac)*tempEnergy/drbc;
