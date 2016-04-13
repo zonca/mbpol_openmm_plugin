@@ -647,6 +647,8 @@ extern "C" __global__ void computeThreeBodyForce(
 
 
     // Loop over particles to be the first one in the set.
+    // Each block is assigned a particle, after that, a block gets another particle gridDim.x away
+    // until all atoms have been processed.
 
     for (int p1 = blockIdx.x; p1 < NUM_ATOMS; p1 += gridDim.x) {
         const int a1 = 0;
@@ -657,16 +659,25 @@ extern "C" __global__ void computeThreeBodyForce(
         int numNeighbors = NUM_ATOMS-p1-1;
 #endif
         int numCombinations = numNeighbors*numNeighbors;
+
+        // For each particle, all threads in a block get assigned a combination, after that,
+        // they get another one blockDim.x away until all have been processed.
+
         for (int index = threadIdx.x; index < numCombinations; index += blockDim.x) {
+
+        // Create a triplet
+        // Example, p1 = 0, have 4 numNeighbors, 16 numCombinations
+        // threadIdx.x = 12
 #ifdef USE_CUTOFF
         	//FIND_ATOMS_FOR_COMBINATION_INDEX;
-			int tempIndex = index;
-			int a2 = 1+tempIndex%numNeighbors;
-			tempIndex /= numNeighbors;
-			int a3 = 1+tempIndex%numNeighbors;
-			a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1);
-			int p2 = neighbors[firstNeighbor-1+a2];
-			int p3 = neighbors[firstNeighbor-1+a3];
+			int tempIndex = index; // 12
+            // a2 and a3 are atom index offsets from firstNeighbor
+			int a2 = 1+tempIndex%numNeighbors; // 1
+			tempIndex /= numNeighbors; // 3
+			int a3 = 1+tempIndex%numNeighbors; // 4
+			a2 = (a3%2 == 0 ? a2 : numNeighbors-a2+1); // 1
+			int p2 = neighbors[firstNeighbor-1+a2]; // neighbors[0]
+			int p3 = neighbors[firstNeighbor-1+a3]; // neighbors[3]
 #else
 			//FIND_ATOMS_FOR_COMBINATION_INDEX;
         	int tempIndex = index;
@@ -711,15 +722,3 @@ extern "C" __global__ void computeThreeBodyForce(
     }
     energyBuffer[blockIdx.x*blockDim.x+threadIdx.x] += energy;
 }
-
-    
-       
-       
-       
-       
-       
-       
-       
-       
-       
-       
