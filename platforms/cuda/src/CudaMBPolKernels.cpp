@@ -367,9 +367,9 @@ void CudaCalcMBPolThreeBodyForceKernel::initialize(const System& system, const M
 	    map<string, string> defines;
 	    defines["NUM_ATOMS"] = cu.intToString(cu.getNumAtoms());
 	    defines["PADDED_NUM_ATOMS"] = cu.intToString(cu.getPaddedNumAtoms());
-	    defines["NUM_BLOCKS"] = "1";
+	    defines["NUM_BLOCKS"] = cu.intToString(cu.getNumAtomBlocks());
 	    defines["TILE_SIZE"] = cu.intToString(CudaContext::TileSize);
-	    defines["THREAD_BLOCK_SIZE"] = "1";
+	    defines["THREAD_BLOCK_SIZE"] = cu.intToString(cu.getNonbondedUtilities().getNumForceThreadBlocks());
 	    //
 	    // tiles with exclusions setup
 
