@@ -243,6 +243,10 @@ extern "C" __global__ void findBlockBounds(real4 periodicBoxSize, real4 invPerio
 	//printf("Thread %d\n", index);
     int base = index*TILE_SIZE;
     while (base < NUM_ATOMS) {
+    	//FIXME: temp fix to building neighborlist to include only oxygen particles
+		// this causes infinite loop, also, it is fine to do block bounds also considering hydrogens
+       	//if (base%3 != 0)
+        //    continue;
         real4 pos = posq[base];
 //        printf("Thread %d blockbounds pos = <%10lf, %10lf, %10lf>\n", index,  pos.x, pos.y, pos.z);
 #ifdef USE_PERIODIC
