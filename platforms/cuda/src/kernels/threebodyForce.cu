@@ -108,6 +108,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
 
         for (int block2Base = startBlock; block2Base < NUM_BLOCKS; block2Base += 32) {
             int block2 = block2Base+indexInWarp;
+			    printf("Atom %d Blocks %d %d, NUM_BLOCKS %d\n", atom1, block1, block2, NUM_BLOCKS);
             bool includeBlock2 = (block2 < NUM_BLOCKS);
             if (includeBlock2) {
                 real4 blockCenter2 = blockCenter[block2];
@@ -152,7 +153,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
 
                         if (includeAtom) {
                             included[numIncluded++] = atom2;
-//                            printf("Tid %d, pair found: %d, %d\n", threadIdx.x, atom1, atom2);
+                            //printf("Tid %d, pair found: %d, %d\n", threadIdx.x, atom1, atom2);
                         }
                     }
                 }
@@ -170,7 +171,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         }
         numNeighborsForAtom[atom1] = totalNeighborsForAtom1;
     }
-    //printf("completed call of findNeighbors: %d\n", threadIdx.x);
+    printf("completed call of findNeighbors: %d\n", threadIdx.x);
 }
 
 /**
@@ -248,7 +249,6 @@ extern "C" __global__ void findBlockBounds(real4 periodicBoxSize, real4 invPerio
        	//if (base%3 != 0)
         //    continue;
         real4 pos = posq[base];
-//        printf("Thread %d blockbounds pos = <%10lf, %10lf, %10lf>\n", index,  pos.x, pos.y, pos.z);
 #ifdef USE_PERIODIC
         APPLY_PERIODIC_TO_POS(pos)
 #endif
@@ -267,6 +267,7 @@ extern "C" __global__ void findBlockBounds(real4 periodicBoxSize, real4 invPerio
         real4 blockSize = 0.5f*(maxPos-minPos);
         blockBoundingBox[index] = blockSize;
         blockCenter[index] = 0.5f*(maxPos+minPos);
+        printf("Thread %d blockbounds pos = <%10lf, %10lf, %10lf>\n", index,  blockCenter[index].x, blockCenter[index].y, blockCenter[index].z);
         index += blockDim.x*gridDim.x;
         base = index*TILE_SIZE;
     }
@@ -534,8 +535,8 @@ extern "C" __device__ real computeInteraction(
 			}
 				
 			//extern "C" __device__ void computeGVar(real g, real k, real r0, real3 * a1, real3 * a2, real3 * g1, real3 * g2)
-			for (int n = 0; n < 9; ++n)
-				printf("b4 forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
+			// for (int n = 0; n < 9; ++n)
+			// 	printf("b4 forces[%d] = <%lf, %lf, %lf>\n",n, forces[n].x ,forces[n].y, forces[n].z);
 
 			i = 0;
         	computeGVar(g+i, kHH_intra, dHH_intra, positions+ Ha1, positions+ Ha2, forces+ Ha1, forces+ Ha2); ++i; //0
@@ -714,6 +715,7 @@ extern "C" __global__ void computeThreeBodyForce(
 //        	   printf("computed energy = %lf for atoms { %d, %d, %d } in thread: %d\n", computed_energy, atom1, atom2, atom3, threadIdx.x);
         	   energy += computed_energy;
         	   int oxygens[] = {atom3, atom2, atom1}; // ordered to match ref
+               //printf("Thread %d: Triplet %d,%d,%d\n", threadIdx.x, atom1, atom2, atom3);
         	   for (int j = 0, k = 0; j<3; j++){// j used to select oxygen index, k for index in force array
 				   for (int i=0, atom = oxygens[j]; i<3; i++, k++) {// i used to index of each particle associated with the oxygen
 					   atomicAdd(&forceBuffers[atom + i], static_cast<unsigned long long>((long long) (forces[k].x*0x100000000)));
