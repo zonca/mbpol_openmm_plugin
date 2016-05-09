@@ -11,7 +11,7 @@ namespace std {
   %template(vectorstring) vector<string>;
 };
 
-%import(module="simtk.openmm") "OpenMMSwigHeaders.i"
+%import(module="simtk.openmm") "swig/OpenMMSwigHeaders.i"
 
 %{
 #include "openmm/MBPolElectrostaticsForce.h"
