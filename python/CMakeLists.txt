@@ -9,6 +9,7 @@ add_custom_command(
         -python -c++
         -o "${WRAP_FILE}"
         "-I${OPENMM_DIR}/include"
+        "-DOPENMM_MAJOR_VERSION=${OPENMM_MAJOR_VERSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/mbpolplugin.i"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/mbpolplugin.i"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
