@@ -10,6 +10,8 @@ import mbpol
 configurations = (("amoeba2013", "CUDA"), ("amoeba2013", "Reference"),)#, ("mbpol", "Reference"),)
 configurations = (("mbpol", "Reference"),)
 steps = 10000
+timestep = 0.02*unit.femtoseconds
+temperature = 300*unit.kelvin
 
 for forcefield_configuration, platform_name in configurations:
 
@@ -36,7 +38,6 @@ for forcefield_configuration, platform_name in configurations:
     forcefield = app.ForceField(forcefield_configuration + ".xml")
 
     system = forcefield.createSystem(pdb.topology, nonbondedMethod=app.PME, nonbondedCutoff=.9*unit.nanometer)
-    timestep = 0.02*unit.femtoseconds
     integrator = mm.VerletIntegrator(timestep)
 
     platform = mm.Platform.getPlatformByName(platform_name)
@@ -45,17 +46,11 @@ for forcefield_configuration, platform_name in configurations:
     simulation.context.computeVirtualSites()
 
     state = simulation.context.getState(getForces=True, getEnergy=True)
-    potential_energy = state.getPotentialEnergy()
-    energy_kcal_per_mol = potential_energy.value_in_unit(unit.kilocalorie_per_mole)
+    simulation.context.setVelocitiesToTemperature(temperature)
 
-    simulation.reporters.append(app.StateDataReporter("simulation_{tag}_{timestep}.log".format(**locals()).replace(" ",""), 100, step=True, totalEnergy=True,
+    simulation.reporters.append(app.StateDataReporter("simulation_{tag}_{timestep}_{temperature}.log".format(**locals()).replace(" ",""), 100, step=True, totalEnergy=True,
     potentialEnergy=True, temperature=True, progress=True, remainingTime=True,
     speed=True, totalSteps=steps, separator=','))
-
-    output = pd.DataFrame(dict(
-                    box_size = boxSize,
-                    openmm_energy_kcal_per_mol = energy_kcal_per_mol
-                    ), index=[tag])
 
     start = datetime.datetime.now()
     simulation.step(steps)
