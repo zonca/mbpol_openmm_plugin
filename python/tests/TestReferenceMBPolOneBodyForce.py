@@ -34,8 +34,6 @@ class TestCustomForce(unittest.TestCase):
         potential_energy = state.getPotentialEnergy()
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
-        print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
-        
         
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .001)
         
