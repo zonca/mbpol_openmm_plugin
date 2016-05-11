@@ -24,7 +24,7 @@ pdb = app.PDBFile("water14_cluster.pdb")
 
 # In[ ]:
 
-forcefield = app.ForceField("mbpol.xml")
+forcefield = app.ForceField(mbpol.__file__.replace('mbpol.py', 'mbpol.xml'))
 # use tip4p
 #forcefield = app.ForceField("tip4pfb.xml")
 
