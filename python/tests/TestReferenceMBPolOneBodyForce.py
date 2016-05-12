@@ -15,7 +15,6 @@ class TestCustomForce(unittest.TestCase):
         expected_energy = 0.55975882
         pdb = app.PDBFile("pdb_files/water1.pdb")
         forcefield = app.ForceField("../mbpol.xml")
-        forcefield._forces = forcefield._forces[1:2]
         nonbondedCutoff = 0.9*unit.nanometer
         
         if (nonbondedMethod == app.PME):
@@ -24,7 +23,23 @@ class TestCustomForce(unittest.TestCase):
             pdb.topology.setUnitCellDimensions( boxsize )
             
         system = forcefield.createSystem(pdb.topology, nonbondedMethod=nonbondedMethod, nonbondedCutoff=nonbondedCutoff)
-            
+        
+        #forces must be removed from the system to test single force
+        #order of forces:
+        # elec
+        # one
+        # two
+        # three
+        # CMMotionRemover
+        # CustomDispersion
+        system.removeForce(0) #remove elec
+        system.removeForce(2) #remove two
+        system.removeForce(1) #remove three
+        system.removeForce(1) #remove CMMotionRemover
+        system.removeForce(1) #remove CustomDispersion
+
+
+   
         integrator = mm.LangevinIntegrator(0.0, 0.1, 0.01)
         platform = mm.Platform.getPlatformByName('Reference')
         simulation = app.Simulation(pdb.topology, system, integrator, platform)
