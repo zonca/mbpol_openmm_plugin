@@ -28,7 +28,7 @@ class TestReferenceMBPolIntegration(unittest.TestCase):
         potential_energy = state.getPotentialEnergy()
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .1)
-        print("Passed TestReferenceMBPolIntegrationTestWater3")
+#        print("Passed TestReferenceMBPolIntegrationTestWater3")
 #    def test_water3_periodic(self):
 #        self.test_water3(nonbondedMethod=app.PME)
 #        print("Passed TestReferenceMBPolIntegrationTestWater3PME")
@@ -57,7 +57,7 @@ class TestReferenceMBPolIntegration(unittest.TestCase):
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < 1)
-        print("Passed TestReferenceMBPolIntegrationTestWater50PME")
+#        print("Passed TestReferenceMBPolIntegrationTestWater50PME")
         
     def test_water256_periodic(self):
         nonbondedMethod=app.PME
@@ -84,7 +84,7 @@ class TestReferenceMBPolIntegration(unittest.TestCase):
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < 20)
-        print("Passed TestReferenceMBPolIntegrationTest")
+#        print("Passed TestReferenceMBPolIntegrationTest")
 
 if __name__ == '__main__':
     unittest.main()

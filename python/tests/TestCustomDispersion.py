@@ -76,7 +76,7 @@ class TestCustomForce(unittest.TestCase):
         simulation.context.computeVirtualSites()
         state = simulation.context.getState(getForces=True, getEnergy=True, getPositions=True)
         potential_energy = state.getPotentialEnergy()
-        print(potential_energy.in_units_of(unit.kilocalorie_per_mole))
+        #print(potential_energy.in_units_of(unit.kilocalorie_per_mole))
         
         self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .01)
        
