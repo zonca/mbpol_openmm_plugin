@@ -33,7 +33,7 @@ class TestCustomForce(unittest.TestCase):
         # CMMotionRemover
         # CustomDispersion
         system.removeForce(0) #remove elec
-        system.removeForce(2) #remove two
+        system.removeForce(1) #remove two
         system.removeForce(1) #remove three
         system.removeForce(1) #remove CMMotionRemover
         system.removeForce(1) #remove CustomDispersion

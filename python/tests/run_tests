@@ -1,0 +1,7 @@
+#python TestReferenceMBPolElectrostaticsForce.py
+python TestReferenceMBPolOneBodyForce.py
+python TestReferenceMBPolTwoBodyForce.py
+python TestReferenceMBPolThreeBodyForce.py
+python TestCustomDispersion.py
+python TestReferenceMBPolIntegrationTest.py
+python TestReferenceMBPol14WaterTest.py
