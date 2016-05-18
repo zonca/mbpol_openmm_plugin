@@ -1,5 +1,6 @@
 printf "\nRunning Python Tests\n"
-#python TestReferenceMBPolElectrostaticsForce.py
+printf "\nRunning Electrostatics Test\n"
+python TestReferenceMBPolElectrostaticsForce.py
 printf "\nRunning OneBody Test\n"
 python TestReferenceMBPolOneBodyForce.py
 printf "\nRunning TwoBody Test\n"
