@@ -10,15 +10,14 @@ import mbpol
 class TestCustomForce(unittest.TestCase):
     """This tests the Reference implementation of ReferenceMBPolOneBodyForce."""
 
-    def testOneOneBody(self):
-        nonbondedMethod=app.PME
-        expected_energy = 0.55975882
-        pdb = app.PDBFile("pdb_files/water1.pdb")
+    def testTwoBody(self, nonbondedMethod=app.CutoffNonPeriodic):
+        expected_energy = 0.15586446
+        pdb = app.PDBFile("pdb_files/water3.pdb")
         forcefield = app.ForceField("../mbpol.xml")
-        nonbondedCutoff = 0.9*unit.nanometer
+        nonbondedCutoff = 10*unit.nanometer
         
         if (nonbondedMethod == app.PME):
-            boxDimension = 1.8
+            boxDimension = 50
             boxsize = [boxDimension, boxDimension, boxDimension]
             pdb.topology.setUnitCellDimensions( boxsize )
             
@@ -33,13 +32,12 @@ class TestCustomForce(unittest.TestCase):
         # CMMotionRemover
         # CustomDispersion
         system.removeForce(0) #remove elec
-        system.removeForce(1) #remove two
-        system.removeForce(1) #remove three
+        system.removeForce(0) #remove one
+        system.removeForce(0) #remove two
         system.removeForce(1) #remove CMMotionRemover
         system.removeForce(1) #remove CustomDispersion
 
 
-   
         integrator = mm.LangevinIntegrator(0.0, 0.1, 0.01)
         platform = mm.Platform.getPlatformByName('Reference')
         simulation = app.Simulation(pdb.topology, system, integrator, platform)
@@ -49,8 +47,12 @@ class TestCustomForce(unittest.TestCase):
         potential_energy = state.getPotentialEnergy()
         potential_energy.in_units_of(unit.kilocalorie_per_mole)
         
+        #print(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value)
         
-        self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .001)
         
+        self.assertTrue(abs(potential_energy.in_units_of(unit.kilocalorie_per_mole)._value - expected_energy) < .01)
+    
+
+
 if __name__ == '__main__':
     unittest.main()
