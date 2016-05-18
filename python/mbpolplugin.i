@@ -11,7 +11,11 @@ namespace std {
   %template(vectorstring) vector<string>;
 };
 
+#if (OPENMM_MAJOR_VERSION > 6)
+%import(module="simtk.openmm") "swig/OpenMMSwigHeaders.i"
+#else
 %import(module="simtk.openmm") "OpenMMSwigHeaders.i"
+#endif
 
 %{
 #include "openmm/MBPolElectrostaticsForce.h"
