@@ -12,7 +12,7 @@ class TestCustomForce(unittest.TestCase):
 
     def test_three_water(self, nonbondedMethod=app.CutoffNonPeriodic):
         expected_energy = -6.84471477
-        pdb = app.PDBFile("../water3.pdb")
+        pdb = app.PDBFile("pdb_files/water3.pdb")
         forcefield = app.ForceField("../mbpol.xml")
         nonbondedCutoff = 1e3*unit.nanometer
         

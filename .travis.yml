@@ -17,8 +17,8 @@ before_install:
   - conda create --yes -n py3 python=3 --file ci/requirements-conda.txt
   - source activate py3
   - $HOME/miniconda3/envs/py3/bin/pip install $PIP_ARGS nose-exclude
-  - conda install --yes openmm=6.3 runipy
-  - conda install --yes swig
+  - conda install --yes openmm=6.3 runipy swig pytest
+
 
 
 install:
@@ -31,9 +31,9 @@ install:
 
 script:
   - make test
-  - cd ../python
+  - cd python/tests
+  - py.test -v   
+  - cd ../../../python
   - runipy water14.ipynb
   - mbpol_builder mbpol_config.ini example_run.py
   - python example_run.py && python -c "import os.path; import sys; sys.exit(not os.path.isfile('water14_cluster_trajectory.pdb'))"
-  - cd ./tests/
-  - ./run_tests
