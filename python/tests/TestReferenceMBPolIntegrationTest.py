@@ -10,7 +10,7 @@ import mbpol
 class TestReferenceMBPolIntegration(unittest.TestCase):
     def test_water3(self, nonbondedMethod=app.CutoffNonPeriodic):
         expected_energy = -8.78893485
-        pdb = app.PDBFile("../water3.pdb")
+        pdb = app.PDBFile("pdb_files/water3.pdb")
         forcefield = app.ForceField("../mbpol.xml")
         nonbondedCutoff = 0.9*unit.nanometers
         if (nonbondedMethod == app.PME):
