@@ -131,6 +131,47 @@ private:
 
 };
 
+class CudaCalcMBPolThreeBodyForceKernel : public CalcMBPolThreeBodyForceKernel {
+public:
+    CudaCalcMBPolThreeBodyForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
+
+    ~CudaCalcMBPolThreeBodyForceKernel();
+    /**
+     * Initialize the kernel.
+     *
+     * @param system     the System this kernel will be applied to
+<<<<<<< HEAD
+     * @param force      the MBPolThreeBodyForce this kernel will be used for
+     */
+    void initialize(const OpenMM::System& system, const MBPolThreeBodyForce& force);
+    double execute(OpenMM::ContextImpl& context, bool includeForces, bool includeEnergy);
+    void copyParametersToContext(OpenMM::ContextImpl& context, const MBPolThreeBodyForce& force);
+private:
+    int numMolecules;
+    CudaArray* particleIndices;
+    bool hasInitializedKernel;
+    OpenMM::CudaContext& cu;
+    const OpenMM::System& system;
+    OpenMM::CudaArray* params;
+    CUfunction computeThreeBodyForceKernel;
+
+
+
+//    ///////////// things added for neighbor list //////////////////////////
+	CudaArray* blockCenter;
+	CudaArray* blockBoundingBox;
+	CudaArray* neighborPairs;
+	CudaArray* numNeighborPairs;
+	CudaArray* neighborStartIndex;
+	CudaArray* numNeighborsForAtom;
+	CudaArray* neighbors;
+	int forceWorkgroupSize, maxNeighborPairs, findNeighborsWorkgroupSize;
+	CUfunction blockBoundsKernel, neighborsKernel, startIndicesKernel, copyPairsKernel;
+    std::vector<void*> forceArgs, blockBoundsArgs, neighborsArgs, startIndicesArgs, copyPairsArgs;
+//    OpenMM::CudaArray* neighbors, *neighborStartIndex;
+//    ///////////////////////////////////////////////////////////////////////
+};
+
 /**
  * This kernel is invoked by AmoebaMultipoleForce to calculate the forces acting on the system and the energy of the system.
  */
@@ -138,21 +179,7 @@ class CudaCalcMBPolElectrostaticsForceKernel : public CalcMBPolElectrostaticsFor
 public:
 	CudaCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, CudaContext& cu, const System& system);
 		~CudaCalcMBPolElectrostaticsForceKernel();
-    /**
-     * Initialize the kernel.
-     *
-     * @param system     the System this kernel will be applied to
-     * @param force      the AmoebaMultipoleForce this kernel will be used for
-     */
     void initialize(const System& system, const MBPolElectrostaticsForce& force);
-    /**
-     * Execute the kernel to calculate the forces and/or energy.
-     *
-     * @param context        the context in which to execute this kernel
-     * @param includeForces  true if forces should be calculated
-     * @param includeEnergy  true if the energy should be calculated
-     * @return the potential energy due to the force
-     */
     double execute(ContextImpl& context, bool includeForces, bool includeEnergy);
     /**
      * Get the induced dipole moments of all particles.
@@ -182,12 +209,6 @@ public:
      *                                quadrupole_zx, quadrupole_zy, quadrupole_zz)
      */
     void getSystemMultipoleMoments(ContextImpl& context, std::vector<double>& outputMultipoleMoments);
-    /**
-     * Copy changed parameters over to a context.
-     *
-     * @param context    the context to copy parameters to
-     * @param force      the AmoebaMultipoleForce to copy the parameters from
-     */
     void copyParametersToContext(ContextImpl& context, const MBPolElectrostaticsForce& force);
 
     void getSystemElectrostaticsMoments( ContextImpl& context, std::vector< double >& outputElectrostaticsMonents );
