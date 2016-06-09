@@ -1,4 +1,4 @@
-#define DEBUG
+//#define DEBUG
 
 __device__ real poly_3b_v2x_eval(
 							const real x[36],

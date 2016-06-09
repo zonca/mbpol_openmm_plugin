@@ -716,7 +716,7 @@ extern "C" __global__ void computeThreeBodyForce(
         	   for (int j = 0, k = 0; j<3; j++){// j used to select oxygen index, k for index in force array
 				   for (int i=0, atom = oxygens[j]; i<3; i++, k++) {// i used to index of each particle associated with the oxygen
 					   atomicAdd(&forceBuffers[atom + i], static_cast<unsigned long long>((long long) (forces[k].x*0x100000000)));
-					   atomicAdd(&forceBuffers[atom + i+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[k].y*0x100000000)));
+				   atomicAdd(&forceBuffers[atom + i+PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[k].y*0x100000000)));
 					   atomicAdd(&forceBuffers[atom + i+2*PADDED_NUM_ATOMS], static_cast<unsigned long long>((long long) (forces[k].z*0x100000000)));
 				   }
         	   }

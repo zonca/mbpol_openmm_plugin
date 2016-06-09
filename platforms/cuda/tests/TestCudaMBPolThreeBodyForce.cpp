@@ -39,6 +39,7 @@
 #include "openmm/Platform.h"
 #include "openmm/System.h"
 #include "openmm/LangevinIntegrator.h"
+#include "openmm/VirtualSite.h"
 #include <cmath>
 #include <iostream>
 #include <vector>
@@ -62,7 +63,8 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
     std::string testName      = "testMBPolThreeBodyInteraction";
 
     System system;
-    int numberOfParticles          = 9;
+    unsigned int particlesPerMolecule = 4;
+    int numberOfParticles          = 3*particlesPerMolecule;
     MBPolThreeBodyForce* mbpolThreeBodyForce = new MBPolThreeBodyForce();
     double cutoff = 10;
     mbpolThreeBodyForce->setCutoff( cutoff );
@@ -77,13 +79,19 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
             mbpolThreeBodyForce->setNonbondedMethod(MBPolThreeBodyForce::CutoffNonPeriodic);
         }
 
-    unsigned int particlesPerMolecule = 3;
+    double virtualSiteWeightO = 0.573293118;
+    double virtualSiteWeightH = 0.213353441;
 
     std::vector<int> particleIndices(particlesPerMolecule);
     for( unsigned int jj = 0; jj < numberOfParticles; jj += particlesPerMolecule ){
         system.addParticle( 1.5999000e+01 );
         system.addParticle( 1.0080000e+00 );
         system.addParticle( 1.0080000e+00 );
+        system.addParticle(0.); // Virtual Site
+        system.setVirtualSite(jj + 3,
+            new ThreeParticleAverageSite(jj,        jj + 1, jj + 2,
+              virtualSiteWeightO, virtualSiteWeightH,
+              virtualSiteWeightH));
         particleIndices[0] = jj;
         particleIndices[1] = jj+1;
         particleIndices[2] = jj+2;
@@ -100,14 +108,17 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
     positions[0]             = Vec3( -1.516074336e+00, -2.023167650e-01,  1.454672917e+00  );
     positions[1]             = Vec3( -6.218989773e-01, -6.009430735e-01,  1.572437625e+00  );
     positions[2]             = Vec3( -2.017613812e+00, -4.190350349e-01,  2.239642849e+00  );
+    positions[3]             = Vec3( 0,0,0 );
 
-    positions[3]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
-    positions[4]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
-    positions[5]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
+    positions[4]             = Vec3( -1.763651687e+00, -3.816594649e-01, -1.300353949e+00  );
+    positions[5]             = Vec3( -1.903851736e+00, -4.935677617e-01, -3.457810126e-01  );
+    positions[6]             = Vec3( -2.527904158e+00, -7.613550077e-01, -1.733803676e+00  );
+    positions[7]             = Vec3( 0,0,0 );
 
-    positions[6]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
-    positions[7]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
-    positions[8]             = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
+    positions[8]             = Vec3( -5.588472140e-01,  2.006699172e+00, -1.392786582e-01  );
+    positions[9]             = Vec3( -9.411558180e-01,  1.541226676e+00,  6.163293071e-01  );
+    positions[10]            = Vec3( -9.858551734e-01,  1.567124294e+00, -8.830970941e-01  );
+    positions[11]             = Vec3( 0,0,0 );
 
     for (int i=0; i<numberOfParticles; i++) {
         for (int j=0; j<3; j++) {
@@ -126,12 +137,17 @@ void testThreeBody( double boxDimension, bool addPositionOffset ) {
     expectedForces[0]     = Vec3(  0.29919011, -0.34960381, -0.16238472 );
     expectedForces[1]     = Vec3(  0.34138467, -0.01255068, -0.00998383 );
     expectedForces[2]     = Vec3( -0.44376649,  0.03687577,  0.54604510 );
-    expectedForces[3]     = Vec3( -0.01094164, -0.36171476, -0.05130395 );
-    expectedForces[4]     = Vec3(  0.24939202,  1.29382952,  0.22930712 );
-    expectedForces[5]     = Vec3( -0.13250943, -0.19313418, -0.34123592 );
-    expectedForces[6]     = Vec3(  0.56722869,  0.46036139, -0.39999973 );
-    expectedForces[7]     = Vec3( -0.75669111, -0.76132457, -0.29799486 );
-    expectedForces[8]     = Vec3( -0.11328682, -0.11273867,  0.48755080 );
+    expectedForces[3]     = Vec3( 0,0,0 );
+
+    expectedForces[4]     = Vec3( -0.01094164, -0.36171476, -0.05130395 );
+    expectedForces[5]     = Vec3(  0.24939202,  1.29382952,  0.22930712 );
+    expectedForces[6]     = Vec3( -0.13250943, -0.19313418, -0.34123592 );
+    expectedForces[7]     = Vec3( 0,0,0 );
+
+    expectedForces[8]     = Vec3(  0.56722869,  0.46036139, -0.39999973 );
+    expectedForces[9]     = Vec3( -0.75669111, -0.76132457, -0.29799486 );
+    expectedForces[10]    = Vec3( -0.11328682, -0.11273867,  0.48755080 );
+    expectedForces[11]    = Vec3( 0,0,0 );
 
 
     // gradients => forces
