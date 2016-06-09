@@ -531,7 +531,7 @@ double CudaCalcMBPolThreeBodyForceKernel::execute(ContextImpl& context, bool inc
 			cu.executeKernel(blockBoundsKernel, &blockBoundsArgs[0], cu.getNumAtomBlocks());
 			//CHECK_RESULT(cuEventRecord(event, 0), "Error recording event for CustomManyParticleForce");
 
-			cu.executeKernel(neighborsKernel, &neighborsArgs[0], cu.getNumAtoms(), 1);
+			cu.executeKernel(neighborsKernel, &neighborsArgs[0], cu.getNumAtoms(), findNeighborsWorkgroupSize);
 			// We need to make sure there was enough memory for the neighbor list.  Download the
 			// information asynchronously so kernels can be running at the same time.
 			// download originally was set false,
