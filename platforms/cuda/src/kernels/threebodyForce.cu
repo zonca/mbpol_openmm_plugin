@@ -168,7 +168,7 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
         }
         numNeighborsForAtom[atom1] = totalNeighborsForAtom1;
     }
-    printf("completed call of findNeighbors: %d\n", threadIdx.x);
+    //printf("completed call of findNeighbors: %d\n", threadIdx.x);
 }
 
 /**
