@@ -87,11 +87,11 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
     	
     	//FIXME: temporary fix to num neigbors for atom is not paddded so the size is 9
     	// but needs to be executed for paddedNumAtoms which is 32
-    	if (atom1 >= NUM_ATOMS)
-        	continue;
+    	//if (atom1 >= NUM_ATOMS)
+        //	continue;
     	//FIXME: temp fix to building neighborlist to include only oxygen particles
-    	if (atom1%3 != 0)
-    		continue;
+    	//if (atom1%3 != 0)
+    	//	continue;
         
         real3 pos1 = trim(posq[atom1]);
         //printf("find neighbors pos1 = <%10lf, %10lf, %10lf>\n",  pos1.x, pos1.y, pos1.z);
@@ -140,9 +140,6 @@ extern "C" __global__ void findNeighbors(real4 periodicBoxSize, real4 invPeriodi
                 if (atom1 < NUM_ATOMS) {
                     for (int j = 0; j < 32; j++) {
                         int atom2 = start+j;
-                    	//FIXME: temp fix to building neighborlist to include only oxygen particles
-                    	if (atom2%3 != 0)
-                    		continue;
                         real3 pos2 = positionCache[threadIdx.x-indexInWarp+j];
 //                        printf("threadIdx.x-indexInWarp+j = %d\n", threadIdx.x-indexInWarp+j);
                         // Decide whether to include this atom pair in the neighbor list.
