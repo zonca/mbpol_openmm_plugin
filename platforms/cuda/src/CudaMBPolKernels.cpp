@@ -63,7 +63,6 @@
 #include <windows.h>
 #endif
 ///////////////////////////////////////////////////////////////
->>>>>>> cuda
 
 using namespace MBPolPlugin;
 using namespace OpenMM;
