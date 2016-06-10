@@ -6,8 +6,9 @@ Only for GNU/Linux 64bit a binary distribution is available through `conda`.
 * Install the Anaconda Python distribution from <http://continuum.io/downloads>. Either Python 3 or Python 2.7 would work, Python 3 is recommended.
 * Add `conda` channels:
 
-        conda config --add  -c https://conda.anaconda.org/omnia
-        conda config --add  -c https://conda.anaconda.org/paesanilab
+        conda config --add channels https://conda.anaconda.org/omnia
+        conda config --add channels https://conda.anaconda.org/paesanilab
+        
 * Install OpenMM-MBPol (OpenMM will be installed as a requirement) with `conda`: `conda install mbpol`
 * How to update: `conda update mbpol`
 

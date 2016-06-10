@@ -1,0 +1,15 @@
+printf "\nRunning Python Tests\n"
+printf "\nRunning Electrostatics Test\n"
+python TestReferenceMBPolElectrostaticsForce.py
+printf "\nRunning OneBody Test\n"
+python TestReferenceMBPolOneBodyForce.py
+printf "\nRunning TwoBody Test\n"
+python TestReferenceMBPolTwoBodyForce.py
+printf "\nRunning ThreeBody Test\n"
+python TestReferenceMBPolThreeBodyForce.py
+printf "\nRunning Dispersion Tests\n"
+python TestCustomDispersion.py
+printf "\nRunning Integration Tests\n"
+python TestReferenceMBPolIntegrationTest.py
+printf "\nRunning Water14 Test\n"
+python TestReferenceMBPol14WaterTest.py

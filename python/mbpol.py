@@ -219,79 +219,7 @@ class MBPolThreeBodyForceGenerator:
 
 app.forcefield.parsers["MBPolThreeBodyForce"] = MBPolThreeBodyForceGenerator.parseElement
 
-## @private
-class MBPolDispersionForceGenerator:
-
-    def __init__(self):
-
-        self.types1 = []
-        self.types2 = []
-        self.types3 = []
-        self.parameters = dict()
-
-    @staticmethod
-    def parseElement(element, forceField):
-        generator = MBPolDispersionForceGenerator()
-        forceField.registerGenerator(generator)
-
-        # <MBPolDispersionForce>
-        #     <Residue name="HOH" class1="O" class2="H" class3="H" />
-        #     <Parameters class1="O" class2="O" c6="9.92951990e+08" d6="9.29548582e+01" />
-        #     <Parameters class1="O" class2="H" c6="3.49345451e+08" d6="9.77520243e+01" />
-        #     <Parameters class1="H" class2="H" c6="8.40715638e+07" d6="9.40647517e+01" />
-        # </MBPolDispersionForce>
-
-        for residue in element.findall('Residue'):
-            types = forceField._findAtomTypes(residue.attrib, 3)
-            if None not in types:
-
-                generator.types1.append(types[0])
-                generator.types2.append(types[1])
-                generator.types3.append(types[2])
-
-            else:
-                outputString = self.__class__ + ": error getting types: %s %s %s" % (
-                                    residue.attrib['class1'],
-                                    residue.attrib['class2'],
-                                    residue.attrib['class3'])
-                raise ValueError(outputString)
-
-        for parameter in element.findall('Parameters'):
-            generator.parameters[(parameter.attrib['class1'], parameter.attrib['class2'])] = \
-                (float(parameter.attrib['c6']), float(parameter.attrib['d6']))
-
-    def createForce(self, sys, data, nonbondedMethod, nonbondedCutoff, args):
-
-        methodMap = {app.NoCutoff:mbpolplugin.MBPolDispersionForce.NoCutoff,
-                     app.PME:mbpolplugin.MBPolDispersionForce.CutoffPeriodic,
-                     app.CutoffPeriodic:mbpolplugin.MBPolDispersionForce.CutoffPeriodic,
-                     app.CutoffNonPeriodic:mbpolplugin.MBPolDispersionForce.CutoffNonPeriodic}
-
-        existing = [sys.getForce(i) for i in range(sys.getNumForces())]
-        existing = [f for f in existing if type(f) == mbpolplugin.MBPolDispersionForce]
-
-        if len(existing) == 0:
-            force = mbpolplugin.MBPolDispersionForce()
-            force.setCutoff(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
-            sys.addForce(force)
-        else:
-            force = existing[0]
-
-        force.setNonbondedMethod(methodMap[nonbondedMethod])
-
-        for atom in data.atoms:
-            if atom.element:
-                force.addParticle(atom.element.symbol)
-            else:
-                # virtual site
-                force.addParticle('M')
-
-        for elements, c6d6 in self.parameters.items():
-            force.addDispersionParameters(elements[0], elements[1], c6d6[0], c6d6[1])
-
-app.forcefield.parsers["MBPolDispersionForce"] = MBPolDispersionForceGenerator.parseElement
-
-## @private
+# @private
 class MBPolElectrostaticsForceGenerator:
 
     def __init__(self):
@@ -370,7 +298,7 @@ class MBPolElectrostaticsForceGenerator:
             sys.addForce(force)
         else:
             force = existing[0]
-
+        print(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
         force.setNonbondedMethod(methodMap[nonbondedMethod])
         force.setTholeParameters(self.thole)
 

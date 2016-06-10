@@ -9,6 +9,7 @@ add_custom_command(
         -python -c++
         -o "${WRAP_FILE}"
         "-I${OPENMM_DIR}/include"
+        "-DOPENMM_MAJOR_VERSION=${OPENMM_MAJOR_VERSION}"
         "${CMAKE_CURRENT_SOURCE_DIR}/mbpolplugin.i"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/mbpolplugin.i"
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
@@ -29,3 +30,18 @@ add_custom_command(TARGET PythonInstall
     COMMAND "${PYTHON_EXECUTABLE}" setup.py install
     WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 )
+
+#copy python test files
+file(GLOB PYTESTS ${CMAKE_CURRENT_SOURCE_DIR}/ tests/*.py)
+foreach(PYTEST ${PYTESTS})
+    get_filename_component(FILENAME ${PYTEST} NAME)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tests/${FILENAME} ${CMAKE_CURRENT_BINARY_DIR}/tests/${FILENAME})
+endforeach()
+#copy pdb files for python tests
+file(GLOB PDBS ${CMAKE_CURRENT_SOURCE_DIR}/ tests/pdb_files/*.pdb)
+foreach(PDB ${PDBS})
+    get_filename_component(FILENAME ${PDB} NAME)
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tests/pdb_files/${FILENAME} ${CMAKE_CURRENT_BINARY_DIR}/tests/pdb_files/${FILENAME})
+endforeach()
+#copy py.test infile
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/tests/pytest.ini ${CMAKE_CURRENT_BINARY_DIR}/tests/pytest.ini)
