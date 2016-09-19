@@ -2,7 +2,7 @@ MB-pol plugin for OpenMM
 =======================
 
 [![Build Status](https://travis-ci.org/paesanilab/mbpol_openmm_plugin.svg?branch=master)](https://travis-ci.org/paesanilab/mbpol_openmm_plugin)
-[![Binstar Badge](https://binstar.org/paesanilab/mbpol/badges/version.svg)](https://binstar.org/paesanilab/mbpol)
+[![Anaconda Badge](https://anaconda.org/paesanilab/mbpol/badges/version.svg)](https://anaconda.org/paesanilab/mbpol)
 
 `mbpol` is a plugin for the `OpenMM` toolkit for molecular simulations using the `MB-pol` many-body water potential. Currently, the `mbpol` plugin is available within the “reference implementation” of the `OpenMM` toolkit, which is appropriate for energy calculations for both clusters and systems in periodic boundary conditions. Multicore and GPU implementations for actual molecular dynamics production runs within `OpenMM` will become available in the near future.
 
