@@ -176,10 +176,7 @@ public:
             {
                 for (unsigned int atomQindex=atomJindex+1; atomQindex<nearbyAtoms.size(); atomQindex++)
                 {
-                    // check only distance Q-J, we checked I-J and I-Q in the previous loop
-                    double dSquared = compPairDistanceSquared(*nearbyAtomsLocation[atomJindex], *nearbyAtomsLocation[atomQindex], periodicBoxSize, usePeriodic);
-                    if (dSquared > maxDistanceSquared) continue;
-                    if (dSquared < minDistanceSquared) continue;
+                    // do not check distance Q-J, MBPol requires just 2 distances to be below the cutoff
 
                     AtomTriplet triplet = {atomI, nearbyAtoms[atomJindex], nearbyAtoms[atomQindex]};
                     neighbors.push_back(triplet);
