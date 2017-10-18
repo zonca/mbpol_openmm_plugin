@@ -25,6 +25,8 @@
 #include "MBPolReferenceElectrostaticsForce.h"
 #include <algorithm>
 #include <iostream>
+#include <cstdio>
+#include <ctime>
 
 // In case we're using some primitive version of Visual Studio this will
 // make sure that erf() and erfc() are defined.
@@ -511,6 +513,12 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
     // loop until (1) induced dipoles are converged or
     //            (2) iterations == max iterations or
     //            (3) convergence factor (spsilon) increases
+    //
+    std::clock_t start;
+    double duration;
+
+    start = std::clock();
+
 
     while( !done ){
 
@@ -527,6 +535,11 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
         currentEpsilon = epsilon;
         iteration++;
     }
+    /* Your algorithm here */
+
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+    std::cout << "Induced dipole Iterations " << iteration << "took " << duration << "s" << std::endl;
     setMutualInducedDipoleEpsilon( currentEpsilon );
     setMutualInducedDipoleIterations( iteration );
 
