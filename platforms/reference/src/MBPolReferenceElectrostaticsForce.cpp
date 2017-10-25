@@ -538,6 +538,12 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
         }
     }
 
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+    std::cout << "Precomputation took " << duration << "s" << std::endl;
+
+    start = std::clock();
+
     while( !done ){
 
         RealOpenMM epsilon = updateInducedDipoleFields( particleData, updateInducedDipoleField, scale3, scale5);
