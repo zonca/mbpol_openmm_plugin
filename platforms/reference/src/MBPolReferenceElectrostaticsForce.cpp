@@ -520,6 +520,26 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
     start = std::clock();
 
 
+    // Precompute scale3 and scale5
+    unsigned int scale_length = particleData.size() * (particleData.size()-1)/2;
+    RealOpenMM * scale3 = new RealOpenMM[scale_length]; 
+    RealOpenMM * scale5 = new RealOpenMM[scale_length]; 
+    int xx = 0;
+    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+        for( unsigned int jj = ii; jj < particleData.size(); jj++ ){
+	    RealVec deltaR    = particleData[jj].position - particleData[ii].position;
+
+	    getPeriodicDelta( deltaR );
+	    RealOpenMM r2     = deltaR.dot( deltaR );
+
+	    RealOpenMM r           = SQRT(r2);
+
+	    scale3[xx] = getAndScaleInverseRs(particleData[ii], particleData[jj], r, true, 3, TDD);
+	    scale5[xx] = getAndScaleInverseRs(particleData[ii], particleData[jj], r, true, 5, TDD);
+        xx++;
+        }
+    }
+
     while( !done ){
 
         RealOpenMM epsilon = updateInducedDipoleFields( particleData, updateInducedDipoleField);
