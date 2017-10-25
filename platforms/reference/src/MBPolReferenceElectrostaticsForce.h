@@ -675,7 +675,7 @@ protected:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     virtual void calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI, const ElectrostaticsParticleData& particleJ,
-                                                 std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields );
+                                                 std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields , RealOpenMM scale3, RealOpenMM scale5);
 
     /**
      * Calculate induced dipole fields.
@@ -684,7 +684,7 @@ protected:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     virtual void calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields);
+                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5);
     /**
      * Converge induced dipoles.
      *
@@ -701,7 +701,9 @@ protected:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     RealOpenMM updateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                          std::vector<UpdateInducedDipoleFieldStruct>& calculateInducedDipoleField);
+                                          std::vector<UpdateInducedDipoleFieldStruct>& calculateInducedDipoleField,
+                                          RealOpenMM * scale3,
+                                          RealOpenMM * scale5);
 
     /**
      * Update induced dipole for a particle given updated induced dipole field at the site.

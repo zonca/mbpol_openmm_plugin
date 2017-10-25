@@ -425,19 +425,15 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxn( unsigned 
 
 void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleJ,
-                                                                    std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
+                                                                    std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields , RealOpenMM scale3, RealOpenMM scale5)
 {
 
    if( particleI.particleIndex == particleJ.particleIndex )return;
 
     RealVec deltaR       = particleJ.position - particleI.position;
-    RealOpenMM r         =  SQRT( deltaR.dot( deltaR ) );
-
-    RealOpenMM scale3 = getAndScaleInverseRs( particleI, particleJ, r, false, 3, TDD);
-    RealOpenMM scale5 = getAndScaleInverseRs( particleI, particleJ, r, false, 5, TDD);
 
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
-        calculateInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, -scale3, scale5, deltaR,
+        calculateInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, scale3, scale5, deltaR,
                                        *(updateInducedDipoleFields[ii].inducedDipoles), updateInducedDipoleFields[ii].inducedDipoleField );
     }
     return;
@@ -445,19 +441,21 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const El
 }
 
 void MBPolReferenceElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                  std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields)
+                                                                  std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5)
 {
 
+    unsigned int xx = 0;
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii; jj < particleData.size(); jj++ ){
-            calculateInducedDipolePairIxns( particleData[ii], particleData[jj], updateInducedDipoleFields );
+            calculateInducedDipolePairIxns( particleData[ii], particleData[jj], updateInducedDipoleFields, scale3[xx], scale5[xx]);
+            xx++;
         }
     }
     return;
 }
 
 RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields)
+                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5)
 {
 
     // (1) zero fields
@@ -469,7 +467,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipoleFields( const s
         std::fill( updateInducedDipoleFields[ii].inducedDipoleField.begin(), updateInducedDipoleFields[ii].inducedDipoleField.end(), zeroVec );
     }
 
-    calculateInducedDipoleFields( particleData, updateInducedDipoleFields);
+    calculateInducedDipoleFields( particleData, updateInducedDipoleFields, scale3, scale5);
 
     RealOpenMM maxEpsilon = 0.0;
     for( unsigned int kk = 0; kk < updateInducedDipoleFields.size(); kk++ ){
@@ -542,7 +540,7 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
 
     while( !done ){
 
-        RealOpenMM epsilon = updateInducedDipoleFields( particleData, updateInducedDipoleField);
+        RealOpenMM epsilon = updateInducedDipoleFields( particleData, updateInducedDipoleField, scale3, scale5);
                    epsilon = _polarSOR*_debye*SQRT( epsilon/( static_cast<RealOpenMM>(_numParticles) ) );
 
         if( epsilon < getMutualInducedDipoleTargetEpsilon() ){
