@@ -2565,13 +2565,14 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
     electrostaticPotential[iIndex] -= sci4 * (bn1 - rr3 * (1 - scale3CD)); // /2.;
     electrostaticPotential[jIndex] += sci3 * (bn1 - rr3 * (1 - scale3CD));//  /2.;
 
-    RealOpenMM scale3CC =getAndScaleInverseRs(particleI,particleJ,r,true,3,TCC);
-    RealOpenMM scale5CD =getAndScaleInverseRs(particleI,particleJ,r,true,5,TCD);
+    RealOpenMM scale3CC = 0.;
+    RealOpenMM scale5CD = 0.;
     RealOpenMM scale5DD =getAndScaleInverseRs(particleI,particleJ,r,true,5,TDD);
     RealOpenMM scale7DD =getAndScaleInverseRs(particleI,particleJ,r,true,7,TDD);
 
-    if( isSameWater ) {
-        scale3CC = scale5CD = 0.;
+    if( !isSameWater ) {
+        scale3CC = getAndScaleInverseRs(particleI,particleJ,r,true,3,TCC);
+        scale5CD = getAndScaleInverseRs(particleI,particleJ,r,true,5,TCD);
     }
 
     // intermediate variables for permanent force terms
