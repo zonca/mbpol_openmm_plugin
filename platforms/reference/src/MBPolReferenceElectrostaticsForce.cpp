@@ -564,8 +564,6 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
 
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
-    std::cout << "Precomputation took " << duration << "s" << std::endl;
-
     start = std::clock();
 
     while( !done ){
@@ -587,7 +585,11 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
 
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
+
+#ifdef DEBUG_MBPOL
     std::cout << "Induced dipole Iterations " << iteration << "took " << duration << "s" << std::endl;
+#endif
+
     setMutualInducedDipoleEpsilon( currentEpsilon );
     setMutualInducedDipoleIterations( iteration );
 
