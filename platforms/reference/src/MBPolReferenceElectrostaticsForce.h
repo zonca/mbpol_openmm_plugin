@@ -627,6 +627,10 @@ protected:
                                                                         const ElectrostaticsParticleData& particleK,
                                                               RealOpenMM r, bool justScale, int interactionOrder, int interactionType) const;
 
+    RealOpenMM getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
+                                                                    const ElectrostaticsParticleData& particleK,
+                                                     const RealOpenMM & pgamma, RealOpenMM r, RealOpenMM & scale3, RealOpenMM & scale5) const;
+
     /**
      * Zero fixed multipole fields.
      */
