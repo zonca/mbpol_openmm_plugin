@@ -38,6 +38,8 @@
 using std::vector;
 using OpenMM::RealVec;
 
+const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
+
 #undef MBPOL_DEBUG
 
 MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( ) :
@@ -312,7 +314,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
         switch (interactionOrder) {
 
         case 1:
-            return rrI * (1.0 - EXP(dampForExp) + pow(pgamma, 1.0/4.0)*(r/damp)*EXP(ttm::gammln(3.0/4.0))*ttm::gammq(3.0/4.0, -dampForExp));
+            return rrI * (1.0 - EXP(dampForExp) + pow(pgamma, 1.0/4.0)*(r/damp)*EXPGAMM*ttm::gammq(3.0/4.0, -dampForExp));
 
         case 3:
             return rrI * ( 1.0 - EXP(dampForExp) );
