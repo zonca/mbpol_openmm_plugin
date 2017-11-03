@@ -345,7 +345,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC
         RealOpenMM dampForExp = -1 * pgamma * ratio;
 
         scale3 =  1.0 - EXP(dampForExp);
-        scale5 = scale3 + pow(pgamma, 1.0/4.0)*(r/damp)*EXPGAMM;//*ttm::gammq(3.0/4.0, -dampForExp);
+        scale5 = scale3 + pow(pgamma, 1.0/4.0)*(r/damp)*EXPGAMM*ttm::gammq(3.0/4.0, -dampForExp);
     } else {
             scale3 = scale5 = 1.;
     }
