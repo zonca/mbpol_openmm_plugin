@@ -549,7 +549,7 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
         for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
 	    RealVec deltaR    = particleData[jj].position - particleData[ii].position;
 
-	    //getPeriodicDelta( deltaR );
+	    getPeriodicDelta( deltaR );
 	    RealOpenMM r2     = deltaR.dot( deltaR );
 
 	    RealOpenMM r           = SQRT(r2);
