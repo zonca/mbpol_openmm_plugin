@@ -704,7 +704,7 @@ protected:
      * @param particleData              vector of particle positions and parameters (charge, labFrame dipoles, quadrupoles, ...)
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
-    RealOpenMM updateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
+    RealOpenMM runUpdateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
                                           std::vector<UpdateInducedDipoleFieldStruct>& calculateInducedDipoleField,
                                           RealOpenMM * scale3,
                                           RealOpenMM * scale5);

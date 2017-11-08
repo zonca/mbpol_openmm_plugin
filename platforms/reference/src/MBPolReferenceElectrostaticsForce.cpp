@@ -476,7 +476,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoleFields( const std:
     return;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolReferenceElectrostaticsForce::runUpdateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                      std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5)
 {
 
@@ -566,7 +566,7 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
 
     while( !done ){
 
-        RealOpenMM epsilon = updateInducedDipoleFields( particleData, updateInducedDipoleField, scale3, scale5);
+        RealOpenMM epsilon = runUpdateInducedDipoleFields( particleData, updateInducedDipoleField, scale3, scale5);
                    epsilon = _polarSOR*_debye*SQRT( epsilon/( static_cast<RealOpenMM>(_numParticles) ) );
 
         if( epsilon < getMutualInducedDipoleTargetEpsilon() ){
