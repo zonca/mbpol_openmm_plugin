@@ -452,10 +452,16 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const El
 {
 
     RealVec deltaR       = particleJ.position - particleI.position;
-    RealOpenMM r         =  SQRT( deltaR.dot( deltaR ) );
+    getPeriodicDelta(deltaR);
+	    RealOpenMM r2     = deltaR.dot( deltaR );
+
+	    RealOpenMM r           = SQRT(r2);
+
+	    RealOpenMM s3 = -1 * getAndScaleInverseRs(particleI, particleJ, r, false, 3, TDD);
+	    RealOpenMM s5 = getAndScaleInverseRs(particleI, particleJ, r, false, 5, TDD);
     
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
-        calculateInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, scale3, scale5, deltaR,
+        calculateInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, s3, s5, deltaR,
                                        *(updateInducedDipoleFields[ii].inducedDipoles), updateInducedDipoleFields[ii].inducedDipoleField );
     }
     return;
