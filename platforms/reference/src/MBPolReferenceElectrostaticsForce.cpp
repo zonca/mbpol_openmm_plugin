@@ -470,7 +470,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoleFields( const std:
 
     unsigned int xx = 0;
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-        for( unsigned int jj = ii; jj < particleData.size(); jj++ ){
+        for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
             calculateInducedDipolePairIxns( particleData[ii], particleData[jj], updateInducedDipoleFields, scale3[xx], scale5[xx]);
             xx++;
         }
@@ -548,7 +548,7 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
     RealOpenMM * scale5 = new RealOpenMM[scale_length]; 
     int xx = 0;
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-        for( unsigned int jj = ii; jj < particleData.size(); jj++ ){
+        for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
 	    RealVec deltaR    = particleData[jj].position - particleData[ii].position;
 
 	    //getPeriodicDelta( deltaR );
