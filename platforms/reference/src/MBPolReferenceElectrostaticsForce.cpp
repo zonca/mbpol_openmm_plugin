@@ -452,7 +452,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const El
 {
 
     RealVec deltaR       = particleJ.position - particleI.position;
-    getPeriodicDelta(deltaR);
+    //getPeriodicDelta(deltaR);
 	    RealOpenMM r2     = deltaR.dot( deltaR );
 
 	    RealOpenMM r           = SQRT(r2);
