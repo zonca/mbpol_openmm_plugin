@@ -591,6 +591,8 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
     setMutualInducedDipoleEpsilon( currentEpsilon );
     setMutualInducedDipoleIterations( iteration );
 
+    delete scale3, scale5;
+
     return;
 }
 
