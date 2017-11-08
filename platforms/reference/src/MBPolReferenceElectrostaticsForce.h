@@ -671,6 +671,7 @@ protected:
                                         const std::vector<RealVec>& inducedDipole,
                                         std::vector<RealVec>& field ) const;
 
+    void precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM * scale3, RealOpenMM * scale5 );
     /**
      * Calculate fields due induced dipoles at each site.
      *
@@ -679,7 +680,7 @@ protected:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     virtual void calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI, const ElectrostaticsParticleData& particleJ,
-                                                 std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields , RealOpenMM scale3, RealOpenMM scale5);
+                                                 std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM precomputedScale3, RealOpenMM precomputedScale5  );
 
     /**
      * Calculate induced dipole fields.
@@ -1109,6 +1110,7 @@ private:
      */
     void recordFixedElectrostaticsField( void );
 
+    void precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM * scale3, RealOpenMM * scale5 );
     /**
      * Compute the potential due to the reciprocal space PME calculation for induced dipoles.
      *
@@ -1142,7 +1144,9 @@ private:
      */
     void calculateDirectInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
                                                const ElectrostaticsParticleData& particleJ,
-                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields );
+                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields,
+                                               RealOpenMM precomputedScale3,
+                                               RealOpenMM precomputedScale5 );
 
     /**
      * Initialize induced dipoles
