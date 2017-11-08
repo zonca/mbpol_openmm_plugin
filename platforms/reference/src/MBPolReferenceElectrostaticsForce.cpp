@@ -451,8 +451,6 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const El
                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields , RealOpenMM scale3, RealOpenMM scale5)
 {
 
-   if( particleI.particleIndex == particleJ.particleIndex )return;
-
     RealVec deltaR       = particleJ.position - particleI.position;
     RealOpenMM r         =  SQRT( deltaR.dot( deltaR ) );
     
