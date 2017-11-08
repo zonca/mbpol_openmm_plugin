@@ -431,8 +431,8 @@ void MBPolReferenceElectrostaticsForce::initializeInducedDipoles( std::vector<Up
 
 void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxn( unsigned int particleI,
                                                                    unsigned int particleJ,
-                                                                   RealOpenMM rr3,
-                                                                   RealOpenMM rr5,
+                                                                   const RealOpenMM & rr3,
+                                                                   const RealOpenMM & rr5,
                                                                    const RealVec& deltaR,
                                                                    const std::vector<RealVec>& inducedDipole,
                                                                    std::vector<RealVec>& field ) const
@@ -2339,6 +2339,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateInducedDipoleFields( const s
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii + 1; jj < particleData.size(); jj++ ){
             calculateDirectInducedDipolePairIxns( particleData[ii], particleData[jj], updateInducedDipoleFields, scale3[xx], scale5[xx] );
+            xx++;
         }
     }
 
@@ -2383,7 +2384,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxn( 
 void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
                                                                              const ElectrostaticsParticleData& particleJ,
                                                                              std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields,
-RealOpenMM precomputedScale3, RealOpenMM precomputedScale5 )
+RealOpenMM scale3, RealOpenMM scale5 )
 {
 
     // compute the real space portion of the Ewald summation
@@ -2434,9 +2435,6 @@ RealOpenMM precomputedScale3, RealOpenMM precomputedScale5 )
 //            scale5        = 1.0 - expdamp*(1.0-damp);
 //        }
 //    }
-
-    RealOpenMM scale3 = getAndScaleInverseRs(particleI, particleJ, r, true, 3, TDD);
-    RealOpenMM scale5 = getAndScaleInverseRs(particleI, particleJ, r, true, 5, TDD);
 
     RealOpenMM dsc3        = uscale*scale3;
     RealOpenMM dsc5        = uscale*scale5;

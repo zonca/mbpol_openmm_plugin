@@ -667,11 +667,11 @@ protected:
      * @param field                   vector of induced dipole fields
      */
     void calculateInducedDipolePairIxn( unsigned int particleI, unsigned int particleJ,
-                                        RealOpenMM rr3, RealOpenMM rr5, const RealVec& delta,
+                                        const RealOpenMM & rr3, const RealOpenMM & rr5, const RealVec& delta,
                                         const std::vector<RealVec>& inducedDipole,
                                         std::vector<RealVec>& field ) const;
 
-    void precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM * scale3, RealOpenMM * scale5 );
+    virtual void precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM * scale3, RealOpenMM * scale5 );
     /**
      * Calculate fields due induced dipoles at each site.
      *
