@@ -2298,14 +2298,14 @@ void MBPolReferencePmeElectrostaticsForce::calculateReciprocalSpaceInducedDipole
 }
 
 void MBPolReferencePmeElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields)
+                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5)
 {
 
-    // direct space ixns
-
+    unsigned int xx = 0;
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii + 1; jj < particleData.size(); jj++ ){
-            calculateDirectInducedDipolePairIxns( particleData[ii], particleData[jj], updateInducedDipoleFields );
+            calculateInducedDipolePairIxns( particleData[ii], particleData[jj], updateInducedDipoleFields, scale3[xx], scale5[xx]);
+            xx++;
         }
     }
 

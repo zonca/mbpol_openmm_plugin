@@ -1182,7 +1182,7 @@ private:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     void calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                       std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields);
+                                       std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5);
 
     /**
      * Set reciprocal space induced dipole fields.
