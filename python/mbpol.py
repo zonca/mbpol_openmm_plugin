@@ -85,6 +85,7 @@ class MBPolTwoBodyForceGenerator:
         self.types1 = []
         self.types2 = []
         self.types3 = []
+        self.cutoff = None
 
     @staticmethod
     def parseElement(element, forceField):
@@ -94,6 +95,8 @@ class MBPolTwoBodyForceGenerator:
         # <MBPolTwoBodyForce>
         #     <Residue class1="OW" class2="HW" class3="HW" />
         # </MBPolTwoBodyForce>
+
+        generator.cutoff = float(element.attrib["cutoff_nm"])
 
         for MBPolTwoBodyForce_template in element.findall('MBPolTwoBodyForce'):
             types = forceField._findAtomTypes(MBPolTwoBodyForce_template, 3)
@@ -125,7 +128,7 @@ class MBPolTwoBodyForceGenerator:
 
         if len(existing) == 0:
             force = mbpolplugin.MBPolTwoBodyForce()
-            force.setCutoff(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
+            force.setCutoff(self.cutoff)
             sys.addForce(force)
         else:
             force = existing[0]
@@ -166,6 +169,8 @@ class MBPolThreeBodyForceGenerator:
         #     <Residue class1="OW" class2="HW" class3="HW" />
         # </MBPolThreeBodyForce>
 
+        generator.cutoff = float(element.attrib["cutoff_nm"])
+
         for MBPolThreeBodyForce_template in element.findall('MBPolThreeBodyForce'):
             types = forceField._findAtomTypes(MBPolThreeBodyForce_template.attrib, 3)
             if None not in types:
@@ -196,7 +201,7 @@ class MBPolThreeBodyForceGenerator:
 
         if len(existing) == 0:
             force = mbpolplugin.MBPolThreeBodyForce()
-            force.setCutoff(float(nonbondedCutoff.value_in_unit(unit.nanometer)))
+            force.setCutoff(self.cutoff)
             sys.addForce(force)
         else:
             force = existing[0]

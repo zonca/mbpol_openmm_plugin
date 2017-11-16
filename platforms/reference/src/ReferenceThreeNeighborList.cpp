@@ -98,7 +98,7 @@ public:
     }
 
     void getNeighbors(
-            ThreeNeighborList& neighbors,
+            std::vector< std::vector<AtomIndex> > & nearbyAtoms,
             const VoxelItem& referencePoint, 
             double maxDistance, 
             double minDistance) const 
@@ -131,8 +131,6 @@ public:
             lastz = min(lastz, centerVoxelIndex.z-dIndexZ+nz-1);
         }
 
-        std::vector<AtomIndex> nearbyAtoms;
-        std::vector<const RealVec*> nearbyAtomsLocation;
 
         // Loop through nearby Voxels and create vectors of nearby Atoms and their locations
         for (int x = centerVoxelIndex.x - dIndexX; x <= lastx; ++x)
@@ -161,32 +159,13 @@ public:
                         if (dSquared > maxDistanceSquared) continue;
                         if (dSquared < minDistanceSquared) continue;
 
-                        nearbyAtoms.push_back( atomJ );
-                        nearbyAtomsLocation.push_back( itemIter->first );
+                        nearbyAtoms[atomI].push_back( atomJ );
                     } // for atom indices
                 }  // for z
             }  // for y
         } // for x
 
 
-        if (nearbyAtoms.size() >= 2)
-        {
-            // Loop through each combination of the reference atom (atomI) with each pair of nearby atoms atomJ and atomQ
-            for (unsigned int atomJindex=0; atomJindex<(nearbyAtoms.size()-1); atomJindex++)
-            {
-                for (unsigned int atomQindex=atomJindex+1; atomQindex<nearbyAtoms.size(); atomQindex++)
-                {
-                    // check only distance Q-J, we checked I-J and I-Q in the previous loop
-                    double dSquared = compPairDistanceSquared(*nearbyAtomsLocation[atomJindex], *nearbyAtomsLocation[atomQindex], periodicBoxSize, usePeriodic);
-                    if (dSquared > maxDistanceSquared) continue;
-                    if (dSquared < minDistanceSquared) continue;
-
-                    AtomTriplet triplet = {atomI, nearbyAtoms[atomJindex], nearbyAtoms[atomQindex]};
-                    neighbors.push_back(triplet);
-
-                }
-            }
-        }
     }
 
 private:
@@ -209,6 +188,7 @@ void OPENMM_EXPORT computeThreeNeighborListVoxelHash(
                               double minDistance                             )
 {
     neighborList.clear();
+    std::vector< std::vector<AtomIndex> > nearbyAtoms (nAtoms);
 
     double edgeSizeX, edgeSizeY, edgeSizeZ;
     if (!usePeriodic)
@@ -224,13 +204,24 @@ void OPENMM_EXPORT computeThreeNeighborListVoxelHash(
         // 1) Find other atoms that are close to this one
         const RealVec& location = atomLocations[atomJ];
         voxelHash.getNeighbors( 
-            neighborList, 
+            nearbyAtoms,
             VoxelItem(&location, atomJ),
             maxDistance, 
             minDistance);
             
         // 2) Add this atom to the voxelHash
         voxelHash.insert(atomJ, location);
+    }
+    for (AtomIndex atomI = 0; atomI < (AtomIndex) nAtoms; ++atomI)
+    {
+        for (std::vector<AtomIndex>::iterator atomJ_itr = nearbyAtoms[atomI].begin(); atomJ_itr != nearbyAtoms[atomI].end(); ++atomJ_itr)
+        {
+                for (std::vector<AtomIndex>::iterator atomK_itr = nearbyAtoms[*atomJ_itr].begin(); atomK_itr != nearbyAtoms[*atomJ_itr].end(); ++atomK_itr)
+                {
+                    AtomTriplet triplet = {atomI, *atomJ_itr, *atomK_itr};
+                    neighborList.push_back(triplet);
+                }
+        }
     }
 }
 

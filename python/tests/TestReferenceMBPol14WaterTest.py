@@ -11,7 +11,7 @@ class TestCustomForce(unittest.TestCase):
 
     def testWater14(self):
         nonbondedMethod=app.PME
-        expected_energy = -59.10662152
+        expected_energy = -60
         pdb = app.PDBFile("pdb_files/water14.pdb")
         forcefield = app.ForceField("../mbpol.xml")
         nonbondedCutoff = 0.9*unit.nanometer
