@@ -799,8 +799,8 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
             deltaK = particleData[particleK.otherSiteIndex[s]].position
            - particleI.position;
             distanceK = SQRT(deltaK.dot(deltaK));
-            getAndScaleInverseRs13justScaleTCC(particleData[particleI.otherSiteIndex[s]], particleK, pgamma, distanceI, scale1I, scale3I);
-            getAndScaleInverseRs13justScaleTCC(particleData[particleK.otherSiteIndex[s]], particleI, pgamma, distanceK, scale1K, scale3K);
+            //getAndScaleInverseRs13justScaleTCC(particleData[particleI.otherSiteIndex[s]], particleK, pgamma, distanceI, scale1I, scale3I);
+            //getAndScaleInverseRs13justScaleTCC(particleData[particleK.otherSiteIndex[s]], particleI, pgamma, distanceK, scale1K, scale3K);
             inducedDipoleI = _inducedDipole[kIndex].dot(deltaI);
             inducedDipoleK = _inducedDipole[iIndex].dot(deltaK);
 
