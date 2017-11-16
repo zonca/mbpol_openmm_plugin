@@ -331,9 +331,9 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
     return rrI;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
+void MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
-                                                          RealOpenMM pgamma, RealOpenMM r, RealOpenMM * scale3, RealOpenMM * scale5) const
+                                                          RealOpenMM pgamma, RealOpenMM r, RealOpenMM * scale1, RealOpenMM * scale3) const
 {
 
 
@@ -345,9 +345,10 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC
         RealOpenMM dampForExp = -1 * pgamma * ratio;
 
         *scale3 =  1.0 - EXP(dampForExp);
-        *scale5 = *scale3 + pow(pgamma, 1.0/4.0)*(r/damp)*EXPGAMM*ttm::gammq(3.0/4.0, -dampForExp);
+        *scale1 = *scale3 + pow(pgamma, 1.0/4.0)*(r/damp)*EXPGAMM*ttm::gammq(3.0/4.0, -dampForExp);
     } else {
-            *scale3 = *scale5 = 1.;
+            *scale3 = 1.;
+            *scale1 = 1.;
     }
 
 }
@@ -783,7 +784,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
         RealOpenMM distanceK, distanceI,
            inducedDipoleI, inducedDipoleK;
-          RealOpenMM * scale1I, *scale1K, *scale3I,* scale3K;
+          RealOpenMM scale1I, scale1K, scale3I, scale3K;
     RealVec deltaI, deltaK;
 
             std::vector<RealOpenMM> thole = getTholeParameters();
@@ -799,18 +800,18 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
             deltaK = particleData[particleK.otherSiteIndex[s]].position
            - particleI.position;
             distanceK = SQRT(deltaK.dot(deltaK));
-            getAndScaleInverseRs13justScaleTCC(particleData[particleI.otherSiteIndex[s]], particleK, pgamma, distanceI, scale1I, scale3I);
-            getAndScaleInverseRs13justScaleTCC(particleData[particleK.otherSiteIndex[s]], particleI, pgamma, distanceK, scale1K, scale3K);
+            getAndScaleInverseRs13justScaleTCC(particleData[particleI.otherSiteIndex[s]], particleK, pgamma, distanceI, &scale1I, &scale3I);
+            getAndScaleInverseRs13justScaleTCC(particleData[particleK.otherSiteIndex[s]], particleI, pgamma, distanceK, &scale1K,& scale3K);
             inducedDipoleI = _inducedDipole[kIndex].dot(deltaI);
             inducedDipoleK = _inducedDipole[iIndex].dot(deltaK);
 
             for (size_t i = 0; i < 3; ++i) {
 
-                ftm2[i] +=  *scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
-                ftm2[i] -=  *scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge; // charge - charge
+                ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
+                ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge; // charge - charge
 
-                ftm2i[i] += *scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
-                ftm2i[i] -= *scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
+                ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
+                ftm2i[i] -= scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
 
             }
 
