@@ -38,6 +38,8 @@
 using std::vector;
 using OpenMM::RealVec;
 
+// Precomputed here instead of inside getAndScaleInverseRs
+
 const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
 
 #undef MBPOL_DEBUG
@@ -335,6 +337,9 @@ void MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  con
                                                                     const ElectrostaticsParticleData& particleK,
                                                           RealOpenMM pgamma, RealOpenMM r, RealOpenMM * scale1, RealOpenMM * scale3) const
 {
+/* This is a specialized version of the function to compute the scale factors optimized for the loop
+ * of interaction between an atom and the other size in the second atom water molecule.
+ */
 
 
     RealOpenMM damp      = pow(particleI.dampingFactor*particleK.dampingFactor, 1/6.); // AA in MBPol
@@ -528,7 +533,10 @@ RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipole( const std::ve
 
 void MBPolReferenceElectrostaticsForce::precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM scale3[], RealOpenMM scale5[] )
 {
-    // Precompute scale3 and scale5
+    // Precompute scale3 and scale5, the arrays will be passed into the iterative dipole estimation
+    // this has a great impact on performance
+    // The arrays are indexed by `xx`, we always scan through the arrays with the same 2 nested loops
+    // so we are always able to recover the correct element.
     int xx = 0;
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
