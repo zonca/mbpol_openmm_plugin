@@ -38,7 +38,7 @@
 using std::vector;
 using OpenMM::RealVec;
 
-const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
+const RealOpenMM EXPGAMM = 1.;
 
 #undef MBPOL_DEBUG
 
