@@ -333,7 +333,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
 
 RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
-                                                          const RealOpenMM& pgamma, RealOpenMM r, RealOpenMM * scale3, RealOpenMM * scale5) const
+                                                          RealOpenMM pgamma, RealOpenMM r, RealOpenMM * scale3, RealOpenMM * scale5) const
 {
 
 
