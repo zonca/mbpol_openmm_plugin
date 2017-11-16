@@ -333,7 +333,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
 
 RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
-                                                          const RealOpenMM& pgamma, RealOpenMM r, RealOpenMM & scale3, RealOpenMM & scale5) const
+                                                          const RealOpenMM& pgamma, RealOpenMM r, RealOpenMM * scale3, RealOpenMM * scale5) const
 {
 
 
@@ -344,10 +344,10 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC
         RealOpenMM ratio       = pow(r/damp, 4); // rA4 in MBPol
         RealOpenMM dampForExp = -1 * pgamma * ratio;
 
-        scale3 =  1.0 - EXP(dampForExp);
-        scale5 = scale3 + pow(pgamma, 1.0/4.0)*(r/damp)*EXPGAMM*ttm::gammq(3.0/4.0, -dampForExp);
+        *scale3 =  1.0 - EXP(dampForExp);
+        *scale5 = *scale3 + pow(pgamma, 1.0/4.0)*(r/damp)*EXPGAMM*ttm::gammq(3.0/4.0, -dampForExp);
     } else {
-            scale3 = scale5 = 1.;
+            *scale3 = *scale5 = 1.;
     }
 
 }
@@ -781,9 +781,9 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
     if (getIncludeChargeRedistribution() and (not (isSameWater))){
 
-        double distanceK, distanceI,
-           scale1I, scale1K, scale3I, scale3K,
+        RealOpenMM distanceK, distanceI,
            inducedDipoleI, inducedDipoleK;
+          RealOpenMM * scale1I, scale1K, scale3I, scale3K;
     RealVec deltaI, deltaK;
 
             std::vector<RealOpenMM> thole = getTholeParameters();
@@ -806,11 +806,11 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
             for (size_t i = 0; i < 3; ++i) {
 
-                ftm2[i] +=  scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
-                ftm2[i] -=  scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge; // charge - charge
+                ftm2[i] +=  *scale1I * (1.0/distanceI) * particleI.chargeDerivatives[s][i] * particleK.charge; // charge - charge
+                ftm2[i] -=  *scale1K * (1.0/distanceK) * particleK.chargeDerivatives[s][i] * particleI.charge; // charge - charge
 
-                ftm2i[i] += scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
-                ftm2i[i] -= scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
+                ftm2i[i] += *scale3I * pow(1.0/distanceI,3) * particleI.chargeDerivatives[s][i] * inducedDipoleI;// charge - charge
+                ftm2i[i] -= *scale3K * pow(1.0/distanceK,3) * particleK.chargeDerivatives[s][i] * inducedDipoleK;// charge - charge
 
             }
 
