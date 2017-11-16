@@ -567,7 +567,7 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
     RealOpenMM * scale3 = new RealOpenMM[scale_length]; 
     RealOpenMM * scale5 = new RealOpenMM[scale_length]; 
 
-    //precomputeScale35( particleData, scale3, scale5);
+    precomputeScale35( particleData, scale3, scale5);
 
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
