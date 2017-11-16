@@ -38,7 +38,7 @@
 using std::vector;
 using OpenMM::RealVec;
 
-const RealOpenMM EXPGAMM = 1.;
+const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
 
 #undef MBPOL_DEBUG
 
@@ -783,7 +783,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
 
         RealOpenMM distanceK, distanceI,
            inducedDipoleI, inducedDipoleK;
-          RealOpenMM * scale1I, scale1K, scale3I, scale3K;
+          RealOpenMM * scale1I, *scale1K, *scale3I,* scale3K;
     RealVec deltaI, deltaK;
 
             std::vector<RealOpenMM> thole = getTholeParameters();
