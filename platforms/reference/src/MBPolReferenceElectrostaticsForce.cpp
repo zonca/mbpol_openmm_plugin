@@ -465,7 +465,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const El
 }
 
 void MBPolReferenceElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                  std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5)
+                                                                  std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[])
 {
 
     unsigned int xx = 0;
@@ -480,7 +480,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoleFields( const std:
 }
 
 RealOpenMM MBPolReferenceElectrostaticsForce::runUpdateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5)
+                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[])
 {
 
     // (1) zero fields
@@ -525,7 +525,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipole( const std::ve
 }
 
 
-void MBPolReferenceElectrostaticsForce::precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM * scale3, RealOpenMM * scale5 )
+void MBPolReferenceElectrostaticsForce::precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM scale3[], RealOpenMM scale5[] )
 {
     // Precompute scale3 and scale5
     int xx = 0;
@@ -2328,7 +2328,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateReciprocalSpaceInducedDipole
 }
 
 void MBPolReferencePmeElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM * scale3, RealOpenMM * scale5)
+                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[])
 {
 
     unsigned int xx = 0;
