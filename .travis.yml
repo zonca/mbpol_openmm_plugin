@@ -17,7 +17,7 @@ before_install:
   - conda create --yes -n py3 python=3.4 --file ci/requirements-conda.txt
   - source activate py3
   - $HOME/miniconda3/envs/py3/bin/pip install $PIP_ARGS nose-exclude
-  - conda install --yes openmm=6.3 runipy swig pytest
+  - conda install --yes openmm=6.3 swig pytest nbconvert jupyter
 
 
 
@@ -34,6 +34,6 @@ script:
   - cd python/tests
   - py.test -v   
   - cd ../../../python
-  - runipy water14.ipynb
+  - jupyter nbconvert --execute water14.ipynb  --to notebook
   - mbpol_builder mbpol_config.ini example_run.py
   - travis_wait python example_run.py && python -c "import os.path; import sys; sys.exit(not os.path.isfile('water14_cluster_trajectory.pdb'))"

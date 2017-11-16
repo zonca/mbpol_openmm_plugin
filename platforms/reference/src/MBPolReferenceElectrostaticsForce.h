@@ -627,6 +627,10 @@ protected:
                                                                         const ElectrostaticsParticleData& particleK,
                                                               RealOpenMM r, bool justScale, int interactionOrder, int interactionType) const;
 
+    void getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
+                                                                    const ElectrostaticsParticleData& particleK,
+                                                     const RealOpenMM pgamma, RealOpenMM r, RealOpenMM * scale3, RealOpenMM * scale5) const;
+
     /**
      * Zero fixed multipole fields.
      */
@@ -663,10 +667,11 @@ protected:
      * @param field                   vector of induced dipole fields
      */
     void calculateInducedDipolePairIxn( unsigned int particleI, unsigned int particleJ,
-                                        RealOpenMM rr3, RealOpenMM rr5, const RealVec& delta,
+                                        const RealOpenMM & rr3, const RealOpenMM & rr5, const RealVec& delta,
                                         const std::vector<RealVec>& inducedDipole,
                                         std::vector<RealVec>& field ) const;
 
+    virtual void precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM scale3[], RealOpenMM scale5[] );
     /**
      * Calculate fields due induced dipoles at each site.
      *
@@ -675,7 +680,7 @@ protected:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     virtual void calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI, const ElectrostaticsParticleData& particleJ,
-                                                 std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields );
+                                                 std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM precomputedScale3, RealOpenMM precomputedScale5  );
 
     /**
      * Calculate induced dipole fields.
@@ -684,7 +689,8 @@ protected:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     virtual void calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields);
+                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields,
+						 const RealOpenMM scale3[], const RealOpenMM scale5[]);
     /**
      * Converge induced dipoles.
      *
@@ -700,8 +706,9 @@ protected:
      * @param particleData              vector of particle positions and parameters (charge, labFrame dipoles, quadrupoles, ...)
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
-    RealOpenMM updateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                          std::vector<UpdateInducedDipoleFieldStruct>& calculateInducedDipoleField);
+    RealOpenMM runUpdateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
+                                          std::vector<UpdateInducedDipoleFieldStruct>& calculateInducedDipoleField,
+						 const RealOpenMM scale3[], const RealOpenMM scale5[]);
 
     /**
      * Update induced dipole for a particle given updated induced dipole field at the site.
@@ -1103,6 +1110,7 @@ private:
      */
     void recordFixedElectrostaticsField( void );
 
+    void precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM scale3[], RealOpenMM scale5[] );
     /**
      * Compute the potential due to the reciprocal space PME calculation for induced dipoles.
      *
@@ -1136,7 +1144,9 @@ private:
      */
     void calculateDirectInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
                                                const ElectrostaticsParticleData& particleJ,
-                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields );
+                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields,
+                                               RealOpenMM precomputedScale3,
+                                               RealOpenMM precomputedScale5 );
 
     /**
      * Initialize induced dipoles
@@ -1176,7 +1186,7 @@ private:
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
     void calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                       std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields);
+                                       std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[]);
 
     /**
      * Set reciprocal space induced dipole fields.
