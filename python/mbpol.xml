@@ -35,6 +35,9 @@
         <Residue name="HOH" class1="O" class2="H" class3="H" />
     </MBPolThreeBodyForce>
     <Script>
+import simtk.openmm as mm
+import itertools
+
 numAtomClasses = 4
 
 # Conversion from atom types to atom classes.
