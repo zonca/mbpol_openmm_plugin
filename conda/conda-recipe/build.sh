@@ -29,6 +29,8 @@ elif [[ "$OSTYPE" == "darwin"* ]]; then
     CMAKE_FLAGS+=" -DFFTW_THREADS_LIBRARY=$PREFIX/lib/libfftw3f_threads.dylib"
 fi
 
+CMAKE_FLAGS+=" -DOPENMM_MAJOR_VERSION=7 -DOPENMM_MINOR_VERSION=1 -DCMAKE_BUILD_TYPE=Release"
+
 # Build in subdirectory.
 mkdir build
 cd build
