@@ -113,7 +113,7 @@ echo "********** Installing conda/binstar channels and packages..."
 export PATH=$HOME/miniconda/bin:$PATH
 conda config --add channels http://conda.binstar.org/omnia
 conda install --yes fftw3f jinja2 swig sphinx conda-build cmake binstar pip anaconda-client
-~/miniconda3/bin/conda install --yes fftw3f jinja2 swig sphinx conda-build cmake pip
+~/miniconda3/bin/conda install --yes fftw3f jinja2 swig sphinx conda-build cmake pip anaconda-client
 
 # Add conda to the path.
 echo "********** Adding paths"

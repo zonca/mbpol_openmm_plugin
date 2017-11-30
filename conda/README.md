@@ -14,4 +14,6 @@ Finally execute the `build_conda_package_vagrant.sh` script line by line, making
 to update version numbers.
 `conda-build` works only on the root environment, so we install also `miniconda3` separately.
 
-so we have to set the correct miniconda path in `build.sh`, check mbpol and openmp versions in `meta.yaml` and then repeat the build and upload process for python 2 and 3.
+so we have to set the correct miniconda path in `build.sh`, check mbpol and openmm versions in `meta.yaml` and then repeat the build and upload process for python 2 and 3.
+
+For uploading, add `-u paesanilab` to the anaconda upload command to upload to the Organization
