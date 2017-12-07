@@ -1,15 +1,15 @@
 #---------------------------------------------------
-# OpenMMMBPol REFERENCE Platform
+# OpenMMMBPol CPU Platform
 #----------------------------------------------------
 
-SET(OPENMM_REFERENCE_LIBRARY_NAME OpenMMMBPolReference)
+SET(OPENMM_CPU_LIBRARY_NAME OpenMMMBPolCPU)
 
 
 # The source is organized into subdirectories, but we handle them all from
 # this CMakeLists file rather than letting CMake visit them as SUBDIRS.
 SET(OPENMM_MBPOL_SOURCE_SUBDIRS .)
 
-SET(SHARED_TARGET ${OPENMM_REFERENCE_LIBRARY_NAME})
+SET(SHARED_TARGET ${OPENMM_CPU_LIBRARY_NAME})
 
 # These are all the places to search for header files which are
 # to be part of the API.
@@ -33,12 +33,12 @@ SET(SOURCE_INCLUDE_FILES ${SOURCE_INCLUDE_FILES} ${incl_files})
 INCLUDE_DIRECTORIES(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 INCLUDE_DIRECTORIES(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/src)
-INCLUDE_DIRECTORIES(BEFORE ${CMAKE_SOURCE_DIR}/platforms/reference/include)
-INCLUDE_DIRECTORIES(BEFORE ${CMAKE_SOURCE_DIR}/platforms/reference/src)
+INCLUDE_DIRECTORIES(BEFORE ${CMAKE_SOURCE_DIR}/platforms/cpu/include)
+INCLUDE_DIRECTORIES(BEFORE ${CMAKE_SOURCE_DIR}/platforms/cpu/src)
 
 # Create the library
 
-INCLUDE_DIRECTORIES(${REFERENCE_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${CPU_INCLUDE_DIR})
 
 ADD_LIBRARY(${SHARED_TARGET} SHARED ${SOURCE_FILES} ${SOURCE_INCLUDE_FILES}               ${API_INCLUDE_FILES})
 

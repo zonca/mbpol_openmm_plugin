@@ -1,5 +1,5 @@
-#ifndef MBPOL_OPENMM_REFERERENCE_KERNEL_FACTORY_H_
-#define MBPOL_OPENMM_REFERERENCE_KERNEL_FACTORY_H_
+#ifndef MBPOL_OPENMM_CPU_KERNEL_FACTORY_H_
+#define MBPOL_OPENMM_CPU_KERNEL_FACTORY_H_
 
 /* -------------------------------------------------------------------------- *
  *                            OpenMMMBPol                                    *
@@ -34,14 +34,14 @@ using namespace OpenMM;
 namespace MBPolPlugin {
 
 /**
- * This KernelFactory creates all kernels for MBPolReferencePlatform.
+ * This KernelFactory creates all kernels for MBPolCpuPlatform.
  */
 
-class MBPolReferenceKernelFactory : public KernelFactory {
+class MBPolCpuKernelFactory : public KernelFactory {
 public:
     KernelImpl* createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const;
 };
 
 } // namespace MBPolPlugin
 
-#endif /*MBPOL_OPENMM_REFERERENCE_KERNEL_FACTORY_H_*/
+#endif /*MBPOL_OPENMM_CPU_KERNEL_FACTORY_H_*/

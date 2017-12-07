@@ -24,33 +24,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.      *
  * -------------------------------------------------------------------------- */
 
-#include "MBPolReferenceKernelFactory.h"
-#include "MBPolReferenceKernels.h"
-#include "openmm/reference/ReferencePlatform.h"
+#include "MBPolCpuKernelFactory.h"
+#include "MBPolCpuKernels.h"
+#include "openmm/reference/CpuPlatform.h"
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/OpenMMException.h"
 
 using namespace  OpenMM;
 using namespace MBPolPlugin;
 
-#if defined(WIN32)
-    #include <windows.h>
-    extern "C" void initMBPolReferenceKernels();
-    BOOL WINAPI DllMain(HANDLE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved) {
-        if (ul_reason_for_call == DLL_PROCESS_ATTACH)
-            initMBPolReferenceKernels();
-        return TRUE;
-    }
-#else
-    extern "C" void __attribute__((constructor)) initMBPolReferenceKernels();
-#endif
+// need to add registerKernelFactories from https://github.com/peastman/openmmexampleplugin/blob/master/platforms/reference/src/ReferenceExampleKernelFactory.cpp
 
-extern "C" void initMBPolReferenceKernels() {
+extern "C" void initMBPolCpuKernels() {
     for( int ii = 0; ii < Platform::getNumPlatforms(); ii++ ){
         Platform& platform = Platform::getPlatform(ii);
-        if( platform.getName() == "Reference" ){
+        if( platform.getName() == "Cpu" ){
 
-             MBPolReferenceKernelFactory* factory = new MBPolReferenceKernelFactory();
+             MBPolCpuKernelFactory* factory = new MBPolCpuKernelFactory();
 
              platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(),           factory);
              platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
@@ -60,10 +50,10 @@ extern "C" void initMBPolReferenceKernels() {
     }
 }
 
-KernelImpl* MBPolReferenceKernelFactory::createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const {
-    ReferencePlatform::PlatformData& referencePlatformData = *static_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+KernelImpl* MBPolCpuKernelFactory::createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const {
+    CpuPlatform::PlatformData& referencePlatformData = *static_cast<CpuPlatform::PlatformData*>(context.getPlatformData());
 
-    // create MBPolReferenceData object if contextToMBPolDataMap does not contain
+    // create MBPolCpuData object if contextToMBPolDataMap does not contain
     // key equal to current context
     if (name == CalcMBPolOneBodyForceKernel::Name())
         return new ReferenceCalcMBPolOneBodyForceKernel(name, platform, context.getSystem());
