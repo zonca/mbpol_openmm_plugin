@@ -26,7 +26,7 @@
 
 #include "MBPolCpuKernelFactory.h"
 #include "MBPolCpuKernels.h"
-#include "openmm/reference/CpuPlatform.h"
+#include "openmm/cpu/CpuPlatform.h"
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/OpenMMException.h"
 
@@ -35,6 +35,16 @@ using namespace MBPolPlugin;
 
 // need to add registerKernelFactories from https://github.com/peastman/openmmexampleplugin/blob/master/platforms/reference/src/ReferenceExampleKernelFactory.cpp
 
+//extern "C" OPENMM_EXPORT void registerKernelFactories() {
+//    for (int i = 0; i < Platform::getNumPlatforms(); i++) {
+//        Platform& platform = Platform::getPlatform(i);
+//        if (dynamic_cast<ReferencePlatform*>(&platform) != NULL) {
+//            ReferenceExampleKernelFactory* factory = new ReferenceExampleKernelFactory();
+//            platform.registerKernelFactory(CalcExampleForceKernel::Name(), factory);
+//        }
+//    }
+//}
+
 extern "C" void initMBPolCpuKernels() {
     for( int ii = 0; ii < Platform::getNumPlatforms(); ii++ ){
         Platform& platform = Platform::getPlatform(ii);
@@ -42,30 +52,30 @@ extern "C" void initMBPolCpuKernels() {
 
              MBPolCpuKernelFactory* factory = new MBPolCpuKernelFactory();
 
-             platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(),           factory);
-             platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
-             platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
-             platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
+             //platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(),           factory);
+             //platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
+             //platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
+             //platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
         }
     }
 }
 
 KernelImpl* MBPolCpuKernelFactory::createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const {
-    CpuPlatform::PlatformData& referencePlatformData = *static_cast<CpuPlatform::PlatformData*>(context.getPlatformData());
+    CpuPlatform::PlatformData& data = *static_cast<CpuPlatform::PlatformData*>(context.getPlatformData());
 
     // create MBPolCpuData object if contextToMBPolDataMap does not contain
     // key equal to current context
-    if (name == CalcMBPolOneBodyForceKernel::Name())
-        return new ReferenceCalcMBPolOneBodyForceKernel(name, platform, context.getSystem());
+    //if (name == CalcMBPolOneBodyForceKernel::Name())
+    //    return new ReferenceCalcMBPolOneBodyForceKernel(name, platform, context.getSystem());
 
-    if (name == CalcMBPolTwoBodyForceKernel::Name())
-        return new ReferenceCalcMBPolTwoBodyForceKernel(name, platform, context.getSystem());
+    //if (name == CalcMBPolTwoBodyForceKernel::Name())
+    //    return new ReferenceCalcMBPolTwoBodyForceKernel(name, platform, context.getSystem());
 
-    if (name == CalcMBPolThreeBodyForceKernel::Name())
-            return new ReferenceCalcMBPolThreeBodyForceKernel(name, platform, context.getSystem());
+    //if (name == CalcMBPolThreeBodyForceKernel::Name())
+    //        return new ReferenceCalcMBPolThreeBodyForceKernel(name, platform, context.getSystem());
 
-    if (name == CalcMBPolElectrostaticsForceKernel::Name())
-        return new ReferenceCalcMBPolElectrostaticsForceKernel(name, platform, context.getSystem());
+    //if (name == CalcMBPolElectrostaticsForceKernel::Name())
+    //    return new ReferenceCalcMBPolElectrostaticsForceKernel(name, platform, context.getSystem());
 
     throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
 }

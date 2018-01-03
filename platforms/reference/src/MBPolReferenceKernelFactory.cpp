@@ -57,6 +57,16 @@ extern "C" void initMBPolReferenceKernels() {
              platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
              platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
         }
+        if( platform.getName() == "CPU" ){
+
+             MBPolReferenceKernelFactory* factory = new MBPolReferenceKernelFactory();
+
+             platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(),           factory);
+             platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
+             platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
+             // Electrostatics is defined in the CPU platform
+             platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
+        }
     }
 }
 

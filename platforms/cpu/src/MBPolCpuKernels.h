@@ -1,5 +1,5 @@
-#ifndef MBPOL_OPENMM_REFERENCE_KERNELS_H_
-#define MBPOL_OPENMM_REFERENCE_KERNELS_H_
+#ifndef MBPOL_OPENMM_CPU_KERNELS_H_
+#define MBPOL_OPENMM_CPU_KERNELS_H_
 
 /* -------------------------------------------------------------------------- *
  *                              OpenMMMBPol                                  *
@@ -35,3 +35,5 @@
 #include <string>
 
 using std::string;
+
+#endif
