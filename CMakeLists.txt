@@ -8,7 +8,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 # We need to know where OpenMM is installed so we can access the headers and libraries.
 SET(OPENMM_DIR "/usr/local/openmm" CACHE PATH "Where OpenMM is installed")
-INCLUDE_DIRECTORIES("${OPENMM_DIR}/include" "/home/zonca/Paesani/OpenMM/openmm/libraries/lepton/include/")
+INCLUDE_DIRECTORIES("${OPENMM_DIR}/include" "${OPENMM_DIR}/include/openmm/reference" "${OPENMM_DIR}/include/openmm//lepton/")
 LINK_DIRECTORIES("${OPENMM_DIR}/lib" "${OPENMM_DIR}/lib/plugins")
 
 # Select where to install
