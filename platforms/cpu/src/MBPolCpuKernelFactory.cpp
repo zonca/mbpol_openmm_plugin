@@ -55,7 +55,7 @@ extern "C" OPENMM_EXPORT void registerKernelFactories() {
              //platform.registerKernelFactory(CalcMBPolOneBodyForceKernel::Name(),           factory);
              //platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
              //platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
-             //platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
+             platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
         }
     }
 }
@@ -74,8 +74,8 @@ KernelImpl* MBPolCpuKernelFactory::createKernelImpl(std::string name, const Plat
     //if (name == CalcMBPolThreeBodyForceKernel::Name())
     //        return new ReferenceCalcMBPolThreeBodyForceKernel(name, platform, context.getSystem());
 
-    //if (name == CalcMBPolElectrostaticsForceKernel::Name())
-    //    return new ReferenceCalcMBPolElectrostaticsForceKernel(name, platform, context.getSystem());
+    if (name == CalcMBPolElectrostaticsForceKernel::Name())
+        return new CpuCalcMBPolElectrostaticsForceKernel(name, platform, context.getSystem());
 
     throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
 }

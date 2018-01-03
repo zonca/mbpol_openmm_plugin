@@ -67,7 +67,7 @@ extern "C" OPENMM_EXPORT void registerKernelFactories() {
              platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
              platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
              // Electrostatics is defined in the CPU platform
-             platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
+             // platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
         }
     }
 }
