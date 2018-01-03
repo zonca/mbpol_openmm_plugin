@@ -45,10 +45,10 @@ using namespace MBPolPlugin;
 //    }
 //}
 
-extern "C" void initMBPolCpuKernels() {
+extern "C" OPENMM_EXPORT void registerKernelFactories() {
     for( int ii = 0; ii < Platform::getNumPlatforms(); ii++ ){
         Platform& platform = Platform::getPlatform(ii);
-        if( platform.getName() == "Cpu" ){
+        if( platform.getName() == "CPU" ){
 
              MBPolCpuKernelFactory* factory = new MBPolCpuKernelFactory();
 

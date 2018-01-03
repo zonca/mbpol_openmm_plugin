@@ -46,7 +46,7 @@ using namespace MBPolPlugin;
     extern "C" void __attribute__((constructor)) initMBPolReferenceKernels();
 #endif
 
-extern "C" void initMBPolReferenceKernels() {
+extern "C" OPENMM_EXPORT void registerKernelFactories() {
     for( int ii = 0; ii < Platform::getNumPlatforms(); ii++ ){
         Platform& platform = Platform::getPlatform(ii);
         std::cout << "Platform " << platform.getName() << std::endl;
