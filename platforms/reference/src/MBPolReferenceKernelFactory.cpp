@@ -29,6 +29,7 @@
 #include "openmm/reference/ReferencePlatform.h"
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/OpenMMException.h"
+#include <iostream>
 
 using namespace  OpenMM;
 using namespace MBPolPlugin;
@@ -48,6 +49,7 @@ using namespace MBPolPlugin;
 extern "C" void initMBPolReferenceKernels() {
     for( int ii = 0; ii < Platform::getNumPlatforms(); ii++ ){
         Platform& platform = Platform::getPlatform(ii);
+        std::cout << "Platform " << platform.getName() << std::endl;
         if( platform.getName() == "Reference" ){
 
              MBPolReferenceKernelFactory* factory = new MBPolReferenceKernelFactory();
