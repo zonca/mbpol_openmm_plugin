@@ -22,7 +22,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#include "MBPolReferenceElectrostaticsForce.h"
+#include "MBPolCpuElectrostaticsForce.h"
 #include <algorithm>
 #include <iostream>
 #include <cstdio>
@@ -33,7 +33,7 @@
 #include "openmm/internal/MSVC_erfc.h"
 
 // from mbpol
-#include "gammq.h"
+#include "gammq_cpu.h"
 
 using std::vector;
 using OpenMM::RealVec;
@@ -44,7 +44,7 @@ const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
 
 #undef MBPOL_DEBUG
 
-MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( ) :
+MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( ) :
                                                    _nonbondedMethod(NoCutoff),
                                                    _numParticles(0),
                                                    _electric(138.9354558456),
@@ -61,7 +61,7 @@ MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( ) :
     initialize();
 }
 
-MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( NonbondedMethod nonbondedMethod ) :
+MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod ) :
                                                    _nonbondedMethod(NoCutoff),
                                                    _numParticles(0),
                                                    _electric(138.9354558456),
@@ -78,81 +78,81 @@ MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( NonbondedM
     initialize();
 }
 
-void MBPolReferenceElectrostaticsForce::initialize( void )
+void MBPolCpuElectrostaticsForce::initialize( void )
 {
     return;
 }
 
-MBPolReferenceElectrostaticsForce::NonbondedMethod MBPolReferenceElectrostaticsForce::getNonbondedMethod( void ) const
+MBPolCpuElectrostaticsForce::NonbondedMethod MBPolCpuElectrostaticsForce::getNonbondedMethod( void ) const
 {
     return _nonbondedMethod;
 }
 
-void MBPolReferenceElectrostaticsForce::setNonbondedMethod( MBPolReferenceElectrostaticsForce::NonbondedMethod nonbondedMethod )
+void MBPolCpuElectrostaticsForce::setNonbondedMethod( MBPolCpuElectrostaticsForce::NonbondedMethod nonbondedMethod )
 {
     _nonbondedMethod = nonbondedMethod;
 }
 
-void MBPolReferenceElectrostaticsForce::setIncludeChargeRedistribution( bool includeChargeRedistribution ) {
+void MBPolCpuElectrostaticsForce::setIncludeChargeRedistribution( bool includeChargeRedistribution ) {
     _includeChargeRedistribution = includeChargeRedistribution;
 }
 
-bool MBPolReferenceElectrostaticsForce::getIncludeChargeRedistribution( void ) const
+bool MBPolCpuElectrostaticsForce::getIncludeChargeRedistribution( void ) const
 {
     return _includeChargeRedistribution;
 }
 
-int MBPolReferenceElectrostaticsForce::getMutualInducedDipoleConverged( void ) const
+int MBPolCpuElectrostaticsForce::getMutualInducedDipoleConverged( void ) const
 {
     return _mutualInducedDipoleConverged;
 }
 
-void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleConverged( int mutualInducedDipoleConverged )
+void MBPolCpuElectrostaticsForce::setMutualInducedDipoleConverged( int mutualInducedDipoleConverged )
 {
     _mutualInducedDipoleConverged = mutualInducedDipoleConverged;
 }
 
-int MBPolReferenceElectrostaticsForce::getMutualInducedDipoleIterations( void ) const
+int MBPolCpuElectrostaticsForce::getMutualInducedDipoleIterations( void ) const
 {
     return _mutualInducedDipoleIterations;
 }
 
-void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleIterations( int mutualInducedDipoleIterations )
+void MBPolCpuElectrostaticsForce::setMutualInducedDipoleIterations( int mutualInducedDipoleIterations )
 {
     _mutualInducedDipoleIterations = mutualInducedDipoleIterations;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::getMutualInducedDipoleEpsilon( void ) const
+RealOpenMM MBPolCpuElectrostaticsForce::getMutualInducedDipoleEpsilon( void ) const
 {
     return _mutualInducedDipoleEpsilon;
 }
 
-void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleEpsilon( RealOpenMM mutualInducedDipoleEpsilon )
+void MBPolCpuElectrostaticsForce::setMutualInducedDipoleEpsilon( RealOpenMM mutualInducedDipoleEpsilon )
 {
     _mutualInducedDipoleEpsilon = mutualInducedDipoleEpsilon;
 }
 
-int MBPolReferenceElectrostaticsForce::getMaximumMutualInducedDipoleIterations( void ) const
+int MBPolCpuElectrostaticsForce::getMaximumMutualInducedDipoleIterations( void ) const
 {
     return _maximumMutualInducedDipoleIterations;
 }
 
-void MBPolReferenceElectrostaticsForce::setMaximumMutualInducedDipoleIterations( int maximumMutualInducedDipoleIterations )
+void MBPolCpuElectrostaticsForce::setMaximumMutualInducedDipoleIterations( int maximumMutualInducedDipoleIterations )
 {
     _maximumMutualInducedDipoleIterations = maximumMutualInducedDipoleIterations;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::getMutualInducedDipoleTargetEpsilon( void ) const
+RealOpenMM MBPolCpuElectrostaticsForce::getMutualInducedDipoleTargetEpsilon( void ) const
 {
     return _mutualInducedDipoleTargetEpsilon;
 }
 
-void MBPolReferenceElectrostaticsForce::setMutualInducedDipoleTargetEpsilon( RealOpenMM mutualInducedDipoleTargetEpsilon )
+void MBPolCpuElectrostaticsForce::setMutualInducedDipoleTargetEpsilon( RealOpenMM mutualInducedDipoleTargetEpsilon )
 {
     _mutualInducedDipoleTargetEpsilon = mutualInducedDipoleTargetEpsilon;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::normalizeRealVec( RealVec& vectorToNormalize ) const
+RealOpenMM MBPolCpuElectrostaticsForce::normalizeRealVec( RealVec& vectorToNormalize ) const
 {
     RealOpenMM norm = SQRT( vectorToNormalize.dot( vectorToNormalize ) );
     if( norm > 0.0 ){
@@ -161,21 +161,21 @@ RealOpenMM MBPolReferenceElectrostaticsForce::normalizeRealVec( RealVec& vectorT
     return norm;
 }
 
-void MBPolReferenceElectrostaticsForce::initializeRealOpenMMVector( vector<RealOpenMM>& vectorToInitialize ) const
+void MBPolCpuElectrostaticsForce::initializeRealOpenMMVector( vector<RealOpenMM>& vectorToInitialize ) const
 {
     RealOpenMM zero = 0.0;
     vectorToInitialize.resize( _numParticles );
     std::fill( vectorToInitialize.begin(), vectorToInitialize.end(), zero );
 }
 
-void MBPolReferenceElectrostaticsForce::initializeRealVecVector( vector<RealVec>& vectorToInitialize ) const
+void MBPolCpuElectrostaticsForce::initializeRealVecVector( vector<RealVec>& vectorToInitialize ) const
 {
     vectorToInitialize.resize( _numParticles );
     RealVec zeroVec( 0.0, 0.0, 0.0 );
     std::fill( vectorToInitialize.begin(), vectorToInitialize.end(), zeroVec );
 }
 
-void MBPolReferenceElectrostaticsForce::copyRealVecVector( const std::vector<OpenMM::RealVec>& inputVector, std::vector<OpenMM::RealVec>& outputVector ) const
+void MBPolCpuElectrostaticsForce::copyRealVecVector( const std::vector<OpenMM::RealVec>& inputVector, std::vector<OpenMM::RealVec>& outputVector ) const
 {
     outputVector.resize( inputVector.size() );
     for( unsigned int ii = 0; ii < inputVector.size(); ii++ ){
@@ -184,7 +184,7 @@ void MBPolReferenceElectrostaticsForce::copyRealVecVector( const std::vector<Ope
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::loadParticleData( const std::vector<RealVec>& particlePositions,
+void MBPolCpuElectrostaticsForce::loadParticleData( const std::vector<RealVec>& particlePositions,
                                                       const std::vector<RealOpenMM>& charges,
 													  const std::vector<int>& moleculeIndices,
 													  const std::vector<int>& atomTypes,
@@ -210,13 +210,13 @@ void MBPolReferenceElectrostaticsForce::loadParticleData( const std::vector<Real
     }
 }
 
-void MBPolReferenceElectrostaticsForce::zeroFixedElectrostaticsFields( void )
+void MBPolCpuElectrostaticsForce::zeroFixedElectrostaticsFields( void )
 {
     initializeRealVecVector( _fixedElectrostaticsField );
     initializeRealVecVector( _fixedElectrostaticsFieldPolar );
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM r, int interactionOrder) const
+RealOpenMM MBPolCpuPmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM r, int interactionOrder) const
 {
     // calculate the real space error function terms
 
@@ -258,7 +258,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::ewaldScalingReal (  RealOpenMM 
     }
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const ElectrostaticsParticleData& particleI,
+RealOpenMM MBPolCpuElectrostaticsForce::getAndScaleInverseRs(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
                                                           RealOpenMM r, bool justScale, int interactionOrder, int interactionType) const
 {
@@ -333,7 +333,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::getAndScaleInverseRs(  const Elect
     return rrI;
 }
 
-void MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
+void MBPolCpuElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleK,
                                                           RealOpenMM pgamma, RealOpenMM r, RealOpenMM * scale1, RealOpenMM * scale3) const
 {
@@ -358,7 +358,7 @@ void MBPolReferenceElectrostaticsForce::getAndScaleInverseRs13justScaleTCC(  con
 
 }
 
-void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn( const ElectrostaticsParticleData& particleI,
+void MBPolCpuElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn( const ElectrostaticsParticleData& particleI,
                                                                          const ElectrostaticsParticleData& particleJ)
 {
 
@@ -399,7 +399,7 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsField( const vector<ElectrostaticsParticleData>& particleData )
+void MBPolCpuElectrostaticsForce::calculateFixedElectrostaticsField( const vector<ElectrostaticsParticleData>& particleData )
 {
 
     // calculate fixed multipole fields
@@ -419,7 +419,7 @@ void MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsField( const
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::initializeInducedDipoles( std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
+void MBPolCpuElectrostaticsForce::initializeInducedDipoles( std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
 {
 
     // initialize inducedDipoles
@@ -435,7 +435,7 @@ void MBPolReferenceElectrostaticsForce::initializeInducedDipoles( std::vector<Up
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxn( unsigned int particleI,
+void MBPolCpuElectrostaticsForce::calculateInducedDipolePairIxn( unsigned int particleI,
                                                                    unsigned int particleJ,
                                                                    const RealOpenMM & rr3,
                                                                    const RealOpenMM & rr5,
@@ -452,7 +452,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxn( unsigned 
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
+void MBPolCpuElectrostaticsForce::calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
                                                                     const ElectrostaticsParticleData& particleJ,
                                                                     std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM precomputedScale3, RealOpenMM precomputedScale5 )
 {
@@ -470,7 +470,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipolePairIxns( const El
 
 }
 
-void MBPolReferenceElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
+void MBPolCpuElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                   std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[])
 {
 
@@ -485,7 +485,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoleFields( const std:
     return;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::runUpdateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuElectrostaticsForce::runUpdateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                      std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[])
 {
 
@@ -513,7 +513,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::runUpdateInducedDipoleFields( cons
     return maxEpsilon;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipole( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuElectrostaticsForce::updateInducedDipole( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                const std::vector<RealVec>& fixedElectrostaticsField,
                                                                const std::vector<RealVec>& inducedDipoleField,
                                                                std::vector<RealVec>& inducedDipole )
@@ -531,7 +531,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::updateInducedDipole( const std::ve
 }
 
 
-void MBPolReferenceElectrostaticsForce::precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM scale3[], RealOpenMM scale5[] )
+void MBPolCpuElectrostaticsForce::precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM scale3[], RealOpenMM scale5[] )
 {
     // Precompute scale3 and scale5, the arrays will be passed into the iterative dipole estimation
     // this has a great impact on performance
@@ -554,7 +554,7 @@ void MBPolReferenceElectrostaticsForce::precomputeScale35( const std::vector<Ele
     }
 }
 
-void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector<ElectrostaticsParticleData>& particleData,
+void MBPolCpuElectrostaticsForce::convergeInduceDipoles( const std::vector<ElectrostaticsParticleData>& particleData,
                                                            std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleField)
 {
 
@@ -615,7 +615,7 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
     return;
 }
 
-void MBPolReferenceElectrostaticsForce::calculateInducedDipoles( const std::vector<ElectrostaticsParticleData>& particleData )
+void MBPolCpuElectrostaticsForce::calculateInducedDipoles( const std::vector<ElectrostaticsParticleData>& particleData )
 {
 
     // calculate fixed electric fields
@@ -646,7 +646,7 @@ void MBPolReferenceElectrostaticsForce::calculateInducedDipoles( const std::vect
     return;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                          unsigned int iIndex,
                                                                          unsigned int kIndex,
                                                                          std::vector<RealVec>& forces) const
@@ -835,7 +835,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPairIxn( con
     return energy;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                   std::vector<RealVec>& forces )
 {
 
@@ -854,7 +854,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostatic( const std:
     return energy;
 }
 
-void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& particlePositions,
+void MBPolCpuElectrostaticsForce::setup( const std::vector<RealVec>& particlePositions,
                                            const std::vector<RealOpenMM>& charges,
                                            const std::vector<int>& moleculeIndices,
                                            const std::vector<int>& atomTypes,
@@ -896,7 +896,7 @@ void MBPolReferenceElectrostaticsForce::setup( const std::vector<RealVec>& parti
     return;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std::vector<RealVec>& particlePositions,
+RealOpenMM MBPolCpuElectrostaticsForce::calculateForceAndEnergy( const std::vector<RealVec>& particlePositions,
                                                                    const std::vector<RealOpenMM>& charges,
 																   const std::vector<int>& moleculeIndices,
 																   const std::vector<int>& atomTypes,
@@ -920,7 +920,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std
     return energy;
 }
 
-void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoments( const std::vector<RealOpenMM>& masses,
+void MBPolCpuElectrostaticsForce::calculateMBPolSystemElectrostaticsMoments( const std::vector<RealOpenMM>& masses,
                                                                            const std::vector<RealVec>& particlePositions,
                                                                            const std::vector<RealOpenMM>& charges,
 																		   const std::vector<int>& moleculeIndices,
@@ -1020,7 +1020,7 @@ void MBPolReferenceElectrostaticsForce::calculateMBPolSystemElectrostaticsMoment
     return;
 }
 
-RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPotentialForParticleGridPoint( const ElectrostaticsParticleData& particleI, const RealVec& gridPoint ) const
+RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostaticPotentialForParticleGridPoint( const ElectrostaticsParticleData& particleI, const RealVec& gridPoint ) const
 {
 
     RealVec deltaR           = particleI.position - gridPoint;
@@ -1045,7 +1045,7 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateElectrostaticPotentialFor
 
 }
 
-void MBPolReferenceElectrostaticsForce::calculateElectrostaticPotential( const std::vector<RealVec>& particlePositions,
+void MBPolCpuElectrostaticsForce::calculateElectrostaticPotential( const std::vector<RealVec>& particlePositions,
                                                                      const std::vector<RealOpenMM>& charges,
 																	 const std::vector<int>& moleculeIndices,
 																	 const std::vector<int>& atomTypes,
@@ -1085,19 +1085,19 @@ void MBPolReferenceElectrostaticsForce::calculateElectrostaticPotential( const s
     return;
 }
 
-MBPolReferenceElectrostaticsForce::UpdateInducedDipoleFieldStruct::UpdateInducedDipoleFieldStruct( std::vector<OpenMM::RealVec>* inputFixed_E_Field, std::vector<OpenMM::RealVec>* inputInducedDipoles )
+MBPolCpuElectrostaticsForce::UpdateInducedDipoleFieldStruct::UpdateInducedDipoleFieldStruct( std::vector<OpenMM::RealVec>* inputFixed_E_Field, std::vector<OpenMM::RealVec>* inputInducedDipoles )
 {
     fixedElectrostaticsField  = inputFixed_E_Field;
     inducedDipoles = inputInducedDipoles;
     inducedDipoleField.resize( fixedElectrostaticsField->size() );
 }
 
-const int MBPolReferencePmeElectrostaticsForce::MBPOL_PME_ORDER = 5;
+const int MBPolCpuPmeElectrostaticsForce::MBPOL_PME_ORDER = 5;
 
-const RealOpenMM MBPolReferencePmeElectrostaticsForce::SQRT_PI = 1.77245385091;
+const RealOpenMM MBPolCpuPmeElectrostaticsForce::SQRT_PI = 1.77245385091;
 
-MBPolReferencePmeElectrostaticsForce::MBPolReferencePmeElectrostaticsForce( void ) :
-               MBPolReferenceElectrostaticsForce(PME),
+MBPolCpuPmeElectrostaticsForce::MBPolCpuPmeElectrostaticsForce( void ) :
+               MBPolCpuElectrostaticsForce(PME),
                _cutoffDistance(0.9), _cutoffDistanceSquared(0.81),
                _pmeGridSize(0), _totalGridSize(0), _alphaEwald(0.0)
 {
@@ -1107,7 +1107,7 @@ MBPolReferencePmeElectrostaticsForce::MBPolReferencePmeElectrostaticsForce( void
     _pmeGridDimensions = IntVec( -1, -1, -1 );
 }
 
-MBPolReferencePmeElectrostaticsForce::~MBPolReferencePmeElectrostaticsForce( )
+MBPolCpuPmeElectrostaticsForce::~MBPolCpuPmeElectrostaticsForce( )
 {
     if( _fftplan ){
         fftpack_destroy( _fftplan );
@@ -1117,28 +1117,28 @@ MBPolReferencePmeElectrostaticsForce::~MBPolReferencePmeElectrostaticsForce( )
     }
 };
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::getCutoffDistance( void ) const
+RealOpenMM MBPolCpuPmeElectrostaticsForce::getCutoffDistance( void ) const
 {
      return _cutoffDistance;
 };
 
-void MBPolReferencePmeElectrostaticsForce::setCutoffDistance( RealOpenMM cutoffDistance )
+void MBPolCpuPmeElectrostaticsForce::setCutoffDistance( RealOpenMM cutoffDistance )
 {
      _cutoffDistance        = cutoffDistance;
      _cutoffDistanceSquared = cutoffDistance*cutoffDistance;
 };
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::getAlphaEwald( void ) const
+RealOpenMM MBPolCpuPmeElectrostaticsForce::getAlphaEwald( void ) const
 {
      return _alphaEwald;
 };
 
-void MBPolReferencePmeElectrostaticsForce::setAlphaEwald( RealOpenMM alphaEwald )
+void MBPolCpuPmeElectrostaticsForce::setAlphaEwald( RealOpenMM alphaEwald )
 {
      _alphaEwald = alphaEwald;
 };
 
-void MBPolReferencePmeElectrostaticsForce::getPmeGridDimensions( std::vector<int>& pmeGridDimensions ) const
+void MBPolCpuPmeElectrostaticsForce::getPmeGridDimensions( std::vector<int>& pmeGridDimensions ) const
 {
 
     pmeGridDimensions.resize( 3 );
@@ -1150,7 +1150,7 @@ void MBPolReferencePmeElectrostaticsForce::getPmeGridDimensions( std::vector<int
     return;
 };
 
-void MBPolReferencePmeElectrostaticsForce::setPmeGridDimensions( std::vector<int>& pmeGridDimensions )
+void MBPolCpuPmeElectrostaticsForce::setPmeGridDimensions( std::vector<int>& pmeGridDimensions )
 {
 
     if( (pmeGridDimensions[0] == _pmeGridDimensions[0]) &&
@@ -1169,7 +1169,7 @@ void MBPolReferencePmeElectrostaticsForce::setPmeGridDimensions( std::vector<int
     initializeBSplineModuli( );
 };
 
-void MBPolReferencePmeElectrostaticsForce::setPeriodicBoxSize( RealVec& boxSize )
+void MBPolCpuPmeElectrostaticsForce::setPeriodicBoxSize( RealVec& boxSize )
 {
 
     if( boxSize[0] == 0.0 ||  boxSize[1] == 0.0 ||  boxSize[2] == 0.0 ){
@@ -1192,7 +1192,7 @@ int compareInt2( const int2& v1, const int2& v2 )
     return v1[1] < v2[1];
 }
 
-void MBPolReferencePmeElectrostaticsForce::resizePmeArrays( void )
+void MBPolCpuPmeElectrostaticsForce::resizePmeArrays( void )
 {
 
     _totalGridSize = _pmeGridDimensions[0]*_pmeGridDimensions[1]*_pmeGridDimensions[2];
@@ -1220,7 +1220,7 @@ void MBPolReferencePmeElectrostaticsForce::resizePmeArrays( void )
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::initializePmeGrid( void )
+void MBPolCpuPmeElectrostaticsForce::initializePmeGrid( void )
 {
     if( _pmeGrid == NULL )return;
     //memset( _pmeGrid, 0, sizeof( t_complex )*_totalGridSize );
@@ -1231,21 +1231,21 @@ void MBPolReferencePmeElectrostaticsForce::initializePmeGrid( void )
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::getPeriodicDelta( RealVec& deltaR ) const
+void MBPolCpuPmeElectrostaticsForce::getPeriodicDelta( RealVec& deltaR ) const
 {
     deltaR[0]  -= FLOOR(deltaR[0]*_invPeriodicBoxSize[0]+0.5)*_periodicBoxSize[0];
     deltaR[1]  -= FLOOR(deltaR[1]*_invPeriodicBoxSize[1]+0.5)*_periodicBoxSize[1];
     deltaR[2]  -= FLOOR(deltaR[2]*_invPeriodicBoxSize[2]+0.5)*_periodicBoxSize[2];
 }
 
-void MBPolReferencePmeElectrostaticsForce::getPmeScale( RealVec& scale ) const
+void MBPolCpuPmeElectrostaticsForce::getPmeScale( RealVec& scale ) const
 {
     scale[0] = static_cast<RealOpenMM>(_pmeGridDimensions[0])*_invPeriodicBoxSize[0];
     scale[1] = static_cast<RealOpenMM>(_pmeGridDimensions[1])*_invPeriodicBoxSize[1];
     scale[2] = static_cast<RealOpenMM>(_pmeGridDimensions[2])*_invPeriodicBoxSize[2];
 }
 
-void MBPolReferencePmeElectrostaticsForce::initializeBSplineModuli( void )
+void MBPolCpuPmeElectrostaticsForce::initializeBSplineModuli( void )
 {
 
     // Initialize the b-spline moduli.
@@ -1339,7 +1339,7 @@ void MBPolReferencePmeElectrostaticsForce::initializeBSplineModuli( void )
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn( const ElectrostaticsParticleData& particleI,
+void MBPolCpuPmeElectrostaticsForce::calculateFixedElectrostaticsFieldPairIxn( const ElectrostaticsParticleData& particleI,
                                                                             const ElectrostaticsParticleData& particleJ)
 {
 
@@ -1406,7 +1406,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsFieldPair
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsField( const vector<ElectrostaticsParticleData>& particleData )
+void MBPolCpuPmeElectrostaticsForce::calculateFixedElectrostaticsField( const vector<ElectrostaticsParticleData>& particleData )
 {
 
     // first calculate reciprocal space fixed multipole fields
@@ -1433,7 +1433,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsField( co
 
     // include direct space fixed multipole fields
 
-    this->MBPolReferenceElectrostaticsForce::calculateFixedElectrostaticsField( particleData );
+    this->MBPolCpuElectrostaticsForce::calculateFixedElectrostaticsField( particleData );
 
     return;
 }
@@ -1443,7 +1443,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateFixedElectrostaticsField( co
 /**
  * This is called from computeBsplines().  It calculates the spline coefficients for a single atom along a single axis.
  */
-void MBPolReferencePmeElectrostaticsForce::computeBSplinePoint( std::vector<RealOpenMM4>& thetai, RealOpenMM w  )
+void MBPolCpuPmeElectrostaticsForce::computeBSplinePoint( std::vector<RealOpenMM4>& thetai, RealOpenMM w  )
 {
 
     RealOpenMM array[MBPOL_PME_ORDER*MBPOL_PME_ORDER];
@@ -1519,7 +1519,7 @@ void MBPolReferencePmeElectrostaticsForce::computeBSplinePoint( std::vector<Real
 /**
  * Compute b-spline coefficients.
  */
-void MBPolReferencePmeElectrostaticsForce::computeMBPolBsplines( const std::vector<ElectrostaticsParticleData>& particleData )
+void MBPolCpuPmeElectrostaticsForce::computeMBPolBsplines( const std::vector<ElectrostaticsParticleData>& particleData )
 {
 
     //  get the B-spline coefficients for each multipole site
@@ -1556,7 +1556,7 @@ void MBPolReferencePmeElectrostaticsForce::computeMBPolBsplines( const std::vect
 /**
  * For each grid point, find the range of sorted atoms associated with that point.
  */
-void MBPolReferencePmeElectrostaticsForce::findMBPolAtomRangeForGrid( const vector<ElectrostaticsParticleData>& particleData )
+void MBPolCpuPmeElectrostaticsForce::findMBPolAtomRangeForGrid( const vector<ElectrostaticsParticleData>& particleData )
 {
 
     int last;
@@ -1596,7 +1596,7 @@ void MBPolReferencePmeElectrostaticsForce::findMBPolAtomRangeForGrid( const vect
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::getGridPointGivenGridIndex( int gridIndex, IntVec& gridPoint ) const
+void MBPolCpuPmeElectrostaticsForce::getGridPointGivenGridIndex( int gridIndex, IntVec& gridPoint ) const
 {
 
     gridPoint[0]  = gridIndex/(_pmeGridDimensions[1]*_pmeGridDimensions[2]);
@@ -1607,7 +1607,7 @@ void MBPolReferencePmeElectrostaticsForce::getGridPointGivenGridIndex( int gridI
     return;
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::computeFixedElectrostaticssGridValue( const vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::computeFixedElectrostaticssGridValue( const vector<ElectrostaticsParticleData>& particleData,
                                                                               const int2& particleGridIndices, const RealVec& scale,
                                                                               int ix, int iy, const IntVec& gridPoint ) const
 {
@@ -1633,7 +1633,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeFixedElectrostaticssGrid
     return gridValue;
 }
 
-void MBPolReferencePmeElectrostaticsForce::spreadFixedElectrostaticssOntoGrid( const vector<ElectrostaticsParticleData>& particleData )
+void MBPolCpuPmeElectrostaticsForce::spreadFixedElectrostaticssOntoGrid( const vector<ElectrostaticsParticleData>& particleData )
 {
 
     RealVec scale;
@@ -1673,7 +1673,7 @@ void MBPolReferencePmeElectrostaticsForce::spreadFixedElectrostaticssOntoGrid( c
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::performMBPolReciprocalConvolution( void )
+void MBPolCpuPmeElectrostaticsForce::performMBPolReciprocalConvolution( void )
 {
 
     RealOpenMM expFactor   = (M_PI*M_PI)/(_alphaEwald*_alphaEwald);
@@ -1712,7 +1712,7 @@ void MBPolReferencePmeElectrostaticsForce::performMBPolReciprocalConvolution( vo
     }
 }
 
-void MBPolReferencePmeElectrostaticsForce::computeFixedPotentialFromGrid( void )
+void MBPolCpuPmeElectrostaticsForce::computeFixedPotentialFromGrid( void )
 {
     // extract the permanent multipole field at each site
 
@@ -1820,7 +1820,7 @@ void MBPolReferencePmeElectrostaticsForce::computeFixedPotentialFromGrid( void )
     }
 }
 
-t_complex MBPolReferencePmeElectrostaticsForce::computeInducedDipoleGridValue( const int2& particleGridIndices, const RealVec& scale, int ix, int iy,
+t_complex MBPolCpuPmeElectrostaticsForce::computeInducedDipoleGridValue( const int2& particleGridIndices, const RealVec& scale, int ix, int iy,
                                                                            const IntVec& gridPoint,
                                                                            const std::vector<RealVec>& inputInducedDipole,
                                                                            const std::vector<RealVec>& inputInducedDipolePolar ) const
@@ -1864,7 +1864,7 @@ t_complex MBPolReferencePmeElectrostaticsForce::computeInducedDipoleGridValue( c
     return gridValue;
 }
 
-void MBPolReferencePmeElectrostaticsForce::spreadInducedDipolesOnGrid( const std::vector<RealVec>& inputInducedDipole,
+void MBPolCpuPmeElectrostaticsForce::spreadInducedDipolesOnGrid( const std::vector<RealVec>& inputInducedDipole,
                                                                    const std::vector<RealVec>& inputInducedDipolePolar )
 {
     RealVec scale;
@@ -1907,7 +1907,7 @@ void MBPolReferencePmeElectrostaticsForce::spreadInducedDipolesOnGrid( const std
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::computeInducedPotentialFromGrid( void )
+void MBPolCpuPmeElectrostaticsForce::computeInducedPotentialFromGrid( void )
 {
     // extract the induced dipole field at each site
 
@@ -2110,7 +2110,7 @@ void MBPolReferencePmeElectrostaticsForce::computeInducedPotentialFromGrid( void
     return;
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                                                  std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
     RealOpenMM multipole[10];
@@ -2183,7 +2183,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceFixedElec
 /**
  * Compute the forces due to the reciprocal space PME calculation for induced dipoles.
  */
-RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                                                 std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const
 {
 
@@ -2264,7 +2264,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::computeReciprocalSpaceInducedDi
     return (0.5*_electric*energy);
 }
 
-void MBPolReferencePmeElectrostaticsForce::recordFixedElectrostaticsField( void )
+void MBPolCpuPmeElectrostaticsForce::recordFixedElectrostaticsField( void )
 {
     RealVec scale;
     getPmeScale( scale );
@@ -2277,7 +2277,7 @@ void MBPolReferencePmeElectrostaticsForce::recordFixedElectrostaticsField( void 
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM * scale3, RealOpenMM * scale5 )
+void MBPolCpuPmeElectrostaticsForce::precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM * scale3, RealOpenMM * scale5 )
 {
     // Precompute scale3 and scale5
     int xx = 0;
@@ -2297,15 +2297,15 @@ void MBPolReferencePmeElectrostaticsForce::precomputeScale35( const std::vector<
     }
 }
 
-void MBPolReferencePmeElectrostaticsForce::initializeInducedDipoles( std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
+void MBPolCpuPmeElectrostaticsForce::initializeInducedDipoles( std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
 {
 
-    this->MBPolReferenceElectrostaticsForce::initializeInducedDipoles( updateInducedDipoleFields );
+    this->MBPolCpuElectrostaticsForce::initializeInducedDipoles( updateInducedDipoleFields );
     calculateReciprocalSpaceInducedDipoleField( updateInducedDipoleFields );
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::recordInducedDipoleField( vector<RealVec>& field, vector<RealVec>& fieldPolar )
+void MBPolCpuPmeElectrostaticsForce::recordInducedDipoleField( vector<RealVec>& field, vector<RealVec>& fieldPolar )
 {
     RealVec scale;
     getPmeScale( scale );
@@ -2323,7 +2323,7 @@ void MBPolReferencePmeElectrostaticsForce::recordInducedDipoleField( vector<Real
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::calculateReciprocalSpaceInducedDipoleField( std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
+void MBPolCpuPmeElectrostaticsForce::calculateReciprocalSpaceInducedDipoleField( std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields )
 {
     // Perform PME for the induced dipoles.
 
@@ -2336,7 +2336,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateReciprocalSpaceInducedDipole
     recordInducedDipoleField( updateInducedDipoleFields[0].inducedDipoleField, updateInducedDipoleFields[1].inducedDipoleField );
 }
 
-void MBPolReferencePmeElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
+void MBPolCpuPmeElectrostaticsForce::calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                      std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[])
 {
 
@@ -2366,7 +2366,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateInducedDipoleFields( const s
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxn( unsigned int iIndex, unsigned int jIndex,
+void MBPolCpuPmeElectrostaticsForce::calculateDirectInducedDipolePairIxn( unsigned int iIndex, unsigned int jIndex,
                                                                             RealOpenMM preFactor1, RealOpenMM preFactor2,
                                                                             const RealVec& delta,
                                                                             const std::vector<RealVec>& inducedDipole,
@@ -2386,7 +2386,7 @@ void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxn( 
     return;
 }
 
-void MBPolReferencePmeElectrostaticsForce::calculateDirectInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
+void MBPolCpuPmeElectrostaticsForce::calculateDirectInducedDipolePairIxns( const ElectrostaticsParticleData& particleI,
                                                                              const ElectrostaticsParticleData& particleJ,
                                                                              std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields,
 RealOpenMM scale3, RealOpenMM scale5 )
@@ -2469,7 +2469,7 @@ RealOpenMM scale3, RealOpenMM scale5 )
     return;
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
         std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
 
@@ -2507,7 +2507,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeSelfEnergy( const s
     return energy;
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
                                              unsigned int iIndex,
                                              unsigned int jIndex,
                                                                                          std::vector<RealVec>& forces,
@@ -2715,7 +2715,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculatePmeDirectElectrostatic
 
 }
 
-RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                      std::vector<RealVec>& forces )
 {
 
@@ -2777,7 +2777,7 @@ RealOpenMM MBPolReferencePmeElectrostaticsForce::calculateElectrostatic( const s
 }
 
 
-void MBPolReferenceElectrostaticsForce::printPotential (std::vector<RealOpenMM> electrostaticPotential, RealOpenMM energy, std::string name, const std::vector<ElectrostaticsParticleData>& particleData ) {
+void MBPolCpuElectrostaticsForce::printPotential (std::vector<RealOpenMM> electrostaticPotential, RealOpenMM energy, std::string name, const std::vector<ElectrostaticsParticleData>& particleData ) {
 #ifdef DEBUG_MBPOL
     RealOpenMM energyFromPotential = 0;
     for (int i=0; i<particleData.size(); i++) {
@@ -2790,7 +2790,7 @@ void MBPolReferenceElectrostaticsForce::printPotential (std::vector<RealOpenMM> 
 #endif
 }
 
-void MBPolReferenceElectrostaticsForce::computeWaterCharge(
+void MBPolCpuElectrostaticsForce::computeWaterCharge(
         ElectrostaticsParticleData& particleO, ElectrostaticsParticleData& particleH1,
         ElectrostaticsParticleData& particleH2,ElectrostaticsParticleData& particleM)
 {

@@ -29,23 +29,16 @@
 #include "openmm/cpu/CpuPlatform.h"
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/OpenMMException.h"
+#include <iostream>
 
 using namespace  OpenMM;
 using namespace MBPolPlugin;
 
-// need to add registerKernelFactories from https://github.com/peastman/openmmexampleplugin/blob/master/platforms/reference/src/ReferenceExampleKernelFactory.cpp
-
-//extern "C" OPENMM_EXPORT void registerKernelFactories() {
-//    for (int i = 0; i < Platform::getNumPlatforms(); i++) {
-//        Platform& platform = Platform::getPlatform(i);
-//        if (dynamic_cast<ReferencePlatform*>(&platform) != NULL) {
-//            ReferenceExampleKernelFactory* factory = new ReferenceExampleKernelFactory();
-//            platform.registerKernelFactory(CalcExampleForceKernel::Name(), factory);
-//        }
-//    }
-//}
+extern "C" OPENMM_EXPORT void registerPlatforms() {
+}
 
 extern "C" OPENMM_EXPORT void registerKernelFactories() {
+    std::cout << "Executing registerKernelFactories of CPU MBPol" << std::endl;
     for( int ii = 0; ii < Platform::getNumPlatforms(); ii++ ){
         Platform& platform = Platform::getPlatform(ii);
         if( platform.getName() == "CPU" ){
@@ -56,8 +49,19 @@ extern "C" OPENMM_EXPORT void registerKernelFactories() {
              //platform.registerKernelFactory(CalcMBPolTwoBodyForceKernel::Name(),                   factory);
              //platform.registerKernelFactory(CalcMBPolThreeBodyForceKernel::Name(),                   factory);
              platform.registerKernelFactory(CalcMBPolElectrostaticsForceKernel::Name(),             factory);
+             std::cout << "Registered CPU CalcMBPolElectrostaticsForceKernel::Name" << std::endl;
         }
     }
+}
+
+extern "C" OPENMM_EXPORT void registerMBPolCpuKernelFactories() {
+    try {
+        Platform::getPlatformByName("CPU");
+    }
+    catch (...) {
+        Platform::registerPlatform(new CpuPlatform());
+    }
+    registerKernelFactories();
 }
 
 KernelImpl* MBPolCpuKernelFactory::createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const {

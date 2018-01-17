@@ -21,12 +21,12 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#ifndef __MBPolReferenceElectrostaticsForce_H__
-#define __MBPolReferenceElectrostaticsForce_H__
+#ifndef __MBPolCpuElectrostaticsForce_H__
+#define __MBPolCpuElectrostaticsForce_H__
 
 #include <vector>
-#include "openmm/reference/RealVec.h"
-#include "openmm/reference/SimTKOpenMMRealType.h"
+//#include "openmm/cpu/RealVec.h"
+//#include "openmm/cpu/SimTKOpenMMRealType.h"
 #include "openmm/MBPolElectrostaticsForce.h"
 #include <map>
 #include "openmm/reference/fftpack.h"
@@ -220,12 +220,12 @@ private:
 using namespace  OpenMM;
 using namespace MBPolPlugin;
 
-class MBPolReferenceElectrostaticsForce {
+class MBPolCpuElectrostaticsForce {
 
    /**
-    * MBPolReferenceElectrostaticsForce is base class for ElectrostaticsForce calculations
-    * MBPolReferenceGeneralizedKirkwoodElectrostaticsForce  is derived class for Generalized Kirkwood calculations
-    * MBPolReferencePmeElectrostaticsForce is derived class for PME calculations
+    * MBPolCpuElectrostaticsForce is base class for ElectrostaticsForce calculations
+    * MBPolCpuGeneralizedKirkwoodElectrostaticsForce  is derived class for Generalized Kirkwood calculations
+    * MBPolCpuPmeElectrostaticsForce is derived class for PME calculations
     *
     * Below is a outline of the sequence of methods called to evaluate the force and energy
     * for each scenario: Generalized Kirkwood (GK) and PME.
@@ -241,7 +241,7 @@ class MBPolReferenceElectrostaticsForce {
     *
     *                                                      GK case includes the following calls:
     *
-    *                                                          MBPolReferenceElectrostaticsForce::calculateElectrostatic()
+    *                                                          MBPolCpuElectrostaticsForce::calculateElectrostatic()
     *                                                               loop over particle pairs: calculateElectrostaticPairIxn()
     *
     *                                                          TINKER's egk1a: calculateKirkwoodPairIxn()
@@ -331,20 +331,20 @@ public:
      * Constructor
      *
      */
-    MBPolReferenceElectrostaticsForce( );
+    MBPolCpuElectrostaticsForce( );
 
     /**
      * Constructor
      *
      * @param nonbondedMethod nonbonded method
      */
-    MBPolReferenceElectrostaticsForce( NonbondedMethod nonbondedMethod );
+    MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod );
 
     /**
      * Destructor
      *
      */
-    virtual ~MBPolReferenceElectrostaticsForce( ){};
+    virtual ~MBPolCpuElectrostaticsForce( ){};
 
     /**
      * Get nonbonded method.
@@ -834,7 +834,7 @@ protected:
     virtual void getPeriodicDelta( RealVec& deltaR ) const {};
 };
 
-class MBPolReferencePmeElectrostaticsForce : public MBPolReferenceElectrostaticsForce {
+class MBPolCpuPmeElectrostaticsForce : public MBPolCpuElectrostaticsForce {
 
 public:
 
@@ -842,13 +842,13 @@ public:
      * Constructor
      *
      */
-    MBPolReferencePmeElectrostaticsForce( void );
+    MBPolCpuPmeElectrostaticsForce( void );
 
     /**
      * Destructor
      *
      */
-    ~MBPolReferencePmeElectrostaticsForce( );
+    ~MBPolCpuPmeElectrostaticsForce( );
 
     /**
      * Get cutoff distance.
@@ -1226,4 +1226,4 @@ private:
 
 };
 
-#endif // _MBPolReferenceElectrostaticsForce___
+#endif // _MBPolCpuElectrostaticsForce___

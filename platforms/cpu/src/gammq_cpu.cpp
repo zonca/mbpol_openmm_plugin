@@ -6,7 +6,7 @@
 #include <limits>
 #include <algorithm> // for max
 
-#include "gammq.h"
+#include "gammq_cpu.h"
 
 // Gamma function and incomplete gamma function from mbpol
 ////////////////////////////////////////////////////////////////////////////////

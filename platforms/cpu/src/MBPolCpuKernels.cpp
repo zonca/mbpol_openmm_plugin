@@ -24,7 +24,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.      *
  * -------------------------------------------------------------------------- */
 
-#include "openmm/reference/ReferencePlatform.h"
+#include "MBPolCpuKernels.h"
+#include "openmm/cpu/CpuPlatform.h"
 #include "openmm/internal/ContextImpl.h"
 #include "openmm/MBPolElectrostaticsForce.h"
 #include "openmm/internal/MBPolElectrostaticsForceImpl.h"
@@ -44,20 +45,46 @@ using namespace  OpenMM;
 using namespace MBPolPlugin;
 using namespace std;
 
+static vector<RealVec>& extractPositions(ContextImpl& context) {
+    ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+    return *((vector<RealVec>*) data->positions);
+}
+
+static vector<RealVec>& extractVelocities(ContextImpl& context) {
+    ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+    return *((vector<RealVec>*) data->velocities);
+}
+
+static vector<RealVec>& extractForces(ContextImpl& context) {
+    ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+    return *((vector<RealVec>*) data->forces);
+}
+
+static RealVec& extractBoxSize(ContextImpl& context) {
+    ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+    return *(RealVec*) data->periodicBoxSize;
+}
+#if !(OPENMM_MAJOR_VERSION == 6 && OPENMM_MINOR_VERSION <= 2)
+static RealVec* extractBoxVectors(ContextImpl& context) {
+    ReferencePlatform::PlatformData* data = reinterpret_cast<ReferencePlatform::PlatformData*>(context.getPlatformData());
+    return (RealVec*) data->periodicBoxVectors;
+}
+#endif
+
 /* -------------------------------------------------------------------------- *
  *                             MBPolElectrostatics                                *
  * -------------------------------------------------------------------------- */
 
-ReferenceCalcMBPolElectrostaticsForceKernel::ReferenceCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, const OpenMM::System& system) : 
+CpuCalcMBPolElectrostaticsForceKernel::CpuCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, const OpenMM::System& system) : 
          CalcMBPolElectrostaticsForceKernel(name, platform), system(system), numElectrostatics(0), mutualInducedMaxIterations(200), mutualInducedTargetEpsilon(1.0e-03),
                                                          usePme(false),alphaEwald(0.0), cutoffDistance(1.0) {  
 
 }
 
-ReferenceCalcMBPolElectrostaticsForceKernel::~ReferenceCalcMBPolElectrostaticsForceKernel() {
+CpuCalcMBPolElectrostaticsForceKernel::~CpuCalcMBPolElectrostaticsForceKernel() {
 }
 
-void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::System& system, const MBPolElectrostaticsForce& force) {
+void CpuCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::System& system, const MBPolElectrostaticsForce& force) {
 
     numElectrostatics   = force.getNumElectrostatics();
 
@@ -120,69 +147,69 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::initialize(const OpenMM::Syste
     return;
 }
 
-MBPolReferenceElectrostaticsForce* ReferenceCalcMBPolElectrostaticsForceKernel::setupMBPolReferenceElectrostaticsForce(ContextImpl& context )
+MBPolCpuElectrostaticsForce* CpuCalcMBPolElectrostaticsForceKernel::setupMBPolCpuElectrostaticsForce(ContextImpl& context )
 {
 
-    // mbpolReferenceElectrostaticsForce is set to MBPolReferenceGeneralizedKirkwoodForce if MBPolGeneralizedKirkwoodForce is present
-    // mbpolReferenceElectrostaticsForce is set to MBPolReferencePmeElectrostaticsForce if 'usePme' is set
-    // mbpolReferenceElectrostaticsForce is set to MBPolReferenceElectrostaticsForce otherwise
+    // mbpolCpuElectrostaticsForce is set to MBPolCpuGeneralizedKirkwoodForce if MBPolGeneralizedKirkwoodForce is present
+    // mbpolCpuElectrostaticsForce is set to MBPolCpuPmeElectrostaticsForce if 'usePme' is set
+    // mbpolCpuElectrostaticsForce is set to MBPolCpuElectrostaticsForce otherwise
 
-    MBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = NULL;
+    MBPolCpuElectrostaticsForce* mbpolCpuElectrostaticsForce = NULL;
     if( usePme ) {
 
-         MBPolReferencePmeElectrostaticsForce* mbpolReferencePmeElectrostaticsForce = new MBPolReferencePmeElectrostaticsForce( );
-         mbpolReferencePmeElectrostaticsForce->setAlphaEwald( alphaEwald );
-         mbpolReferencePmeElectrostaticsForce->setCutoffDistance( cutoffDistance );
-         mbpolReferencePmeElectrostaticsForce->setPmeGridDimensions( pmeGridDimension );
+         MBPolCpuPmeElectrostaticsForce* mbpolCpuPmeElectrostaticsForce = new MBPolCpuPmeElectrostaticsForce( );
+         mbpolCpuPmeElectrostaticsForce->setAlphaEwald( alphaEwald );
+         mbpolCpuPmeElectrostaticsForce->setCutoffDistance( cutoffDistance );
+         mbpolCpuPmeElectrostaticsForce->setPmeGridDimensions( pmeGridDimension );
          RealVec& box = extractBoxSize(context);
          double minAllowedSize = 1.999999*cutoffDistance;
          if (box[0] < minAllowedSize || box[1] < minAllowedSize || box[2] < minAllowedSize){
             throw OpenMMException("The periodic box size has decreased to less than twice the nonbonded cutoff.");
          }
-         mbpolReferencePmeElectrostaticsForce->setPeriodicBoxSize(box);
-         mbpolReferenceElectrostaticsForce = static_cast<MBPolReferenceElectrostaticsForce*>(mbpolReferencePmeElectrostaticsForce);
+         mbpolCpuPmeElectrostaticsForce->setPeriodicBoxSize(box);
+         mbpolCpuElectrostaticsForce = static_cast<MBPolCpuElectrostaticsForce*>(mbpolCpuPmeElectrostaticsForce);
 
     } else {
-         mbpolReferenceElectrostaticsForce = new MBPolReferenceElectrostaticsForce( MBPolReferenceElectrostaticsForce::NoCutoff );
+         mbpolCpuElectrostaticsForce = new MBPolCpuElectrostaticsForce( MBPolCpuElectrostaticsForce::NoCutoff );
     }
 
-    mbpolReferenceElectrostaticsForce->setMutualInducedDipoleTargetEpsilon( mutualInducedTargetEpsilon );
-    mbpolReferenceElectrostaticsForce->setMaximumMutualInducedDipoleIterations( mutualInducedMaxIterations );
+    mbpolCpuElectrostaticsForce->setMutualInducedDipoleTargetEpsilon( mutualInducedTargetEpsilon );
+    mbpolCpuElectrostaticsForce->setMaximumMutualInducedDipoleIterations( mutualInducedMaxIterations );
 
-    mbpolReferenceElectrostaticsForce->setIncludeChargeRedistribution(includeChargeRedistribution);
+    mbpolCpuElectrostaticsForce->setIncludeChargeRedistribution(includeChargeRedistribution);
     if (tholeParameters.size() > 0)
-        mbpolReferenceElectrostaticsForce->setTholeParameters(tholeParameters);
+        mbpolCpuElectrostaticsForce->setTholeParameters(tholeParameters);
 
-    return mbpolReferenceElectrostaticsForce;
+    return mbpolCpuElectrostaticsForce;
 
 }
 
-double ReferenceCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
+double CpuCalcMBPolElectrostaticsForceKernel::execute(ContextImpl& context, bool includeForces, bool includeEnergy) {
 
-    MBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = setupMBPolReferenceElectrostaticsForce( context );
+    MBPolCpuElectrostaticsForce* mbpolCpuElectrostaticsForce = setupMBPolCpuElectrostaticsForce( context );
 
     vector<RealVec>& posData   = extractPositions(context);
     vector<RealVec>& forceData = extractForces(context);
-    RealOpenMM energy          = mbpolReferenceElectrostaticsForce->calculateForceAndEnergy( posData, charges, moleculeIndices, atomTypes, tholes,
+    RealOpenMM energy          = mbpolCpuElectrostaticsForce->calculateForceAndEnergy( posData, charges, moleculeIndices, atomTypes, tholes,
                                                                                          dampingFactors, polarity,
                                                                                          forceData);
 
-    delete mbpolReferenceElectrostaticsForce;
+    delete mbpolCpuElectrostaticsForce;
 
     return static_cast<double>(energy);
 }
 
-void ReferenceCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(ContextImpl& context, const std::vector< Vec3 >& inputGrid,
+void CpuCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(ContextImpl& context, const std::vector< Vec3 >& inputGrid,
                                                                         std::vector< double >& outputElectrostaticPotential ){
 
-    MBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = setupMBPolReferenceElectrostaticsForce( context );
+    MBPolCpuElectrostaticsForce* mbpolCpuElectrostaticsForce = setupMBPolCpuElectrostaticsForce( context );
     vector<RealVec>& posData                                     = extractPositions(context);
     vector<RealVec> grid( inputGrid.size() );
     vector<RealOpenMM> potential( inputGrid.size() );
     for( unsigned int ii = 0; ii < inputGrid.size(); ii++ ){
         grid[ii] = inputGrid[ii];
     }
-    mbpolReferenceElectrostaticsForce->calculateElectrostaticPotential( posData, charges,moleculeIndices, atomTypes,  tholes,
+    mbpolCpuElectrostaticsForce->calculateElectrostaticPotential( posData, charges,moleculeIndices, atomTypes,  tholes,
                                                                     dampingFactors, polarity,
                                                                     grid, potential );
 
@@ -191,12 +218,12 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::getElectrostaticPotential(Cont
         outputElectrostaticPotential[ii] = potential[ii];
     }
 
-    delete mbpolReferenceElectrostaticsForce;
+    delete mbpolCpuElectrostaticsForce;
 
     return;
 }
 
-void ReferenceCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments(ContextImpl& context, std::vector< double >& outputElectrostaticsMoments){
+void CpuCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments(ContextImpl& context, std::vector< double >& outputElectrostaticsMoments){
 
     // retrieve masses
 
@@ -206,18 +233,18 @@ void ReferenceCalcMBPolElectrostaticsForceKernel::getSystemElectrostaticsMoments
         masses.push_back( static_cast<RealOpenMM>(system.getParticleMass(i)) );
     }    
 
-    MBPolReferenceElectrostaticsForce* mbpolReferenceElectrostaticsForce = setupMBPolReferenceElectrostaticsForce( context );
+    MBPolCpuElectrostaticsForce* mbpolCpuElectrostaticsForce = setupMBPolCpuElectrostaticsForce( context );
     vector<RealVec>& posData                                     = extractPositions(context);
-    mbpolReferenceElectrostaticsForce->calculateMBPolSystemElectrostaticsMoments( masses, posData, charges, moleculeIndices, atomTypes, tholes,
+    mbpolCpuElectrostaticsForce->calculateMBPolSystemElectrostaticsMoments( masses, posData, charges, moleculeIndices, atomTypes, tholes,
                                                                           dampingFactors, polarity,
                                                                           outputElectrostaticsMoments );
 
-    delete mbpolReferenceElectrostaticsForce;
+    delete mbpolCpuElectrostaticsForce;
 
     return;
 }
 
-void ReferenceCalcMBPolElectrostaticsForceKernel::copyParametersToContext(ContextImpl& context, const MBPolElectrostaticsForce& force) {
+void CpuCalcMBPolElectrostaticsForceKernel::copyParametersToContext(ContextImpl& context, const MBPolElectrostaticsForce& force) {
     if (numElectrostatics != force.getNumElectrostatics())
         throw OpenMMException("updateParametersInContext: The number of multipoles has changed");
 
