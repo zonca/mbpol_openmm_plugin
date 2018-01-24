@@ -44,7 +44,7 @@ const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
 
 #undef MBPOL_DEBUG
 
-MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( ) :
+MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, const ThreadPool& threads) :
                                                    _nonbondedMethod(NoCutoff),
                                                    _numParticles(0),
                                                    _electric(138.9354558456),
@@ -56,24 +56,8 @@ MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( ) :
                                                    _mutualInducedDipoleTargetEpsilon(1.0e-04),
                                                    _polarSOR(0.55),
                                                    _debye(48.033324),
-                                                   _includeChargeRedistribution(true)
-{
-    initialize();
-}
-
-MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod ) :
-                                                   _nonbondedMethod(NoCutoff),
-                                                   _numParticles(0),
-                                                   _electric(138.9354558456),
-                                                   _dielectric(1.0),
-                                                   _mutualInducedDipoleConverged(0),
-                                                   _mutualInducedDipoleIterations(0),
-                                                   _maximumMutualInducedDipoleIterations(100),
-                                                   _mutualInducedDipoleEpsilon(1.0e+50),
-                                                   _mutualInducedDipoleTargetEpsilon(1.0e-04),
-                                                   _polarSOR(0.55),
-                                                   _debye(48.033324),
-                                                   _includeChargeRedistribution(true)
+                                                   _includeChargeRedistribution(true),
+                                                   threads(threads)
 {
     initialize();
 }
@@ -1096,8 +1080,8 @@ const int MBPolCpuPmeElectrostaticsForce::MBPOL_PME_ORDER = 5;
 
 const RealOpenMM MBPolCpuPmeElectrostaticsForce::SQRT_PI = 1.77245385091;
 
-MBPolCpuPmeElectrostaticsForce::MBPolCpuPmeElectrostaticsForce( void ) :
-               MBPolCpuElectrostaticsForce(PME),
+MBPolCpuPmeElectrostaticsForce::MBPolCpuPmeElectrostaticsForce( const ThreadPool& threads) :
+               MBPolCpuElectrostaticsForce(PME, threads),
                _cutoffDistance(0.9), _cutoffDistanceSquared(0.81),
                _pmeGridSize(0), _totalGridSize(0), _alphaEwald(0.0)
 {

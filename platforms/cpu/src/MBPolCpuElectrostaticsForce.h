@@ -28,6 +28,9 @@
 //#include "openmm/cpu/RealVec.h"
 //#include "openmm/cpu/SimTKOpenMMRealType.h"
 #include "openmm/MBPolElectrostaticsForce.h"
+#include "openmm/cpu/AlignedArray.h"
+#include "openmm/internal/ThreadPool.h"
+#include "openmm/internal/vectorize.h"
 #include <map>
 #include "openmm/reference/fftpack.h"
 #include <complex>
@@ -330,15 +333,9 @@ public:
     /**
      * Constructor
      *
-     */
-    MBPolCpuElectrostaticsForce( );
-
-    /**
-     * Constructor
-     *
      * @param nonbondedMethod nonbonded method
      */
-    MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod );
+    MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, const ThreadPool& threads);
 
     /**
      * Destructor
@@ -549,6 +546,12 @@ protected:
     RealOpenMM  _mutualInducedDipoleTargetEpsilon;
     RealOpenMM  _polarSOR;
     RealOpenMM  _debye;
+
+    const ThreadPool& threads;
+        // The following variables are used to make information accessible to the individual threads.
+        //
+    std::vector<AlignedArray<float> >* threadForce;
+    void* atomicCounter;
 
     /**
      * Helper constructor method to centralize initialization of objects.
@@ -842,7 +845,7 @@ public:
      * Constructor
      *
      */
-    MBPolCpuPmeElectrostaticsForce( void );
+    MBPolCpuPmeElectrostaticsForce( const ThreadPool& threads);
 
     /**
      * Destructor

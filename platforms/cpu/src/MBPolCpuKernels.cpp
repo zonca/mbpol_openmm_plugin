@@ -157,7 +157,7 @@ MBPolCpuElectrostaticsForce* CpuCalcMBPolElectrostaticsForceKernel::setupMBPolCp
     MBPolCpuElectrostaticsForce* mbpolCpuElectrostaticsForce = NULL;
     if( usePme ) {
 
-         MBPolCpuPmeElectrostaticsForce* mbpolCpuPmeElectrostaticsForce = new MBPolCpuPmeElectrostaticsForce( );
+         MBPolCpuPmeElectrostaticsForce* mbpolCpuPmeElectrostaticsForce = new MBPolCpuPmeElectrostaticsForce( data.threads );
          mbpolCpuPmeElectrostaticsForce->setAlphaEwald( alphaEwald );
          mbpolCpuPmeElectrostaticsForce->setCutoffDistance( cutoffDistance );
          mbpolCpuPmeElectrostaticsForce->setPmeGridDimensions( pmeGridDimension );
@@ -170,7 +170,7 @@ MBPolCpuElectrostaticsForce* CpuCalcMBPolElectrostaticsForceKernel::setupMBPolCp
          mbpolCpuElectrostaticsForce = static_cast<MBPolCpuElectrostaticsForce*>(mbpolCpuPmeElectrostaticsForce);
 
     } else {
-         mbpolCpuElectrostaticsForce = new MBPolCpuElectrostaticsForce( MBPolCpuElectrostaticsForce::NoCutoff );
+         mbpolCpuElectrostaticsForce = new MBPolCpuElectrostaticsForce( MBPolCpuElectrostaticsForce::NoCutoff, data.threads );
     }
 
     mbpolCpuElectrostaticsForce->setMutualInducedDipoleTargetEpsilon( mutualInducedTargetEpsilon );
