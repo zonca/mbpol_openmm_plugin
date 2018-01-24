@@ -28,6 +28,8 @@
 #include <cstdio>
 #include <ctime>
 
+#define DEBUG_MBPOL 1
+
 // In case we're using some primitive version of Visual Studio this will
 // make sure that erf() and erfc() are defined.
 #include "openmm/internal/MSVC_erfc.h"
@@ -563,6 +565,7 @@ void MBPolCpuElectrostaticsForce::convergeInduceDipoles( const std::vector<Elect
     precomputeScale35( particleData, scale3, scale5);
 
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    std::cout << "precompute time [s] " << duration << std::endl;
 
     start = std::clock();
 
@@ -825,7 +828,10 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostatic( const std::vecto
 
     RealOpenMM energy = 0.0;
 
+    std::clock_t start;
+    double duration;
     // main loop over particle pairs
+    start = std::clock();
 
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
@@ -834,6 +840,14 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostatic( const std::vecto
 
         }
     }
+
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+
+#ifdef DEBUG_MBPOL
+    std::cout << "Electrostatics Iterations took " << duration << "s" << std::endl;
+#endif
+
 
     return energy;
 }
