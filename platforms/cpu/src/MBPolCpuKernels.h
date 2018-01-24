@@ -32,6 +32,7 @@
 #include "openmm/MBPolElectrostaticsForce.h"
 #include "openmm/cpu/CpuNeighborList.h"
 #include "MBPolCpuElectrostaticsForce.h"
+#include "openmm/cpu/CpuPlatform.h"
 //#include "openmm/cpu/SimTKOpenMMRealType.h"
 #include <string>
 
@@ -41,7 +42,7 @@ namespace MBPolPlugin {
 
 class CpuCalcMBPolElectrostaticsForceKernel : public CalcMBPolElectrostaticsForceKernel {
 public:
-    CpuCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, const System& system);
+    CpuCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, CpuPlatform::PlatformData& data);
     ~CpuCalcMBPolElectrostaticsForceKernel();
     /**
      * Initialize the kernel.
@@ -120,7 +121,7 @@ private:
     RealOpenMM cutoffDistance;
     std::vector<int> pmeGridDimension;
 
-    const System& system;
+    const CpuPlatform::PlatformData& data;
 };
 } // namespace MBPolPlugin
 

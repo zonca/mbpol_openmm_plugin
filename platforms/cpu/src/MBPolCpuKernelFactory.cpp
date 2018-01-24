@@ -79,7 +79,7 @@ KernelImpl* MBPolCpuKernelFactory::createKernelImpl(std::string name, const Plat
     //        return new ReferenceCalcMBPolThreeBodyForceKernel(name, platform, context.getSystem());
 
     if (name == CalcMBPolElectrostaticsForceKernel::Name())
-        return new CpuCalcMBPolElectrostaticsForceKernel(name, platform, context.getSystem());
+        return new CpuCalcMBPolElectrostaticsForceKernel(name, platform, data);
 
     throw OpenMMException((std::string("Tried to create kernel with illegal kernel name '")+name+"'").c_str());
 }

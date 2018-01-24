@@ -75,8 +75,8 @@ static RealVec* extractBoxVectors(ContextImpl& context) {
  *                             MBPolElectrostatics                                *
  * -------------------------------------------------------------------------- */
 
-CpuCalcMBPolElectrostaticsForceKernel::CpuCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, const OpenMM::System& system) : 
-         CalcMBPolElectrostaticsForceKernel(name, platform), system(system), numElectrostatics(0), mutualInducedMaxIterations(200), mutualInducedTargetEpsilon(1.0e-03),
+CpuCalcMBPolElectrostaticsForceKernel::CpuCalcMBPolElectrostaticsForceKernel(std::string name, const Platform& platform, CpuPlatform::PlatformData& data) :
+         CalcMBPolElectrostaticsForceKernel(name, platform), data(data), numElectrostatics(0), mutualInducedMaxIterations(200), mutualInducedTargetEpsilon(1.0e-03),
                                                          usePme(false),alphaEwald(0.0), cutoffDistance(1.0) {  
 
 }
