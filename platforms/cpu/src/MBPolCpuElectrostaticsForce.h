@@ -551,6 +551,7 @@ protected:
         // The following variables are used to make information accessible to the individual threads.
         //
     std::vector<AlignedArray<float> >* threadForce;
+    std::vector<std::vector<std::vector<RealVec> > >* threadField;
     void* atomicCounter;
 
     /**

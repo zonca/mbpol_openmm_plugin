@@ -444,13 +444,14 @@ void MBPolCpuElectrostaticsForce::calculateInducedDipolePairIxns( const Electros
 {
 
    if( particleI.particleIndex == particleJ.particleIndex )return;
+    int threadIndex = 0;
 
     RealVec deltaR       = particleJ.position - particleI.position;
     RealOpenMM r         =  SQRT( deltaR.dot( deltaR ) );
 
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
         calculateInducedDipolePairIxn( particleI.particleIndex, particleJ.particleIndex, precomputedScale3, precomputedScale5, deltaR,
-                                       *(updateInducedDipoleFields[ii].inducedDipoles), updateInducedDipoleFields[ii].inducedDipoleField );
+                                       *(updateInducedDipoleFields[ii].inducedDipoles), (*threadField)[threadIndex][ii] );
     }
     return;
 
@@ -460,6 +461,11 @@ void MBPolCpuElectrostaticsForce::calculateInducedDipoleFields( const std::vecto
                                                                   std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[])
 {
 
+    std::clock_t start;
+    double duration;
+
+    start = std::clock();
+
     unsigned int xx = 0;
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
@@ -468,6 +474,20 @@ void MBPolCpuElectrostaticsForce::calculateInducedDipoleFields( const std::vecto
             xx++;
         }
     }
+
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+    std::cout << "reduction " << updateInducedDipoleFields.size()<< std::endl;
+    int numThreads = 4; //threads.getNumThreads();
+    int numParticles = particleData.size();
+
+    for (int i = 0; i < updateInducedDipoleFields.size(); i++) { // the outer loop can run in parallel
+        for (int j = 0; j < numParticles; j++) {
+            for (int t = 0; t < numThreads; t++) {
+                updateInducedDipoleFields[i].inducedDipoleField[j] += (* threadField)[t][i][j];
+                }
+        }
+    }
+    std::cout << "calculateInducedDipolePairIxns total time [s] " << duration << std::endl;
     return;
 }
 
@@ -482,6 +502,13 @@ RealOpenMM MBPolCpuElectrostaticsForce::runUpdateInducedDipoleFields( const std:
     RealVec zeroVec( 0.0, 0.0, 0.0 );
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
         std::fill( updateInducedDipoleFields[ii].inducedDipoleField.begin(), updateInducedDipoleFields[ii].inducedDipoleField.end(), zeroVec );
+    }
+    int numThreads = 4; //threads.getNumThreads();
+    int numParticles = particleData.size();
+    for (int t = 0; t < numThreads; t++) {
+        for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
+            std::fill( (*threadField)[t][ii].begin(), (*threadField)[t][ii].end(), zeroVec );
+        }
     }
 
     calculateInducedDipoleFields( particleData, updateInducedDipoleFields, scale3, scale5);
@@ -568,6 +595,22 @@ void MBPolCpuElectrostaticsForce::convergeInduceDipoles( const std::vector<Elect
     std::cout << "precompute time [s] " << duration << std::endl;
 
     start = std::clock();
+    int numThreads = 4; //threads.getNumThreads();
+    int numParticles = particleData.size();
+#ifdef DEBUG_MBPOL
+    std::cout << "Initialize threadField " << numThreads << " threads " << numParticles << " particles" << std::endl;
+#endif
+    threadField = new std::vector<std::vector<std::vector<RealVec> > >;
+    threadField->resize(numThreads);
+    for (int t = 0; t < numThreads; t++) {
+       (* threadField)[t].resize(numParticles);
+        for (int i = 0; i < updateInducedDipoleField.size(); i++) { // this is 2, standard and polar
+           (* threadField)[t][i].resize(numParticles);
+        }
+    }
+#ifdef DEBUG_MBPOL
+    std::cout << "Initialized" << std::endl;
+#endif
 
     while( !done ){
 
@@ -628,7 +671,19 @@ void MBPolCpuElectrostaticsForce::calculateInducedDipoles( const std::vector<Ele
     // UpdateInducedDipoleFieldStruct contains induced dipole, fixed multipole fields and fields
     // due to other induced dipoles at each site
 
+    std::clock_t start;
+    double duration;
+    // main loop over particle pairs
+    start = std::clock();
+
     convergeInduceDipoles( particleData, updateInducedDipoleField );
+
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+
+#ifdef DEBUG_MBPOL
+    std::cout << "Converge induced dipoles took " << duration << "s" << std::endl;
+#endif
 
     return;
 }
