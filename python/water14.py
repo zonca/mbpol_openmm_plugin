@@ -33,7 +33,7 @@ forcefield = app.ForceField(mbpol.__file__.replace('mbpol.py', 'mbpol.xml'))
 
 # In[ ]:
 
-system = forcefield.createSystem(pdb.topology, nonbondedMethod=app.CutoffNonPeriodic, nonBondedCutoff=1e3*unit.nanometer)
+system = forcefield.createSystem(pdb.topology, nonbondedMethod=app.CutoffNonPeriodic, nonbondedCutoff=1e3*unit.nanometer)
 integrator = mm.VerletIntegrator(0.00001*unit.femtoseconds)
 
 
