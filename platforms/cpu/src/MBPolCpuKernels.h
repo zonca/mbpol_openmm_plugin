@@ -121,7 +121,7 @@ private:
     RealOpenMM cutoffDistance;
     std::vector<int> pmeGridDimension;
 
-    const CpuPlatform::PlatformData& data;
+    CpuPlatform::PlatformData& data;
 };
 } // namespace MBPolPlugin
 

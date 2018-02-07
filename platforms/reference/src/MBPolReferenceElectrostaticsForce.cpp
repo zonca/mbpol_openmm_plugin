@@ -42,7 +42,7 @@ using OpenMM::RealVec;
 
 const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
 
-#undef MBPOL_DEBUG
+#define MBPOL_DEBUG 1
 
 MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( ) :
                                                    _nonbondedMethod(NoCutoff),

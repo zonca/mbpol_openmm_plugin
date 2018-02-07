@@ -65,7 +65,7 @@ extern "C" OPENMM_EXPORT void registerMBPolCpuKernelFactories() {
 }
 
 KernelImpl* MBPolCpuKernelFactory::createKernelImpl(std::string name, const Platform& platform, ContextImpl& context) const {
-    CpuPlatform::PlatformData& data = *static_cast<CpuPlatform::PlatformData*>(context.getPlatformData());
+    CpuPlatform::PlatformData& data = CpuPlatform::getPlatformData(context);
 
     // create MBPolCpuData object if contextToMBPolDataMap does not contain
     // key equal to current context

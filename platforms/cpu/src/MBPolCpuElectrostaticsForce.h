@@ -25,6 +25,7 @@
 #define __MBPolCpuElectrostaticsForce_H__
 
 #include <vector>
+#include "openmm/internal/gmx_atomic.h"
 //#include "openmm/cpu/RealVec.h"
 //#include "openmm/cpu/SimTKOpenMMRealType.h"
 #include "openmm/MBPolElectrostaticsForce.h"
@@ -305,7 +306,6 @@ class MBPolCpuElectrostaticsForce {
     *                                                       for PME includes reciprocal space calculation calculateReciprocalSpaceInducedDipoleField(),
     *                                                       direct space calculateDirectInducedDipolePairIxns() and self terms
     *
-    *              virtual calculateInducedDipolePairIxns() field at particle i due particle j's induced dipole and vice versa; for GK includes GK field
     */
 
 public:
@@ -335,7 +335,7 @@ public:
      *
      * @param nonbondedMethod nonbonded method
      */
-    MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, const ThreadPool& threads);
+    MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, ThreadPool& threads);
 
     /**
      * Destructor
@@ -493,6 +493,9 @@ public:
                                           std::vector<RealOpenMM>& outputPotential );
 
 
+	class MBPolCpuComputeForceTask;
+    class ReduceThreadFieldTask;
+
 protected:
 
     enum ElectrostaticsParticleDataEnum { PARTICLE_POSITION, PARTICLE_CHARGE,
@@ -547,12 +550,19 @@ protected:
     RealOpenMM  _polarSOR;
     RealOpenMM  _debye;
 
-    const ThreadPool& threads;
-        // The following variables are used to make information accessible to the individual threads.
-        //
+	RealOpenMM * scale3;
+	std::vector<int> scaleOffset;
+	RealOpenMM * scale5;
+    std::vector<UpdateInducedDipoleFieldStruct> * updateInducedDipoleFields;
+    ThreadPool& threads;
+	const std::vector<ElectrostaticsParticleData>* particleData;
+    gmx_atomic_t* atomicCounter;
+    // The following variables are used to make information accessible to the individual threads.
+    //
     std::vector<AlignedArray<float> >* threadForce;
+    std::vector<double> threadEnergy;
+
     std::vector<std::vector<std::vector<RealVec> > >* threadField;
-    void* atomicCounter;
 
     /**
      * Helper constructor method to centralize initialization of objects.
@@ -676,15 +686,6 @@ protected:
                                         std::vector<RealVec>& field ) const;
 
     virtual void precomputeScale35( const std::vector<ElectrostaticsParticleData>& particleData, RealOpenMM scale3[], RealOpenMM scale5[] );
-    /**
-     * Calculate fields due induced dipoles at each site.
-     *
-     * @param particleI                 positions and parameters (charge, labFrame dipoles, quadrupoles, ...) for particle I
-     * @param particleJ                 positions and parameters (charge, labFrame dipoles, quadrupoles, ...) for particle J
-     * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
-     */
-    virtual void calculateInducedDipolePairIxns( const ElectrostaticsParticleData& particleI, const ElectrostaticsParticleData& particleJ,
-                                                 std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, RealOpenMM precomputedScale3, RealOpenMM precomputedScale5  );
 
     /**
      * Calculate induced dipole fields.
@@ -692,9 +693,8 @@ protected:
      * @param particleData              vector of particle positions and parameters (charge, labFrame dipoles, quadrupoles, ...)
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
-    virtual void calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                               std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields,
-						 const RealOpenMM scale3[], const RealOpenMM scale5[]);
+	virtual void calculateInducedDipoleFields( ThreadPool& threads, int threadIndex );
+    void reduceThreadField( ThreadPool& threads, int threadIndex );
     /**
      * Converge induced dipoles.
      *
@@ -704,6 +704,7 @@ protected:
     void convergeInduceDipoles( const std::vector<ElectrostaticsParticleData>& particleData,
                                 std::vector<UpdateInducedDipoleFieldStruct>& calculateInducedDipoleField );
 
+	void threadComputeForce(ThreadPool& threads, int threadIndex);
     /**
      * Update fields due to induced dipoles for each particle.
      *
@@ -846,7 +847,7 @@ public:
      * Constructor
      *
      */
-    MBPolCpuPmeElectrostaticsForce( const ThreadPool& threads);
+    MBPolCpuPmeElectrostaticsForce( ThreadPool& threads);
 
     /**
      * Destructor
@@ -1189,8 +1190,7 @@ private:
      * @param particleData              vector of particle positions and parameters (charge, labFrame dipoles, quadrupoles, ...)
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
-    void calculateInducedDipoleFields( const std::vector<ElectrostaticsParticleData>& particleData,
-                                       std::vector<UpdateInducedDipoleFieldStruct>& updateInducedDipoleFields, const RealOpenMM scale3[], const RealOpenMM scale5[]);
+	void calculateInducedDipoleFields( ThreadPool& threads, int threadIndex );
 
     /**
      * Set reciprocal space induced dipole fields.
