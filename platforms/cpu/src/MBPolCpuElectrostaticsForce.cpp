@@ -28,7 +28,7 @@
 #include <cstdio>
 #include <ctime>
 
-#define DEBUG_MBPOL 1
+//#define DEBUG_MBPOL 1
 
 // In case we're using some primitive version of Visual Studio this will
 // make sure that erf() and erfc() are defined.
@@ -49,14 +49,14 @@ public:
     MBPolCpuComputeForceTask(MBPolCpuElectrostaticsForce& owner) : owner(owner) {
     }
     void execute(ThreadPool& threads, int threadIndex) {
-        owner.calculateInducedDipoleFields(threads, threadIndex);
+        owner.calculateElectrostatic(threads, threadIndex);
     }
     MBPolCpuElectrostaticsForce& owner;
 };
 
 #undef MBPOL_DEBUG
 
-MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, ThreadPool& threads) :
+MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, ThreadPool& threads, std::vector<AlignedArray<float> >& threadForce) :
                                                    _nonbondedMethod(NoCutoff),
                                                    _numParticles(0),
                                                    _electric(138.9354558456),
@@ -69,7 +69,8 @@ MBPolCpuElectrostaticsForce::MBPolCpuElectrostaticsForce( NonbondedMethod nonbon
                                                    _polarSOR(0.55),
                                                    _debye(48.033324),
                                                    _includeChargeRedistribution(true),
-                                                   threads(threads)
+                                                   threads(threads),
+                                                   threadForce(threadForce)
 {
     initialize();
 }
@@ -431,27 +432,24 @@ void MBPolCpuElectrostaticsForce::initializeInducedDipoles( std::vector<UpdateIn
     return;
 }
 
-void MBPolCpuElectrostaticsForce::calculateInducedDipoleFields( ThreadPool& threads, int threadIndex )
+void MBPolCpuElectrostaticsForce::calculateInducedDipoleFields( )
 {
 
 	RealVec deltaR;
     int xx;
 	RealOpenMM r, rr3, rr5;
 
-	while (true) {
-        int i = gmx_atomic_fetch_add(reinterpret_cast<gmx_atomic_t*>(atomicCounter), 1);
-	    if (i >= _numParticles)
-        break;
-
+    for( unsigned int i = 0; i < _numParticles; i++ ){
         for( unsigned int j = i+1; j < _numParticles; j++ ){
 	    	deltaR    = (*particleData)[j].position - (*particleData)[i].position;
             xx = scaleOffset[i] + j - i - 1;
 			for( unsigned int ff = 0; ff < updateInducedDipoleFields->size(); ff++ ){
                 vector<RealVec>& inducedDipoles = *((*updateInducedDipoleFields)[ff].inducedDipoles);
+                vector<RealVec>& field = (*updateInducedDipoleFields)[ff].inducedDipoleField;
 				rr3 = scale3[xx];
 				rr5 = scale5[xx];
-				(*threadField)[threadIndex][ff][i] += inducedDipoles[j]*rr3 + deltaR*rr5*(inducedDipoles[j].dot( deltaR ) );
-				(*threadField)[threadIndex][ff][j] += inducedDipoles[i]*rr3 + deltaR*rr5*(inducedDipoles[i].dot( deltaR ) );
+				field[i] += inducedDipoles[j]*rr3 + deltaR*rr5*(inducedDipoles[j].dot( deltaR ) );
+				field[j] += inducedDipoles[i]*rr3 + deltaR*rr5*(inducedDipoles[i].dot( deltaR ) );
 			}
 		}
     }
@@ -471,29 +469,8 @@ RealOpenMM MBPolCpuElectrostaticsForce::runUpdateInducedDipoleFields( const std:
     for( unsigned int ii = 0; ii < updateInducedDipoleFields.size(); ii++ ){
         std::fill( updateInducedDipoleFields[ii].inducedDipoleField.begin(), updateInducedDipoleFields[ii].inducedDipoleField.end(), zeroVec );
     }
-    int numThreads = threads.getNumThreads();
-    for (int t = 0; t < numThreads; t++) {
-        for( unsigned int f = 0; f < updateInducedDipoleFields.size(); f++ ){
-            std::fill( (*threadField)[t][f].begin(), (*threadField)[t][f].end(), zeroVec );
-        }
-    }
 
-    gmx_atomic_t counter;
-    gmx_atomic_set(&counter, 0);
-    this->atomicCounter = &counter;
-
-    // Signal the threads to start running and wait for them to finish.
-    MBPolCpuComputeForceTask task(*this);
-    threads.execute(task);
-    threads.waitForThreads();
-
-    for (int i = 0; i < updateInducedDipoleFields.size(); i++) { // the outer loop can run in parallel
-        for (int j = 0; j < _numParticles; j++) {
-            for (int t = 0; t < numThreads; t++) {
-                updateInducedDipoleFields[i].inducedDipoleField[j] += (* threadField)[t][i][j];
-                }
-        }
-    }
+    calculateInducedDipoleFields();
 
     RealOpenMM maxEpsilon = 0.0;
     for( unsigned int kk = 0; kk < updateInducedDipoleFields.size(); kk++ ){
@@ -575,24 +552,11 @@ void MBPolCpuElectrostaticsForce::convergeInduceDipoles( const std::vector<Elect
 
     precomputeScale35( particleData, scale3, scale5);
 
+#ifdef DEBUG_MBPOL
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
     std::cout << "precompute time [s] " << duration << std::endl;
 
     start = std::clock();
-    int numThreads = threads.getNumThreads();
-#ifdef DEBUG_MBPOL
-    std::cout << "Initialize threadField " << numThreads << " threads " << _numParticles << " particles" << std::endl;
-#endif
-    threadField = new std::vector<std::vector<std::vector<RealVec> > >;
-    threadField->resize(numThreads);
-    for (int t = 0; t < numThreads; t++) {
-       (* threadField)[t].resize(updateInducedDipoleField.size());
-        for (int i = 0; i < updateInducedDipoleField.size(); i++) { // this is 2, standard and polar
-           (* threadField)[t][i].resize(_numParticles);
-        }
-    }
-#ifdef DEBUG_MBPOL
-    std::cout << "Initialized" << std::endl;
 #endif
 
     while( !done ){
@@ -612,10 +576,9 @@ void MBPolCpuElectrostaticsForce::convergeInduceDipoles( const std::vector<Elect
     }
     /* Your algorithm here */
 
+#ifdef DEBUG_MBPOL
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
-
-#ifdef DEBUG_MBPOL
     std::cout << "Induced dipole Iterations " << iteration << "took " << duration << "s" << std::endl;
 #endif
 
@@ -655,17 +618,19 @@ void MBPolCpuElectrostaticsForce::calculateInducedDipoles( const std::vector<Ele
     // UpdateInducedDipoleFieldStruct contains induced dipole, fixed multipole fields and fields
     // due to other induced dipoles at each site
 
+#ifdef DEBUG_MBPOL
     std::clock_t start;
     double duration;
     // main loop over particle pairs
     start = std::clock();
+#endif
 
     convergeInduceDipoles( particleData, updateInducedDipoleField );
 
+#ifdef DEBUG_MBPOL
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
 
-#ifdef DEBUG_MBPOL
     std::cout << "Converge induced dipoles took " << duration << "s" << std::endl;
 #endif
 
@@ -675,7 +640,7 @@ void MBPolCpuElectrostaticsForce::calculateInducedDipoles( const std::vector<Ele
 RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
                                                                          unsigned int iIndex,
                                                                          unsigned int kIndex,
-                                                                         std::vector<RealVec>& forces) const
+                                                                         float * forces) const
 {
     RealOpenMM temp3,temp5,temp7;
     RealOpenMM gl[9],gli[7],glip[7];
@@ -855,40 +820,38 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostaticPairIxn( const std
     RealVec force   = ftm2 + ftm2i;
             force  *= f;
 
-    forces[iIndex] -= force;
-    forces[kIndex] += force;
+    fvec4 result = fvec4(force[0], force[1], force[2],0);
+    (fvec4(forces+4*iIndex)-result).store(forces+4*iIndex);
+    (fvec4(forces+4*kIndex)+result).store(forces+4*kIndex);
 
     return energy;
 }
 
-RealOpenMM MBPolCpuElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                  std::vector<RealVec>& forces )
+void MBPolCpuElectrostaticsForce::calculateElectrostatic( ThreadPool& threads, int threadIndex )
 {
+
+    float* forces = &threadForce[threadIndex][0];
 
     RealOpenMM energy = 0.0;
 
-    std::clock_t start;
-    double duration;
-    // main loop over particle pairs
-    start = std::clock();
+	// threads.execute(task) creates a task for each core, each task starts this while loop.
+	// there is a unique atomic counter that is increased by all of the tasks in a thread-safe
+    // way. this counter loops through the particles, so at the beginning the threads process
+    // the first num_threads particles and do a loop through all i+1 to the end.
+    // The first thread that finishes restarts the while loop and gets the num_threads+1 particle
+    // and so on until all threads hit the break statement and exit.
+    while (true) {
+        int ii = gmx_atomic_fetch_add(reinterpret_cast<gmx_atomic_t*>(atomicCounter), 1);
+        if (ii >= _numParticles)
+        break;
 
-    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-        for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
+        for( unsigned int jj = ii+1; jj < particleData->size(); jj++ ){
 
-            energy += calculateElectrostaticPairIxn( particleData, ii, jj, forces);
+            threadEnergy[threadIndex] += calculateElectrostaticPairIxn( *particleData, ii, jj, forces);
 
         }
     }
 
-    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
-
-
-#ifdef DEBUG_MBPOL
-    std::cout << "Electrostatics Iterations took " << duration << "s" << std::endl;
-#endif
-
-
-    return energy;
 }
 
 void MBPolCpuElectrostaticsForce::setup( const std::vector<RealVec>& particlePositions,
@@ -918,6 +881,7 @@ void MBPolCpuElectrostaticsForce::setup( const std::vector<RealVec>& particlePos
     if (getIncludeChargeRedistribution())
     {
         for( unsigned int ii = 0; ii < _numParticles; ii=ii+4 ){ // FIXME this assumes only waters
+
             computeWaterCharge(particleData[ii], particleData[ii+1], particleData[ii+2], particleData[ii+3]);
         }
     }
@@ -954,7 +918,22 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateForceAndEnergy( const std::vect
             dampingFactors, polarity,
             particleData );
 
-    RealOpenMM energy = calculateElectrostatic( particleData, forces );
+    RealOpenMM energy = 0;
+
+    gmx_atomic_t counter;
+    gmx_atomic_set(&counter, 0);
+    this->atomicCounter = &counter;
+
+    int numThreads = threads.getNumThreads();
+    threadEnergy.resize(numThreads);
+
+
+    MBPolCpuComputeForceTask task(*this);
+    threads.execute(task);
+    threads.waitForThreads();
+
+	for (int i = 0; i < numThreads; i++)
+		energy += threadEnergy[i];
 
     return energy;
 }
@@ -1135,8 +1114,8 @@ const int MBPolCpuPmeElectrostaticsForce::MBPOL_PME_ORDER = 5;
 
 const RealOpenMM MBPolCpuPmeElectrostaticsForce::SQRT_PI = 1.77245385091;
 
-MBPolCpuPmeElectrostaticsForce::MBPolCpuPmeElectrostaticsForce( ThreadPool& threads) :
-               MBPolCpuElectrostaticsForce(PME, threads),
+MBPolCpuPmeElectrostaticsForce::MBPolCpuPmeElectrostaticsForce( ThreadPool& threads, std::vector<AlignedArray<float> >& threadForce ) :
+               MBPolCpuElectrostaticsForce(PME, threads, threadForce),
                _cutoffDistance(0.9), _cutoffDistanceSquared(0.81),
                _pmeGridSize(0), _totalGridSize(0), _alphaEwald(0.0)
 {
@@ -2375,7 +2354,7 @@ void MBPolCpuPmeElectrostaticsForce::calculateReciprocalSpaceInducedDipoleField(
     recordInducedDipoleField( updateInducedDipoleFields[0].inducedDipoleField, updateInducedDipoleFields[1].inducedDipoleField );
 }
 
-void MBPolCpuPmeElectrostaticsForce::calculateInducedDipoleFields( ThreadPool& threads, int threadIndex )
+void MBPolCpuPmeElectrostaticsForce::calculateInducedDipoleFields( )
 {
 
     unsigned int xx = 0;
@@ -2753,10 +2732,13 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIx
 
 }
 
-RealOpenMM MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
-                                                                     std::vector<RealVec>& forces )
-{
+void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads, int threadIndex )
 
+{
+	const std::vector<ElectrostaticsParticleData>& particleData = *(this->particleData);
+
+    std::vector<RealVec> forces;
+    forces.resize(_numParticles);
     RealOpenMM energy = 0.0;
 
     std::vector<RealOpenMM> electrostaticPotentialDirect(particleData.size());
@@ -2811,7 +2793,6 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( const std::ve
         }}    }
 
 
-    return energy;
 }
 
 

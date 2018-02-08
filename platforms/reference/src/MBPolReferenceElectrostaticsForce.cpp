@@ -42,7 +42,7 @@ using OpenMM::RealVec;
 
 const RealOpenMM EXPGAMM = EXP(ttm::gammln(3.0/4.0));
 
-#define MBPOL_DEBUG 1
+//#define DEBUG_MBPOL 1
 
 MBPolReferenceElectrostaticsForce::MBPolReferenceElectrostaticsForce( ) :
                                                    _nonbondedMethod(NoCutoff),
@@ -578,9 +578,11 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
 
     precomputeScale35( particleData, scale3, scale5);
 
+#ifdef DEBUG_MBPOL
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
     start = std::clock();
+#endif
 
     while( !done ){
 
@@ -599,10 +601,10 @@ void MBPolReferenceElectrostaticsForce::convergeInduceDipoles( const std::vector
     }
     /* Your algorithm here */
 
+#ifdef DEBUG_MBPOL
     duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 
 
-#ifdef DEBUG_MBPOL
     std::cout << "Induced dipole Iterations " << iteration << "took " << duration << "s" << std::endl;
 #endif
 
@@ -915,7 +917,20 @@ RealOpenMM MBPolReferenceElectrostaticsForce::calculateForceAndEnergy( const std
             dampingFactors, polarity,
             particleData );
 
+#ifdef DEBUG_MBPOL
+    std::clock_t start;
+    double duration;
+    // main loop over particle pairs
+    start = std::clock();
+#endif
+
     RealOpenMM energy = calculateElectrostatic( particleData, forces );
+#ifdef DEBUG_MBPOL
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+
+    std::cout << "Electrostatics Iterations took " << duration << "s" << std::endl;
+#endif
 
     return energy;
 }

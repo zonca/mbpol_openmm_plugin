@@ -335,7 +335,7 @@ public:
      *
      * @param nonbondedMethod nonbonded method
      */
-    MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, ThreadPool& threads);
+    MBPolCpuElectrostaticsForce( NonbondedMethod nonbondedMethod, ThreadPool& threads, std::vector<AlignedArray<float> >& threadForce);
 
     /**
      * Destructor
@@ -559,7 +559,7 @@ protected:
     gmx_atomic_t* atomicCounter;
     // The following variables are used to make information accessible to the individual threads.
     //
-    std::vector<AlignedArray<float> >* threadForce;
+    std::vector<AlignedArray<float> >& threadForce;
     std::vector<double> threadEnergy;
 
     std::vector<std::vector<std::vector<RealVec> > >* threadField;
@@ -693,7 +693,7 @@ protected:
      * @param particleData              vector of particle positions and parameters (charge, labFrame dipoles, quadrupoles, ...)
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
-	virtual void calculateInducedDipoleFields( ThreadPool& threads, int threadIndex );
+	virtual void calculateInducedDipoleFields( );
     void reduceThreadField( ThreadPool& threads, int threadIndex );
     /**
      * Converge induced dipoles.
@@ -771,7 +771,7 @@ protected:
             const std::vector<ElectrostaticsParticleData>& particleData,
                                                                                     unsigned int iIndex,
                                                                                     unsigned int kIndex,
-                                                                                    std::vector<OpenMM::RealVec>& forces) const;
+                                                                                    float * forces) const;
 
     /**
      * Calculate electrostatic forces
@@ -781,8 +781,7 @@ protected:
      *
      * @return energy
      */
-    virtual RealOpenMM calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
-                                               std::vector<OpenMM::RealVec>& forces );
+	virtual void calculateElectrostatic( ThreadPool& threads, int threadIndex );
 
     /**
      * Normalize a RealVec
@@ -847,8 +846,7 @@ public:
      * Constructor
      *
      */
-    MBPolCpuPmeElectrostaticsForce( ThreadPool& threads);
-
+    MBPolCpuPmeElectrostaticsForce( ThreadPool& threads, std::vector<AlignedArray<float> >& threadForce);
     /**
      * Destructor
      *
@@ -1190,7 +1188,7 @@ private:
      * @param particleData              vector of particle positions and parameters (charge, labFrame dipoles, quadrupoles, ...)
      * @param updateInducedDipoleFields vector of UpdateInducedDipoleFieldStruct containing input induced dipoles and output fields
      */
-	void calculateInducedDipoleFields( ThreadPool& threads, int threadIndex );
+	void calculateInducedDipoleFields( );
 
     /**
      * Set reciprocal space induced dipole fields.
@@ -1225,8 +1223,7 @@ private:
      *
      * @return energy
      */
-    RealOpenMM calculateElectrostatic( const std::vector<ElectrostaticsParticleData>& particleData,
-                                       std::vector<OpenMM::RealVec>& forces );
+	void calculateElectrostatic( ThreadPool& threads, int threadIndex );
 
 };
 
