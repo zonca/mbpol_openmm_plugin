@@ -851,6 +851,13 @@ void MBPolCpuElectrostaticsForce::calculateElectrostatic( ThreadPool& threads, i
 
         }
     }
+    // the PME version has 2 syncThreads, so the calling function is calling 2 times
+    // resumeThreads in the master thread.
+    // If we don't have 2 syncThreads here, the threads would execute the function again and
+    // add energies and forces 3 times.
+    // The other option would be to have a different calling function for PME and cluster
+    threads.syncThreads();
+    threads.syncThreads();
 
 }
 
