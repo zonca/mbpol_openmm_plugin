@@ -928,7 +928,7 @@ protected:
       */
      RealOpenMM calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
                             unsigned int iIndex, unsigned int jIndex,
-                                                        std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const;
+                                                        float * forces, std::vector<RealOpenMM>& electrostaticPotential ) const;
 
 
 private:
@@ -1103,7 +1103,7 @@ private:
      * @return energy
      */
     RealOpenMM computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                   std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const;
+                                                                   float * forces, std::vector<RealOpenMM>& electrostaticPotential) const;
 
     /**
      * Set reciprocal space fixed multipole fields.
@@ -1204,7 +1204,7 @@ private:
      * @param forces            vector of particle forces to be updated
      */
      RealOpenMM computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                   std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const;
+                                                                   float * forces, std::vector<RealOpenMM>& electrostaticPotential) const;
 
     /**
      * Calculate electrostatic forces.

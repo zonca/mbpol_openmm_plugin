@@ -2129,7 +2129,7 @@ void MBPolCpuPmeElectrostaticsForce::computeInducedPotentialFromGrid( void )
 }
 
 RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                                                 std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
+                                                                                                 float * forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
     RealOpenMM multipole[10];
     const int deriv1[] = {1, 4, 7, 8, 10, 15, 17, 13, 14, 19};
@@ -2188,11 +2188,12 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrosta
 //     } // charge redistribution
 
 
+        scale *= _electric;
         f[0]           *= scale[0];
         f[1]           *= scale[1];
         f[2]           *= scale[2];
-        f              *= (_electric);
-        forces[i]      -= f;
+        fvec4 result = fvec4(f[0], f[1], f[2], 0);
+        (fvec4(forces+4*i)-result).store(forces+4*i);
 
     // }
     return (0.5*_electric*energy);
@@ -2202,7 +2203,7 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrosta
  * Compute the forces due to the reciprocal space PME calculation for induced dipoles.
  */
 RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                                                std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const
+                                                                                                float * forces, std::vector<RealOpenMM>& electrostaticPotential) const
 {
 
     RealOpenMM multipole[10];
@@ -2270,7 +2271,8 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleFo
         f[1]           *= scale[1];
         f[2]           *= scale[2];
         f              *= (0.5*_electric);
-        forces[iIndex] -= f;
+        fvec4 result = fvec4(f[0], f[1], f[2], 0);
+        (fvec4(forces+4*i)-result).store(forces+4*i);
 
     // I don't think this portion of the code needs to be modified
     // for charge derivatives. I think this section for (MB-pol) is
@@ -2489,7 +2491,7 @@ RealOpenMM scale3, RealOpenMM scale5 )
 RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
                                              unsigned int iIndex,
                                              unsigned int jIndex,
-                                                                                         std::vector<RealVec>& forces,
+                                                                                         float * forces,
                                                                                          std::vector<RealOpenMM>& electrostaticPotential ) const
 {
 
@@ -2686,9 +2688,11 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIx
 
     energy                 *= conversionFactor;
 
-    forces[iIndex]      -= (ftm2 + ftm2i)*conversionFactor;
+    RealVec force = (ftm2 + ftm2i)*conversionFactor;
 
-    forces[jIndex]      += (ftm2 + ftm2i)*conversionFactor;
+    fvec4 result = fvec4(force[0], force[1], force[2],0);
+    (fvec4(forces+4*iIndex)-result).store(forces+4*iIndex);
+    (fvec4(forces+4*jIndex)+result).store(forces+4*jIndex);
 
     return energy;
 
@@ -2705,9 +2709,7 @@ void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads
     }
     // loop over particle pairs for direct space interactions
 
-    // float* forces = &threadForce[threadIndex][0];
-    std::vector<RealVec> forces;
-    forces.resize(_numParticles);
+    float* forces = &threadForce[threadIndex][0];
 
     RealOpenMM energy = 0.0;
     const RealOpenMM selfEnergyConversion = -(_electric*_alphaEwald/(_dielectric*SQRT_PI)); // TODO compute
