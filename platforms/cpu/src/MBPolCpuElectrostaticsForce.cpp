@@ -934,6 +934,12 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateForceAndEnergy( const std::vect
     int numThreads = threads.getNumThreads();
     threadEnergy.resize(numThreads);
     threadPotential.resize(numThreads * _numParticles);
+#ifdef DEBUG_MBPOL
+    std::clock_t start;
+    double duration;
+    // main loop over particle pairs
+    start = std::clock();
+#endif
 
 
     MBPolCpuComputeForceTask task(*this);
@@ -952,6 +958,12 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateForceAndEnergy( const std::vect
     this->atomicCounter = &counter;
     threads.resumeThreads();
     threads.waitForThreads();
+#ifdef DEBUG_MBPOL
+    duration = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
+
+
+    std::cout << "Electrostatics Iterations took " << duration << "s" << std::endl;
+#endif
 
     return energy;
 }
