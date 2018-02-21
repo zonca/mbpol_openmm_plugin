@@ -933,28 +933,18 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateForceAndEnergy( const std::vect
     threads.execute(task);
     threads.waitForThreads();
 
+    gmx_atomic_set(&counter, 0);
+    this->atomicCounter = &counter;
+    threads.resumeThreads();
 	for (int t = 0; t < numThreads; t++)
     {
 		energy += threadEnergy[t];
     }
-	for (int t = 1; t < numThreads; t++)
-    {
-        for( unsigned int ii  = 0; ii < _numParticles; ii++ ){
-            threadPotential[ii] += threadPotential[t * _numParticles + ii];
-        }
-    }
-    float* thread0Force = &threadForce[0][0];
-    // need to move outside, close threads, reduce potential and then run this
-    for( int ii = 0; ii < _numParticles; ii++ ){
-        RealVec f = RealVec ( 0,0,0 );
-        for( unsigned int s = 0; s < 3; s++ ){
-            for( unsigned int xyz = 0; xyz < 3; xyz++ ){
-                f[xyz] += particleData[ii].chargeDerivatives[s][xyz] * threadPotential[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
-            }
-        }
-        fvec4 result = fvec4(f[0], f[1], f[2], 0);
-        (fvec4(thread0Force+4*ii)+result).store(thread0Force+4*ii);
-    }
+    threads.waitForThreads();
+    gmx_atomic_set(&counter, 0);
+    this->atomicCounter = &counter;
+    threads.resumeThreads();
+    threads.waitForThreads();
 
     return energy;
 }
@@ -2762,8 +2752,32 @@ void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads
 
     }
 
+    threads.syncThreads();
 
+    while (true) {
+        int ii = gmx_atomic_fetch_add(reinterpret_cast<gmx_atomic_t*>(atomicCounter), 1);
+        if (ii >= _numParticles)
+        break;
 
+        for (int t = 1; t < threads.getNumThreads(); t++)
+        {
+                threadPotential[ii] += threadPotential[t * _numParticles + ii];
+        }
+    }
+    threads.syncThreads();
+    while (true) {
+        int ii = gmx_atomic_fetch_add(reinterpret_cast<gmx_atomic_t*>(atomicCounter), 1);
+        if (ii >= _numParticles)
+        break;
+        RealVec f = RealVec ( 0,0,0 );
+        for( unsigned int s = 0; s < 3; s++ ){
+            for( unsigned int xyz = 0; xyz < 3; xyz++ ){
+                f[xyz] += particleData[ii].chargeDerivatives[s][xyz] * threadPotential[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
+            }
+        }
+        fvec4 result = fvec4(f[0], f[1], f[2], 0);
+        (fvec4(forces+4*ii)+result).store(forces+4*ii);
+    }
 
 
 }
