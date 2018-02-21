@@ -2128,7 +2128,7 @@ void MBPolCpuPmeElectrostaticsForce::computeInducedPotentialFromGrid( void )
     return;
 }
 
-RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
                                                                                                  std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
 {
     RealOpenMM multipole[10];
@@ -2138,7 +2138,7 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrosta
     RealVec scale;
     getPmeScale( scale );
     RealOpenMM energy = 0.0;
-    for (int i = 0; i < _numParticles; i++ ) {
+    // for (int i = 0; i < _numParticles; i++ ) {
 
         // Compute the torque.
 
@@ -2194,14 +2194,14 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrosta
         f              *= (_electric);
         forces[i]      -= f;
 
-    }
+    // }
     return (0.5*_electric*energy);
 }
 
 /**
  * Compute the forces due to the reciprocal space PME calculation for induced dipoles.
  */
-RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
                                                                                                 std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const
 {
 
@@ -2215,7 +2215,7 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleFo
     RealVec scale;
     getPmeScale( scale );
     RealOpenMM energy = 0.0;
-    for (int i = 0; i < _numParticles; i++ ) {
+    // for (int i = 0; i < _numParticles; i++ ) {
 
         // Compute the torque.
 
@@ -2277,7 +2277,7 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleFo
     // only the induced dipole * electric field. So if the charge derivatives
     // do not have to be added to the electric field, this section of the code
     // should work as is.
-    }
+    //}
 
     return (0.5*_electric*energy);
 }
@@ -2484,44 +2484,6 @@ RealOpenMM scale3, RealOpenMM scale5 )
     }
 
     return;
-}
-
-RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
-        std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const
-{
-
-    RealOpenMM cii = 0.0;
-    RealOpenMM dii = 0.0;
-    RealOpenMM qii = 0.0;
-    for( unsigned int ii = 0; ii < _numParticles; ii++ ){
-
-        const ElectrostaticsParticleData& particleI = particleData[ii];
-
-        cii      +=  particleI.charge*particleI.charge;
-
-    }
-
-    RealOpenMM term      = 2.0*_alphaEwald*_alphaEwald;
-    RealOpenMM energy    = (cii + term*(dii/3.0 + 2.0*term*qii/5.0));
-               energy   *= -(_electric*_alphaEwald/(_dielectric*SQRT_PI));
-
-    for( unsigned int ii = 0; ii < _numParticles; ii++ ){
-
-        const ElectrostaticsParticleData& particleI = particleData[ii];
-
-        electrostaticPotential[ii] += particleI.charge * -(_alphaEwald/(SQRT_PI)) * 2;
-
-//        for( unsigned int s = 0; s < 3; s++ ){
-//
-//            for( unsigned int xyz = 0; xyz < 3; xyz++ ){
-//
-//            forces[ii][xyz] += particleI.chargeDerivatives[s][xyz] * particleI.charge * -(_electric*_alphaEwald/(_dielectric*SQRT_PI));
-//
-//
-//        }}
-    }
-
-    return energy;
 }
 
 RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
@@ -2737,48 +2699,57 @@ void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads
 {
 	const std::vector<ElectrostaticsParticleData>& particleData = *(this->particleData);
 
-    std::vector<RealVec> forces;
-    forces.resize(_numParticles);
-    RealOpenMM energy = 0.0;
-
-    std::vector<RealOpenMM> electrostaticPotentialDirect(particleData.size());
-    std::vector<RealOpenMM> electrostaticPotentialInduced(particleData.size());
-    std::vector<RealOpenMM> electrostaticPotentialReciprocal(particleData.size());
-    std::vector<RealOpenMM> electrostaticPotentialSelf(particleData.size());
+    std::vector<RealOpenMM> electrostaticPotential(particleData.size());
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-        electrostaticPotentialDirect[ii] = 0.;
-        electrostaticPotentialReciprocal[ii] = 0.;
-        electrostaticPotentialSelf[ii] = 0.;
+        electrostaticPotential[ii] = 0.;
     }
     // loop over particle pairs for direct space interactions
 
-    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+    // float* forces = &threadForce[threadIndex][0];
+    std::vector<RealVec> forces;
+    forces.resize(_numParticles);
+
+    RealOpenMM energy = 0.0;
+    const RealOpenMM selfEnergyConversion = -(_electric*_alphaEwald/(_dielectric*SQRT_PI)); // TODO compute
+    // just once before threading
+
+	// threads.execute(task) creates a task for each core, each task starts this while loop.
+	// there is a unique atomic counter that is increased by all of the tasks in a thread-safe
+    // way. this counter loops through the particles, so at the beginning the threads process
+    // the first num_threads particles and do a loop through all i+1 to the end.
+    // The first thread that finishes restarts the while loop and gets the num_threads+1 particle
+    // and so on until all threads hit the break statement and exit.
+    while (true) {
+        int ii = gmx_atomic_fetch_add(reinterpret_cast<gmx_atomic_t*>(atomicCounter), 1);
+        if (ii >= _numParticles)
+        break;
+
         for( unsigned int jj = ii+1; jj < particleData.size(); jj++ ){
 
-            energy += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, electrostaticPotentialDirect );
+            threadEnergy[threadIndex] += calculatePmeDirectElectrostaticPairIxn( particleData, ii, jj, forces, electrostaticPotential);
 
         }
+
+        threadEnergy[threadIndex] += computeReciprocalSpaceInducedDipoleForceAndEnergy( particleData, ii, forces, electrostaticPotential );
+        threadEnergy[threadIndex] += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, ii, forces, electrostaticPotential );
+
+        // PME self energy
+        threadEnergy[threadIndex] += particleData[ii].charge*particleData[ii].charge * selfEnergyConversion;
+        electrostaticPotential[ii] += particleData[ii].charge * -(_alphaEwald/(SQRT_PI)) * 2;
+
     }
 
-    energy += computeReciprocalSpaceInducedDipoleForceAndEnergy( particleData, forces, electrostaticPotentialInduced );
 
-    energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, electrostaticPotentialReciprocal );
 
-    energy += calculatePmeSelfEnergy( particleData, forces, electrostaticPotentialSelf );
 
-    for (int i=0; i<particleData.size(); i++) {
-        electrostaticPotentialDirect[i] += electrostaticPotentialReciprocal[i];
-        electrostaticPotentialDirect[i] += electrostaticPotentialInduced[i];
-        electrostaticPotentialDirect[i] += electrostaticPotentialSelf[i];
-    }
+    // FIXME need to move outside, close threads, reduce potential and then run this
+    // for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+    //     for( unsigned int s = 0; s < 3; s++ ){
+    //         for( unsigned int xyz = 0; xyz < 3; xyz++ ){
 
-    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-        for( unsigned int s = 0; s < 3; s++ ){
-            for( unsigned int xyz = 0; xyz < 3; xyz++ ){
+    //         forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotentialDirect[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
 
-            forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotentialDirect[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
-
-        }}    }
+    //     }}    }
 
 
 }

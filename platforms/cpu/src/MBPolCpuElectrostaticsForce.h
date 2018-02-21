@@ -1102,7 +1102,7 @@ private:
      *
      * @return energy
      */
-    RealOpenMM computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+    RealOpenMM computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
                                                                    std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const;
 
     /**
@@ -1198,19 +1198,12 @@ private:
     void recordInducedDipoleField( vector<RealVec>& field, vector<RealVec>& fieldPolar );
 
     /**
-     * Compute Pme self energy.
-     *
-     * @param particleData            vector of parameters (charge, labFrame dipoles, quadrupoles, ...) for particles
-     */
-    RealOpenMM calculatePmeSelfEnergy( const std::vector<ElectrostaticsParticleData>& particleData, std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential ) const;
-
-    /**
      * Calculate reciprocal space energy/force for dipole interaction.
      *
      * @param particleData      vector of particle positions and parameters (charge, labFrame dipoles, quadrupoles, ...)
      * @param forces            vector of particle forces to be updated
      */
-     RealOpenMM computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData,
+     RealOpenMM computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
                                                                    std::vector<RealVec>& forces, std::vector<RealOpenMM>& electrostaticPotential) const;
 
     /**
