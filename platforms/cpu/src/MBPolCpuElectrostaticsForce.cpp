@@ -2760,29 +2760,17 @@ void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads
         }
     }
 
-    printPotential (electrostaticPotentialDirect, energy ,"Direct Space", particleData);
-
-    double previousEnergy = energy;
-
     energy += computeReciprocalSpaceInducedDipoleForceAndEnergy( particleData, forces, electrostaticPotentialInduced );
-    printPotential (electrostaticPotentialInduced, energy - previousEnergy , "Reciprocal Induced", particleData);
 
-    previousEnergy = energy;
     energy += computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( particleData, forces, electrostaticPotentialReciprocal );
-    printPotential (electrostaticPotentialReciprocal, energy - previousEnergy , "Reciprocal Space Fixed", particleData);
 
-    previousEnergy = energy;
     energy += calculatePmeSelfEnergy( particleData, forces, electrostaticPotentialSelf );
-
-    printPotential (electrostaticPotentialSelf, energy - previousEnergy , "Pme Self energy", particleData);
 
     for (int i=0; i<particleData.size(); i++) {
         electrostaticPotentialDirect[i] += electrostaticPotentialReciprocal[i];
         electrostaticPotentialDirect[i] += electrostaticPotentialInduced[i];
         electrostaticPotentialDirect[i] += electrostaticPotentialSelf[i];
     }
-
-    printPotential (electrostaticPotentialDirect, energy, "Total", particleData);
 
     for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
         for( unsigned int s = 0; s < 3; s++ ){
@@ -2795,19 +2783,6 @@ void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads
 
 }
 
-
-void MBPolCpuElectrostaticsForce::printPotential (std::vector<RealOpenMM> electrostaticPotential, RealOpenMM energy, std::string name, const std::vector<ElectrostaticsParticleData>& particleData ) {
-#ifdef DEBUG_MBPOL
-    RealOpenMM energyFromPotential = 0;
-    for (int i=0; i<particleData.size(); i++) {
-        // std::cout << "Potential atom " << i << ": " << electrostaticPotential[i] / (4.184) << " Kcal/mol/C <openmm-mbpol>" << std::endl;
-        energyFromPotential += electrostaticPotential[i] * particleData[i].charge;
-    }
-    energyFromPotential *= _electric/_dielectric;
-    std::cout << "Energy: " << energy / 4.184 << " Kcal/mol <openmm-mbpol>" << std::endl;
-    std::cout << "Energy from potential: " << energyFromPotential / 4.184 / 2. << " Kcal/mol <openmm-mbpol>" << std::endl;
-#endif
-}
 
 void MBPolCpuElectrostaticsForce::computeWaterCharge(
         ElectrostaticsParticleData& particleO, ElectrostaticsParticleData& particleH1,
