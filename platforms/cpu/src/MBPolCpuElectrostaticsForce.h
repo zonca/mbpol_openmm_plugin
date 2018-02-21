@@ -561,6 +561,7 @@ protected:
     //
     std::vector<AlignedArray<float> >& threadForce;
     std::vector<double> threadEnergy;
+    std::vector<float> threadPotential;;
 
     std::vector<std::vector<std::vector<RealVec> > >* threadField;
 
@@ -928,7 +929,7 @@ protected:
       */
      RealOpenMM calculatePmeDirectElectrostaticPairIxn( const std::vector<ElectrostaticsParticleData>& particleData,
                             unsigned int iIndex, unsigned int jIndex,
-                                                        float * forces, std::vector<RealOpenMM>& electrostaticPotential ) const;
+                                                        float * forces, float * electrostaticPotential ) const;
 
 
 private:
@@ -1103,7 +1104,7 @@ private:
      * @return energy
      */
     RealOpenMM computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                   float * forces, std::vector<RealOpenMM>& electrostaticPotential) const;
+                                                                   float * forces, float * electrostaticPotential) const;
 
     /**
      * Set reciprocal space fixed multipole fields.
@@ -1204,7 +1205,7 @@ private:
      * @param forces            vector of particle forces to be updated
      */
      RealOpenMM computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                   float * forces, std::vector<RealOpenMM>& electrostaticPotential) const;
+                                                                   float * forces, float * electrostaticPotential) const;
 
     /**
      * Calculate electrostatic forces.

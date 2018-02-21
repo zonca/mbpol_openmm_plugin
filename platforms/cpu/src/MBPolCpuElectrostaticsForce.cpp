@@ -926,14 +926,35 @@ RealOpenMM MBPolCpuElectrostaticsForce::calculateForceAndEnergy( const std::vect
 
     int numThreads = threads.getNumThreads();
     threadEnergy.resize(numThreads);
+    threadPotential.resize(numThreads * _numParticles);
 
 
     MBPolCpuComputeForceTask task(*this);
     threads.execute(task);
     threads.waitForThreads();
 
-	for (int i = 0; i < numThreads; i++)
-		energy += threadEnergy[i];
+	for (int t = 0; t < numThreads; t++)
+    {
+		energy += threadEnergy[t];
+    }
+	for (int t = 1; t < numThreads; t++)
+    {
+        for( unsigned int ii  = 0; ii < _numParticles; ii++ ){
+            threadPotential[ii] += threadPotential[t * _numParticles + ii];
+        }
+    }
+    float* thread0Force = &threadForce[0][0];
+    // need to move outside, close threads, reduce potential and then run this
+    for( int ii = 0; ii < _numParticles; ii++ ){
+        RealVec f = RealVec ( 0,0,0 );
+        for( unsigned int s = 0; s < 3; s++ ){
+            for( unsigned int xyz = 0; xyz < 3; xyz++ ){
+                f[xyz] += particleData[ii].chargeDerivatives[s][xyz] * threadPotential[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
+            }
+        }
+        fvec4 result = fvec4(f[0], f[1], f[2], 0);
+        (fvec4(thread0Force+4*ii)+result).store(thread0Force+4*ii);
+    }
 
     return energy;
 }
@@ -2129,7 +2150,7 @@ void MBPolCpuPmeElectrostaticsForce::computeInducedPotentialFromGrid( void )
 }
 
 RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrostaticsForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                                                 float * forces, std::vector<RealOpenMM>& electrostaticPotential ) const
+                                                                                                 float * forces, float * electrostaticPotential ) const
 {
     RealOpenMM multipole[10];
     const int deriv1[] = {1, 4, 7, 8, 10, 15, 17, 13, 14, 19};
@@ -2203,7 +2224,7 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceFixedElectrosta
  * Compute the forces due to the reciprocal space PME calculation for induced dipoles.
  */
 RealOpenMM MBPolCpuPmeElectrostaticsForce::computeReciprocalSpaceInducedDipoleForceAndEnergy( const std::vector<ElectrostaticsParticleData>& particleData, int i,
-                                                                                                float * forces, std::vector<RealOpenMM>& electrostaticPotential) const
+                                                                                                float * forces, float * electrostaticPotential) const
 {
 
     RealOpenMM multipole[10];
@@ -2492,7 +2513,7 @@ RealOpenMM MBPolCpuPmeElectrostaticsForce::calculatePmeDirectElectrostaticPairIx
                                              unsigned int iIndex,
                                              unsigned int jIndex,
                                                                                          float * forces,
-                                                                                         std::vector<RealOpenMM>& electrostaticPotential ) const
+                                                                                         float * electrostaticPotential ) const
 {
 
     ElectrostaticsParticleData particleI = particleData[iIndex];
@@ -2703,8 +2724,8 @@ void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads
 {
 	const std::vector<ElectrostaticsParticleData>& particleData = *(this->particleData);
 
-    std::vector<RealOpenMM> electrostaticPotential(particleData.size());
-    for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
+    float * electrostaticPotential = &(threadPotential[threadIndex*_numParticles]);
+    for( unsigned int ii = 0; ii < _numParticles; ii++ ){
         electrostaticPotential[ii] = 0.;
     }
     // loop over particle pairs for direct space interactions
@@ -2743,15 +2764,6 @@ void MBPolCpuPmeElectrostaticsForce::calculateElectrostatic( ThreadPool& threads
 
 
 
-
-    // FIXME need to move outside, close threads, reduce potential and then run this
-    // for( unsigned int ii = 0; ii < particleData.size(); ii++ ){
-    //     for( unsigned int s = 0; s < 3; s++ ){
-    //         for( unsigned int xyz = 0; xyz < 3; xyz++ ){
-
-    //         forces[ii][xyz] += particleData[ii].chargeDerivatives[s][xyz] * electrostaticPotentialDirect[particleData[ii].otherSiteIndex[s]] * -(_electric/(_dielectric));
-
-    //     }}    }
 
 
 }
